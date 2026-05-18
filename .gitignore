@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+bot.log
+smoke.out
+daily_state.json
+signals.csv
+trades.csv
+events.jsonl

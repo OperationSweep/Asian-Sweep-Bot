@@ -71,6 +71,12 @@ def daily_setup() -> None:
     if bias == "NEUTRAL":
         STATE.day_closed = True
         STATE.result_label = "NO_TRADE_NEUTRAL_BIAS"
+        journal.append_signal_row({
+            "date": STATE.trade_date,
+            "bias": STATE.bias,
+            "result": "SKIP",
+            "reason": "neutral_bias",
+        })
         persist()
         return
 
@@ -182,6 +188,7 @@ def force_close_job() -> None:
     info = force_close_positions()
     journal.log_event("force_close", info)
     STATE.day_closed = True
+    STATE.trade_open = False
     STATE.exit_reason = "TIME_EXIT"
     persist()
 
