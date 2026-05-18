@@ -2,4 +2,3 @@ MetaTrader5
 schedule
 pytz
 pandas
-numpy
