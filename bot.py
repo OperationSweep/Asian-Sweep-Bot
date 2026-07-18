@@ -7,7 +7,9 @@ Strategy:
     3. Wait for a sweep of the Asian high (bearish bias) or low (bullish bias)
        between 09:00 and 13:00 Dubai time.
     4. After a sweep, watch for a Break of Structure on the 5m chart.
-    5. Execute a market order with SL at the sweep extreme and TP at 1:2 RR.
+    5. Confirm the BOS with live order flow (tape aggressor delta + DOM
+       imbalance) agreeing with the trade direction, then execute a market
+       order with SL at the sweep extreme and TP at 1:2 RR.
     6. Move SL to break-even at 1R profit, and force close everything at 13:00
        Dubai time.
 
@@ -36,6 +38,7 @@ except ImportError:  # pragma: no cover - MetaTrader5 is platform specific
     mt5 = None  # type: ignore[assignment]
 
 import config
+import orderflow
 
 
 # --------------------------------------------------------------------------- #
@@ -117,6 +120,10 @@ class DailyState:
 
     bos_level: Optional[float] = None
     bos_confirmed: bool = False
+    bos_direction: Optional[str] = None     # BUY | SELL (pending entry)
+    bos_entry_hint: Optional[float] = None
+    bos_confirmed_time: Optional[datetime] = None
+    order_flow_confirmed: bool = False
 
     trade_open: bool = False
     ticket: Optional[int] = None
@@ -181,6 +188,8 @@ def mt5_initialize() -> bool:
                 # make sure the symbol is selected
                 if not mt5.symbol_select(config.SYMBOL, True):
                     log.warning("Failed to select symbol %s", config.SYMBOL)
+                if config.ORDER_FLOW_ENABLED:
+                    orderflow.subscribe_book()
                 return True
             err = mt5.last_error()
             log.warning("MT5 initialize failed (attempt %d/%d): %s",
@@ -197,6 +206,8 @@ def mt5_initialize() -> bool:
 def mt5_shutdown() -> None:
     if mt5 is None:
         return
+    if config.ORDER_FLOW_ENABLED:
+        orderflow.release_book()
     try:
         mt5.shutdown()
     except Exception as exc:  # pragma: no cover - defensive
@@ -395,6 +406,10 @@ def scan_for_setup() -> None:
 
     if not STATE.bos_confirmed:
         _check_for_bos()
+        return
+
+    if not STATE.order_flow_confirmed:
+        _confirm_order_flow_and_enter()
 
 
 def _check_for_sweep() -> None:
@@ -487,12 +502,7 @@ def _check_for_bos() -> None:
                   f"{fmt_price(swing)}...")
             log.info("Monitoring BOS below swing low %s", fmt_price(swing))
         if candle_close < swing and candle_time > STATE.sweep_candle_time:
-            STATE.bos_confirmed = True
-            print(f"{now_str} BOS CONFIRMED - 5m candle closed at "
-                  f"{fmt_price(candle_close)}")
-            log.info("BOS CONFIRMED close=%s level=%s",
-                     fmt_price(candle_close), fmt_price(swing))
-            place_trade(direction="SELL", entry_hint=candle_close)
+            _register_bos("SELL", candle_close, candle_time)
 
     elif STATE.sweep_type == "LOW_SWEEP":
         swing = find_recent_swing(df, "HIGH", STATE.sweep_candle_time)
@@ -505,12 +515,74 @@ def _check_for_bos() -> None:
                   f"{fmt_price(swing)}...")
             log.info("Monitoring BOS above swing high %s", fmt_price(swing))
         if candle_close > swing and candle_time > STATE.sweep_candle_time:
-            STATE.bos_confirmed = True
-            print(f"{now_str} BOS CONFIRMED - 5m candle closed at "
-                  f"{fmt_price(candle_close)}")
-            log.info("BOS CONFIRMED close=%s level=%s",
-                     fmt_price(candle_close), fmt_price(swing))
-            place_trade(direction="BUY", entry_hint=candle_close)
+            _register_bos("BUY", candle_close, candle_time)
+
+
+# --------------------------------------------------------------------------- #
+# Order-flow confirmation gate
+# --------------------------------------------------------------------------- #
+def _register_bos(direction: str, entry_hint: float,
+                  candle_time: datetime) -> None:
+    """Latch a confirmed BOS and hand off to the order-flow gate for entry."""
+    STATE.bos_confirmed = True
+    STATE.bos_direction = direction
+    STATE.bos_entry_hint = entry_hint
+    STATE.bos_confirmed_time = candle_time
+    now_str = now_dubai().strftime("[%H:%M]")
+    print(f"{now_str} BOS CONFIRMED - 5m candle closed at "
+          f"{fmt_price(entry_hint)}")
+    log.info("BOS CONFIRMED close=%s dir=%s",
+             fmt_price(entry_hint), direction)
+    # Attempt an immediate confirmation; otherwise the scan loop retries.
+    _confirm_order_flow_and_enter()
+
+
+def _confirm_order_flow_and_enter() -> None:
+    """Gate the pending BOS entry on live order flow agreeing with direction.
+
+    Retried each scan tick until flow confirms, the setup times out, or the
+    session is force-closed. When ORDER_FLOW_ENABLED is off this passes through
+    to a structure-only entry (original behaviour).
+    """
+    if STATE.trade_open or STATE.closed:
+        return
+    direction = STATE.bos_direction
+    if direction is None or STATE.bos_entry_hint is None:
+        return
+
+    now_str = now_dubai().strftime("[%H:%M]")
+
+    if not config.ORDER_FLOW_ENABLED:
+        STATE.order_flow_confirmed = True
+        place_trade(direction=direction, entry_hint=STATE.bos_entry_hint)
+        return
+
+    signal = orderflow.evaluate_order_flow(direction)
+    if signal is not None and signal.agrees:
+        STATE.order_flow_confirmed = True
+        print(f"{now_str} ORDER FLOW CONFIRMED - {signal.summary()}")
+        log.info("Order flow confirmed entry: %s", signal.summary())
+        place_trade(direction=direction, entry_hint=STATE.bos_entry_hint)
+        return
+
+    if signal is None:
+        log.info("Order flow: awaiting data before entering %s.", direction)
+    else:
+        print(f"{now_str} Order flow not confirming - waiting "
+              f"({signal.summary()})")
+        log.info("Order flow rejected entry: %s", signal.summary())
+
+    # Abandon the setup if flow never lines up within the allowed window.
+    if STATE.bos_confirmed_time is not None:
+        elapsed_min = (now_dubai() - STATE.bos_confirmed_time
+                       ).total_seconds() / 60.0
+        if elapsed_min >= config.ORDER_FLOW_CONFIRM_TIMEOUT_MIN:
+            print(f"{now_str} Order flow never confirmed within "
+                  f"{config.ORDER_FLOW_CONFIRM_TIMEOUT_MIN}m - skipping trade")
+            log.info("Order-flow confirmation timed out after %.1fm - "
+                     "skipping trade.", elapsed_min)
+            STATE.closed = True
+            STATE.result_label = "SKIP-OF"
 
 
 # --------------------------------------------------------------------------- #

@@ -29,3 +29,19 @@ RESET_DUBAI             = "13:05"
 
 SWING_LOOKBACK_CANDLES  = 60
 SWING_FRACTAL_WINDOW    = 2
+
+# --------------------------------------------------------------------------- #
+# Order-flow confirmation
+# After a Break of Structure, the entry is gated on live order flow (tape
+# aggressor delta + depth-of-market imbalance) agreeing with the trade
+# direction. Set ORDER_FLOW_ENABLED = False to fall back to entering purely on
+# structure (original behaviour).
+# --------------------------------------------------------------------------- #
+ORDER_FLOW_ENABLED             = True
+ORDER_FLOW_LOOKBACK_SECONDS    = 90    # tape window used to measure delta
+ORDER_FLOW_MIN_TICKS           = 20    # need at least this many ticks to judge
+ORDER_FLOW_MIN_DELTA_RATIO     = 0.15  # |buy-sell|/total needed to confirm flow
+ORDER_FLOW_USE_BOOK            = True  # factor in DOM imbalance when available
+ORDER_FLOW_REQUIRE_BOOK        = False # hard-require DOM (else it is optional)
+ORDER_FLOW_MIN_BOOK_IMBALANCE  = 0.10  # resting bid/ask skew tolerance
+ORDER_FLOW_CONFIRM_TIMEOUT_MIN = 15    # abort setup if flow never confirms
