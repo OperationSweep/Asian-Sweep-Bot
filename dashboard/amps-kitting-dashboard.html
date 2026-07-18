@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AMPS Kitting Dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb; --page: #f9f9f7;
+  --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
+  --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --series-1: #2a78d6;
+  --status-good: #0ca30c; --status-warn: #fab219; --status-serious: #ec835a; --status-crit: #d03b3b;
+  --good-text: #006300;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19; --page: #0d0d0d;
+  --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+  --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
+  --series-1: #3987e5;
+  --good-text: #0ca30c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --page: #0d0d0d;
+    --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+    --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
+    --series-1: #3987e5;
+    --good-text: #0ca30c;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink-1);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  padding: 18px 22px 4px; }
+header h1 { font-size: 19px; margin: 0; }
+header .sub { color: var(--ink-2); font-size: 13px; }
+header button { margin-left: auto; }
+main { padding: 10px 22px 40px; max-width: 1280px; margin: 0 auto; }
+section.card { background: var(--surface-1); border: 1px solid var(--ring);
+  border-radius: 10px; padding: 16px 18px; margin: 14px 0; overflow-x: auto; }
+h2 { font-size: 15px; margin: 0 0 4px; }
+.hint { color: var(--ink-2); font-size: 12.5px; margin: 2px 0 10px; }
+textarea { width: 100%; min-height: 110px; background: var(--page); color: var(--ink-1);
+  border: 1px dashed var(--baseline); border-radius: 8px; padding: 8px;
+  font: 12px/1.4 ui-monospace, monospace; }
+button { background: var(--surface-1); color: var(--ink-1); border: 1px solid var(--baseline);
+  border-radius: 7px; padding: 6px 12px; font: 13px system-ui, sans-serif; cursor: pointer; }
+button:hover { border-color: var(--ink-2); }
+button.primary { background: var(--series-1); border-color: var(--series-1); color: #fff; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.badge { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--ring); color: var(--ink-2); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 12px; margin: 14px 0; }
+.tile { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 10px;
+  padding: 12px 14px; }
+.tile .v { font-size: 26px; font-weight: 650; }
+.tile .l { color: var(--ink-2); font-size: 12px; margin-top: 2px; }
+.tile .d { font-size: 11.5px; margin-top: 2px; color: var(--ink-muted); }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th { text-align: left; color: var(--ink-2); font-weight: 600; padding: 5px 10px 5px 0;
+  border-bottom: 1px solid var(--baseline); white-space: nowrap; }
+td { padding: 4px 10px 4px 0; border-bottom: 1px solid var(--grid);
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.num, th.num { text-align: right; }
+.st { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; }
+.st .dot { width: 8px; height: 8px; border-radius: 50%; }
+.ok .dot { background: var(--status-good); } .ok { color: var(--good-text); }
+.warn .dot { background: var(--status-serious); } .warn { color: var(--status-serious); }
+.mut .dot { background: var(--ink-muted); } .mut { color: var(--ink-muted); }
+input.attr { width: 120px; background: var(--page); color: var(--ink-1);
+  border: 1px solid var(--baseline); border-radius: 6px; padding: 3px 6px; font-size: 12px; }
+input.attr.filled { border-color: var(--status-good); }
+#tooltip { position: fixed; pointer-events: none; background: var(--surface-1);
+  border: 1px solid var(--ring); border-radius: 7px; padding: 6px 9px; font-size: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,.14); display: none; z-index: 10; }
+.searchbox { background: var(--page); color: var(--ink-1); border: 1px solid var(--baseline);
+  border-radius: 7px; padding: 5px 9px; font-size: 13px; width: 220px; }
+svg text { fill: var(--ink-muted); font-size: 10.5px; }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.scroll { max-height: 420px; overflow-y: auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>AMPS Quarterly Kitting Dashboard</h1>
+  <span class="sub">Store to Production Operations &middot; Greenwich &middot; paste two exports, everything else is automatic</span>
+  <button id="themeBtn" title="Toggle light/dark">◐ theme</button>
+</header>
+<main>
+
+<section class="card">
+  <h2>1 · Paste your exports</h2>
+  <p class="hint">
+    <b>COOIS</b>: List = <i>Documented Goods Movements</i>, filtered to your GFF material(s) — open the saved .XLS in
+    a text editor or Excel, select all, copy, paste below.&ensp;
+    <b>IQ09</b>: serial list for the same GFF material(s) — open the export in Excel, select all (Ctrl+A), copy, paste below.
+    Data is kept in this browser only (nothing is uploaded anywhere).
+  </p>
+  <div class="row" style="align-items:flex-start">
+    <div style="flex:1; min-width:300px">
+      <div class="hint">COOIS — Documented Goods Movements <span id="cooisState" class="badge">empty</span></div>
+      <textarea id="cooisIn" placeholder="Paste COOIS export here…"></textarea>
+    </div>
+    <div style="flex:1; min-width:300px">
+      <div class="hint">IQ09 — Serial number list <span id="iqState" class="badge">empty</span></div>
+      <textarea id="iqIn" placeholder="Paste IQ09 export here…"></textarea>
+    </div>
+  </div>
+  <div class="row">
+    <button class="primary" id="runBtn">Refresh dashboard</button>
+    <button id="clearBtn">Clear saved data</button>
+    <span class="hint" id="parseMsg"></span>
+  </div>
+</section>
+
+<div class="tiles" id="tiles"></div>
+
+<section class="card">
+  <h2>Weekly consumption — GFF serials ZPRO'd per week</h2>
+  <p class="hint">From IQ09: serials whose status left stock (AVLB/ECUS), grouped by their change date. Hover a bar for detail.</p>
+  <div id="chart"></div>
+</section>
+
+<section class="card">
+  <h2>Date reconciliation — COOIS vs serial history</h2>
+  <p class="hint">Rule: net 261 issues in COOIS must equal serials consumed that day in IQ09.
+    A −n/+n pair on consecutive days is a reversal (262) — the serial keeps only its last change date.</p>
+  <div class="scroll"><table id="reconTable"></table></div>
+</section>
+
+<section class="card">
+  <h2>Work orders &amp; attribution</h2>
+  <p class="hint">Every order should consume exactly 2 GFFs. <b>Attribution is hybrid</b>: type Contract / Fibre Pair for
+    orders you kitted (you know them from the ASP plan); historical orders can be back-filled from a top-code trace —
+    entries are saved in this browser and can be exported/imported as CSV so nothing is ever retyped.</p>
+  <div class="row">
+    <input class="searchbox" id="orderSearch" placeholder="Filter orders…">
+    <button id="exportMap">Export attribution CSV</button>
+    <button id="importMap">Import attribution CSV</button>
+    <input type="file" id="importFile" accept=".csv,.txt" style="display:none">
+    <span class="hint" id="mapMsg"></span>
+  </div>
+  <div class="scroll"><table id="orderTable"></table></div>
+</section>
+
+<section class="card">
+  <h2>Serial lookup</h2>
+  <p class="hint">Find any GFF serial: its status, consumption date, and the candidate work orders from that day
+    (exact order pairing needs the serial↔material-document link — SER03/OBJK query).</p>
+  <input class="searchbox" id="serialSearch" placeholder="Type a serial number…">
+  <div class="scroll"><table id="serialTable"></table></div>
+</section>
+
+<section class="card">
+  <details>
+    <summary>Rules built in (so you can defend the numbers)</summary>
+    <ul class="hint">
+      <li>Serial status ESTO = in stock; AVLB = consumed (ZPRO'd); ECUS = at customer.</li>
+      <li>For consumed serials, IQ09 "Changed on" = the ZPRO posting date (validated: daily counts reconcile exactly with COOIS net 261s).</li>
+      <li>Movement 261 = issue to order (+1), 262 = reversal (−1). One kitting = one material document = 2 GFFs.</li>
+      <li>GFF material codes are contract-unique; the contract name is read from the IQ09 description.</li>
+      <li>A serial only keeps its <i>last</i> change date, so a reversal moves it to the re-issue day.</li>
+    </ul>
+  </details>
+</section>
+
+</main>
+<div id="tooltip"></div>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const LS = { coois: "amps.coois", iq: "amps.iq09", map: "amps.attribution", theme: "amps.theme" };
+
+/* ---------- theme ---------- */
+const savedTheme = localStorage.getItem(LS.theme);
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+$("themeBtn").onclick = () => {
+  const cur = document.documentElement.dataset.theme ||
+    (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem(LS.theme, next);
+  render();
+};
+
+/* ---------- parsing ---------- */
+function parseDate(s) {
+  if (!s) return null;
+  s = String(s).trim();
+  let m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);      // dd.mm.yyyy
+  if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);                  // yyyy-mm-dd
+  if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+  return null;
+}
+const dkey = d => d ? d.toISOString().slice(0, 10) : "";
+const dfmt = k => k ? k.split("-").reverse().join(".") : "";
+
+function parseCoois(text) {
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.includes("\t")) continue;
+    const p = line.split("\t").map(s => s.trim());
+    // data rows: an all-digit order number in one of the first two cells
+    const oi = p[1] && /^\d{6,}$/.test(p[1]) ? 1 : (p[0] && /^\d{6,}$/.test(p[0]) ? 0 : -1);
+    if (oi < 0) continue;
+    const r = p.slice(oi);
+    // layout: Order Material Qty GoodsMvmt GRnonval MatDoc Item Mvmt DocDate StorLoc Batch D/C Amount Curr PstngDate
+    const mvmt = r.find(x => x === "261" || x === "262");
+    if (!mvmt) continue;
+    const dates = r.filter(x => /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(x));
+    const matdoc = r.find(x => /^49\d{8}$/.test(x)) || "";
+    rows.push({
+      order: r[0], material: r[1], matdoc, mvmt,
+      date: parseDate(dates[dates.length - 1] || dates[0]),
+      net: mvmt === "261" ? 1 : -1
+    });
+  }
+  return rows.filter(r => r.date);
+}
+
+function parseIq(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.includes("\t"));
+  if (!lines.length) return [];
+  let hdrIdx = lines.findIndex(l => /serial\s*number/i.test(l));
+  if (hdrIdx < 0) hdrIdx = 0;
+  const hdr = lines[hdrIdx].split("\t").map(s => s.trim().toLowerCase());
+  const col = re => hdr.findIndex(h => re.test(h));
+  const ci = {
+    material: col(/^material$/), desc: col(/^desc/), serial: col(/serial/),
+    status: col(/status/), equip: col(/^equip(ment)?$/), created: col(/created on/),
+    changed: col(/changed on/), stloc: col(/stor/)
+  };
+  const rows = [];
+  for (const line of lines.slice(hdrIdx + 1)) {
+    const p = line.split("\t").map(s => s.trim());
+    const serial = ci.serial >= 0 ? p[ci.serial] : "";
+    if (!serial || /serial/i.test(serial)) continue;
+    rows.push({
+      material: ci.material >= 0 ? p[ci.material] : "",
+      desc: ci.desc >= 0 ? p[ci.desc] : "",
+      serial,
+      status: ci.status >= 0 ? p[ci.status] : "",
+      equip: ci.equip >= 0 ? p[ci.equip] : "",
+      changed: parseDate(ci.changed >= 0 ? p[ci.changed] : "")
+    });
+  }
+  return rows;
+}
+
+/* ---------- model ---------- */
+let M = null;
+function build() {
+  const coois = parseCoois($("cooisIn").value);
+  const iq = parseIq($("iqIn").value);
+  const attribution = JSON.parse(localStorage.getItem(LS.map) || "{}");
+
+  const consumed = iq.filter(r => r.status && r.status !== "ESTO");
+  const inStock = iq.filter(r => r.status === "ESTO");
+  // contract name = first word of GFF description (contract-unique GFF rule)
+  const contractOf = {};
+  for (const r of iq) if (r.desc && r.material && !contractOf[r.material])
+    contractOf[r.material] = r.desc.split(/\s+/)[0];
+
+  const cooisByDate = {}, ordersByDate = {}, orders = {};
+  for (const r of coois) {
+    const k = dkey(r.date);
+    cooisByDate[k] = (cooisByDate[k] || 0) + r.net;
+    (ordersByDate[k] = ordersByDate[k] || new Set()).add(r.order);
+    const o = orders[r.order] = orders[r.order] || { order: r.order, net: 0, rows: 0, dates: new Set(), matdocs: new Set(), material: r.material };
+    o.net += r.net; o.rows++; o.dates.add(k); o.matdocs.add(r.matdoc);
+  }
+  const consByDate = {};
+  for (const r of consumed) {
+    const k = dkey(r.changed);
+    if (k) (consByDate[k] = consByDate[k] || []).push(r);
+  }
+  return { coois, iq, consumed, inStock, contractOf, cooisByDate, ordersByDate, orders, consByDate, attribution };
+}
+
+/* ---------- render ---------- */
+function tile(v, l, d) {
+  return `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div>${d ? `<div class="d">${d}</div>` : ""}</div>`;
+}
+function render() {
+  M = build();
+  const nOrders = Object.keys(M.orders).length;
+  const attributed = Object.values(M.orders).filter(o => M.attribution[o.order]).length;
+  const dates = Object.keys(M.cooisByDate);
+  const exact = dates.filter(k => (M.consByDate[k] || []).length === M.cooisByDate[k]).length;
+  const contracts = [...new Set(Object.values(M.contractOf))].join(", ") || "—";
+  $("tiles").innerHTML =
+    tile(M.inStock.length.toLocaleString(), "GFF serials in stock (ESTO)",
+      `${Math.floor(M.inStock.length / 2).toLocaleString()} AMPs kittable`) +
+    tile(M.consumed.length.toLocaleString(), "GFF serials consumed (ZPRO'd)", `contract: ${contracts}`) +
+    tile(nOrders.toLocaleString(), "work orders in COOIS window",
+      nOrders ? `${Math.round(100 * attributed / nOrders)}% attributed` : "") +
+    tile(dates.length ? `${exact}/${dates.length}` : "—", "posting dates reconciled exactly",
+      "COOIS net = serials that day");
+
+  renderChart();
+  renderRecon();
+  renderOrders();
+  renderSerials($("serialSearch").value);
+  $("cooisState").textContent = M.coois.length ? `${M.coois.length} rows` : "empty";
+  $("iqState").textContent = M.iq.length ? `${M.iq.length} serials` : "empty";
+}
+
+function isoWeek(k) {
+  const d = new Date(k + "T00:00:00Z");
+  const t = new Date(d); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const y = t.getUTCFullYear();
+  const w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
+  return `${y}-W${String(w).padStart(2, "0")}`;
+}
+function renderChart() {
+  const byWeek = {};
+  for (const k of Object.keys(M.consByDate)) byWeek[isoWeek(k)] = (byWeek[isoWeek(k)] || 0) + M.consByDate[k].length;
+  const weeks = Object.keys(byWeek).sort();
+  const el = $("chart");
+  if (!weeks.length) { el.innerHTML = '<p class="hint">Paste the IQ09 export to see consumption.</p>'; return; }
+  const W = Math.max(640, Math.min(1200, el.clientWidth || 900)), H = 220,
+    padL = 36, padB = 34, padT = 12, padR = 8;
+  const max = Math.max(...weeks.map(w => byWeek[w]));
+  const bw = Math.max(3, Math.min(26, (W - padL - padR) / weeks.length - 2));
+  const x = i => padL + (W - padL - padR) * (weeks.length === 1 ? .5 : i / (weeks.length - 1)) - bw / 2;
+  const y = v => padT + (H - padT - padB) * (1 - v / max);
+  const css = getComputedStyle(document.documentElement);
+  const c1 = css.getPropertyValue("--series-1").trim();
+  let s = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px">`;
+  for (const g of [0, .5, 1]) {
+    const gy = padT + (H - padT - padB) * g;
+    s += `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="var(--grid)" stroke-width="1"/>`;
+    s += `<text x="${padL - 6}" y="${gy + 3}" text-anchor="end">${Math.round(max * (1 - g))}</text>`;
+  }
+  weeks.forEach((w, i) => {
+    const v = byWeek[w], bx = x(i), by = y(v), bh = H - padB - by;
+    s += `<rect data-tip="${w}: ${v} serials (${Math.floor(v / 2)} AMPs)" x="${bx}" y="${by}" width="${bw}" height="${Math.max(bh, 1)}" rx="2.5" fill="${c1}"/>`;
+    if (weeks.length <= 16 || i % Math.ceil(weeks.length / 14) === 0)
+      s += `<text x="${bx + bw / 2}" y="${H - padB + 14}" text-anchor="middle" transform="rotate(35 ${bx + bw / 2} ${H - padB + 14})">${w.slice(2)}</text>`;
+  });
+  s += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="var(--baseline)" stroke-width="1"/></svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll("rect[data-tip]").forEach(r => {
+    r.addEventListener("mousemove", e => {
+      const t = $("tooltip");
+      t.textContent = r.dataset.tip; t.style.display = "block";
+      t.style.left = (e.clientX + 12) + "px"; t.style.top = (e.clientY - 10) + "px";
+    });
+    r.addEventListener("mouseleave", () => $("tooltip").style.display = "none");
+  });
+}
+
+function renderRecon() {
+  const keys = [...new Set([...Object.keys(M.cooisByDate), ...Object.keys(M.consByDate)])].sort().reverse();
+  let h = `<tr><th>Date</th><th class="num">Serials consumed</th><th class="num">COOIS net 261</th><th class="num">Orders</th><th>Verdict</th></tr>`;
+  for (const k of keys) {
+    const s = (M.consByDate[k] || []).length, inWin = k in M.cooisByDate,
+      c = inWin ? M.cooisByDate[k] : null,
+      o = M.ordersByDate[k] ? M.ordersByDate[k].size : "";
+    const v = !inWin
+      ? `<span class="st mut"><span class="dot"></span>outside COOIS export</span>`
+      : s === c ? `<span class="st ok"><span class="dot"></span>EXACT MATCH</span>`
+        : `<span class="st warn"><span class="dot"></span>Δ ${s - c} — check reversals</span>`;
+    h += `<tr><td>${dfmt(k)}</td><td class="num">${s}</td><td class="num">${c ?? "—"}</td><td class="num">${o}</td><td>${v}</td></tr>`;
+  }
+  $("reconTable").innerHTML = keys.length ? h : "";
+}
+
+function saveAttr(order, field, value) {
+  const map = JSON.parse(localStorage.getItem(LS.map) || "{}");
+  map[order] = map[order] || {};
+  map[order][field] = value.trim();
+  if (!map[order].contract && !map[order].fp) delete map[order];
+  localStorage.setItem(LS.map, JSON.stringify(map));
+  M.attribution = map;
+}
+function renderOrders() {
+  const q = $("orderSearch").value.trim().toLowerCase();
+  const list = Object.values(M.orders).sort((a, b) => b.order.localeCompare(a.order))
+    .filter(o => !q || o.order.includes(q) ||
+      JSON.stringify(M.attribution[o.order] || {}).toLowerCase().includes(q));
+  let h = `<tr><th>Order</th><th>Date(s)</th><th class="num">Net GFFs</th><th>Check</th><th>Contract</th><th>Fibre pair</th><th>Source</th></tr>`;
+  for (const o of list.slice(0, 400)) {
+    const a = M.attribution[o.order] || {};
+    const chk = o.net === 2
+      ? `<span class="st ok"><span class="dot"></span>2 GFF ✓${o.rows > 2 ? " (rework)" : ""}</span>`
+      : `<span class="st warn"><span class="dot"></span>net ${o.net}</span>`;
+    const auto = M.contractOf[o.material] || "";
+    h += `<tr><td>${o.order}</td><td>${[...o.dates].map(dfmt).join(", ")}</td><td class="num">${o.net}</td><td>${chk}</td>
+      <td><input class="attr ${a.contract ? "filled" : ""}" data-o="${o.order}" data-f="contract" value="${a.contract || ""}" placeholder="${auto}"></td>
+      <td><input class="attr ${a.fp ? "filled" : ""}" data-o="${o.order}" data-f="fp" value="${a.fp || ""}" placeholder="e.g. FP3"></td>
+      <td class="hint">${a.contract || a.fp ? "manual" : auto ? "GFF code → " + auto : ""}</td></tr>`;
+  }
+  $("orderTable").innerHTML = h;
+  if (list.length > 400) $("orderTable").innerHTML += `<tr><td colspan="7" class="hint">…${list.length - 400} more (use the filter)</td></tr>`;
+  $("orderTable").querySelectorAll("input.attr").forEach(inp =>
+    inp.addEventListener("change", () => { saveAttr(inp.dataset.o, inp.dataset.f, inp.value); setTimeout(renderOrders, 0); }));
+}
+
+function renderSerials(q) {
+  q = (q || "").trim().toLowerCase();
+  const rows = M.consumed.concat(M.inStock)
+    .filter(r => !q || r.serial.toLowerCase().includes(q))
+    .slice(0, 250);
+  let h = `<tr><th>Serial</th><th>Status</th><th>Consumed on</th><th>Contract</th><th>Candidate orders that day</th></tr>`;
+  for (const r of rows) {
+    const k = dkey(r.changed);
+    const cand = r.status === "ESTO" ? "" :
+      M.ordersByDate[k] ? (M.ordersByDate[k].size <= 4 ? [...M.ordersByDate[k]].join(", ")
+        : `${M.ordersByDate[k].size} orders on ${dfmt(k)}`) : "outside COOIS export";
+    const st = r.status === "ESTO" ? `<span class="st mut"><span class="dot"></span>in stock</span>`
+      : r.status === "ECUS" ? `<span class="st ok"><span class="dot"></span>at customer</span>`
+        : `<span class="st ok"><span class="dot"></span>consumed</span>`;
+    h += `<tr><td>${r.serial}</td><td>${st}</td><td>${r.status === "ESTO" ? "—" : dfmt(k)}</td>
+      <td>${M.contractOf[r.material] || ""}</td><td>${cand}</td></tr>`;
+  }
+  $("serialTable").innerHTML = rows.length ? h : "";
+}
+
+/* ---------- attribution CSV ---------- */
+$("exportMap").onclick = () => {
+  const map = JSON.parse(localStorage.getItem(LS.map) || "{}");
+  const lines = ["order,contract,fibre_pair"];
+  for (const [o, a] of Object.entries(map)) lines.push(`${o},${a.contract || ""},${a.fp || ""}`);
+  const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "amps_attribution.csv"; a.click();
+  $("mapMsg").textContent = `${Object.keys(map).length} attributions exported`;
+};
+$("importMap").onclick = () => $("importFile").click();
+$("importFile").onchange = async e => {
+  const text = await e.target.files[0].text();
+  const map = JSON.parse(localStorage.getItem(LS.map) || "{}");
+  let n = 0;
+  for (const line of text.split(/\r?\n/).slice(1)) {
+    const [o, c, fp] = line.split(",").map(s => (s || "").trim());
+    if (o && /^\d+$/.test(o)) { map[o] = { contract: c, fp }; n++; }
+  }
+  localStorage.setItem(LS.map, JSON.stringify(map));
+  $("mapMsg").textContent = `${n} attributions imported`;
+  render();
+};
+
+/* ---------- wiring ---------- */
+$("runBtn").onclick = () => {
+  localStorage.setItem(LS.coois, $("cooisIn").value);
+  localStorage.setItem(LS.iq, $("iqIn").value);
+  render();
+  $("parseMsg").textContent = "Saved in this browser — next visit picks up where you left off.";
+};
+$("clearBtn").onclick = () => {
+  if (!confirm("Clear the saved COOIS/IQ09 pastes? (Attribution entries are kept.)")) return;
+  localStorage.removeItem(LS.coois); localStorage.removeItem(LS.iq);
+  $("cooisIn").value = ""; $("iqIn").value = ""; render();
+};
+$("orderSearch").addEventListener("input", renderOrders);
+$("serialSearch").addEventListener("input", e => renderSerials(e.target.value));
+
+$("cooisIn").value = localStorage.getItem(LS.coois) || "";
+$("iqIn").value = localStorage.getItem(LS.iq) || "";
+render();
+</script>
+</body>
+</html>
