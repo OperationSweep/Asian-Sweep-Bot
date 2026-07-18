@@ -1,8 +1,9 @@
 # AMPS Quarterly Kitting Dashboard
 
-Single-file, offline HTML dashboard (`amps-kitting-dashboard.html`) for tracking
-AMP kitting — planned (ASP) vs kitted (COOIS) — with GFF serial-number
-attribution. Open the file in any browser; no install, no macros, no network.
+Single-file, offline HTML dashboard (`amps-kitting-dashboard.html`) showing
+**planned (ASP) vs kitted (COOIS) AMPs per contract per week**, with
+UNDER / ON TRACK / AHEAD verdicts, repeater-equivalents, and a serial-number
+audit layer. Open the file in any browser; no install, no macros, no network.
 All pasted data stays in the browser (localStorage).
 
 ## Environment constraints (important)
@@ -15,40 +16,45 @@ All pasted data stays in the browser (localStorage).
 
 ## Inputs
 
-1. **COOIS** — List = *Documented Goods Movements*, filtered to the GFF
-   material code(s), wide date range. Export as .XLS (tab-separated text) and
-   paste. Columns used: Order, Material, Mat. Doc., Mvmt Type (261/262),
-   Pstng Date.
-2. **IQ09** — serial list for the same GFF material(s). Open in Excel,
-   select-all, copy, paste. Columns used: Material, Description, Serial number,
-   System status, Equipment, Changed on.
+1. **COOIS** — List = *Documented Goods Movements* over the AMP work orders:
+   movement types 261/262 **and 101/102**, all component materials, wide date
+   range. One export covers all contracts.
+2. **ASP plan** — open in Excel, select-all, copy, paste. Parsed: PROJECT_ID/
+   PROJECT_DESC, ITEM_ID (fibre pairs), PROD_ID (contract digits), Total
+   system, and the weekly matrix (year row + week-number header row after
+   "Planned Qty"; cells = repeaters planned that week).
+3. **IQ09 serial list** (optional) — audit layer for serial lookups.
 
 ## Business rules (validated against real exports, July 2026)
 
-- **AMPS = repeaters × fibre pairs** (e.g. 104 repeaters × 24FP = 2,496 AMPS).
-- Serial status: `ESTO` = in stock · `AVLB` = consumed (ZPRO'd) · `ECUS` = at
-  customer.
-- For consumed serials, IQ09 **"Changed on" = the ZPRO posting date**.
-  Validation: on every COOIS posting date, net 261 issues = serials changed
-  that day (92=92, 94=94, 48=48, 48=48, 96=96 across the test window).
-- **One kitting = one material document = exactly 2 GFF serials per work
-  order** ("always ×2").
-- Movement 262 is a reversal; a serial only keeps its *last* change date, so a
-  reversal shows as −n on the original day and +n on the re-issue day
-  (observed on order 100851041).
-- **GFF material codes are contract-unique** (contract name is the first word
-  of the GFF description, e.g. "KOHOKU GFF 37.7nm/…"). GFF codes are NOT
-  unique per fibre pair.
-- Serial → contract is exact. Serial → specific work order is narrowed to the
-  posting day's order set; exact pairing requires the serial↔material-document
-  link (SER03/OBJK — needs an IT-built query, not available in the web viewer).
+- **1 work order = 1 AMP. A repeater needs FP-count AMPs** (24FP repeater =
+  24 AMP orders). Planned AMPs per week = ASP weekly repeaters × FP.
+- Fibre pairs parse from ITEM_ID: `R512.24REPOPT` → 24FP, `R512/9.19REP` →
+  19FP (verified: Aurora 104×24=2,496; Medusa 5×19=95).
+- **Contract identity = last 3 digits of the 5-digit group** in assembly
+  codes (92YAF00**588**AAA → 588 = FIG) and ASP PROD_IDs (92ERP24**429**A++ →
+  429 = Aurora).
+- AMP order BOM (from real orders): 2× GFF (91CFL…), 2× 92RRA…, 4× CCG,
+  1× PCL; output = 92YAF… assembly received via movement **101** ("built").
+- **GFF variants are contract-unique**; the variant→contract mapping is
+  learned automatically from orders where a GFF and an RRA/YAF code co-occur
+  (validated 100% unambiguous on 10 variants). Known fixed mapping:
+  91CFL00302AFT → 429 Aurora (confirmed by operations; Aurora orders carry no
+  RRA/YAF rows in the export window). AFM → 335 Medusa ("KOHOKU" in GFF
+  descriptions is Medusa's codename).
+- An order counts as **kitted** on its first net-positive GFF issue
+  (261 − 262) — the ZPRO posting date. Movement 262 reverses; a serial keeps
+  only its last change date.
+- Serial statuses (IQ09): `ESTO` in stock · `AVLB` consumed (ZPRO'd) ·
+  `ECUS` at customer; consumed serial's "Changed on" = ZPRO posting date
+  (validated: daily counts reconcile exactly with COOIS net 261s).
+- Verdict = cumulative kitted vs cumulative planned up to the current week,
+  ±5% tolerance. The plan matrix only covers the weeks present in the ASP
+  export, so contracts kitted before the matrix window read as AHEAD.
 
-## Attribution model (hybrid)
+## Contract mapping
 
-- **Historical orders**: back-fill by tracing where each work order's output
-  was consumed upward (top-code trace via old transactions), or import an
-  attribution CSV.
-- **New kitting**: entered manually at kitting time — the operator knows the
-  contract/fibre pair from the ASP plan. Entries persist in the browser and
-  export/import as `amps_attribution.csv` (columns: order, contract,
-  fibre_pair) so they survive browser changes and can be shared.
+Contract digits found in the data get names automatically from ASP PROD_IDs;
+the "Contract names & fibre pairs" editor fills the gaps (names for 438, 517,
+521, 527, 627, 746; FP overrides for mixed-FP contracts). Entries persist in
+the browser.

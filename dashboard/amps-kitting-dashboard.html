@@ -10,7 +10,7 @@
   --surface-1: #fcfcfb; --page: #f9f9f7;
   --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
   --grid: #e1e0d9; --baseline: #c3c2b7; --ring: rgba(11,11,11,0.10);
-  --series-1: #2a78d6;
+  --series-1: #2a78d6; --series-2: #008300;
   --status-good: #0ca30c; --status-warn: #fab219; --status-serious: #ec835a; --status-crit: #d03b3b;
   --good-text: #006300;
 }
@@ -19,7 +19,7 @@
   --surface-1: #1a1a19; --page: #0d0d0d;
   --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
   --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
-  --series-1: #3987e5;
+  --series-1: #3987e5; --series-2: #008300;
   --good-text: #0ca30c;
 }
 @media (prefers-color-scheme: dark) {
@@ -28,37 +28,34 @@
     --surface-1: #1a1a19; --page: #0d0d0d;
     --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
     --grid: #2c2c2a; --baseline: #383835; --ring: rgba(255,255,255,0.10);
-    --series-1: #3987e5;
+    --series-1: #3987e5; --series-2: #008300;
     --good-text: #0ca30c;
   }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--page); color: var(--ink-1);
   font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-  padding: 18px 22px 4px; }
+header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 18px 22px 4px; }
 header h1 { font-size: 19px; margin: 0; }
 header .sub { color: var(--ink-2); font-size: 13px; }
 header button { margin-left: auto; }
-main { padding: 10px 22px 40px; max-width: 1280px; margin: 0 auto; }
+main { padding: 10px 22px 40px; max-width: 1320px; margin: 0 auto; }
 section.card { background: var(--surface-1); border: 1px solid var(--ring);
   border-radius: 10px; padding: 16px 18px; margin: 14px 0; overflow-x: auto; }
 h2 { font-size: 15px; margin: 0 0 4px; }
 .hint { color: var(--ink-2); font-size: 12.5px; margin: 2px 0 10px; }
-textarea { width: 100%; min-height: 110px; background: var(--page); color: var(--ink-1);
+textarea { width: 100%; min-height: 96px; background: var(--page); color: var(--ink-1);
   border: 1px dashed var(--baseline); border-radius: 8px; padding: 8px;
   font: 12px/1.4 ui-monospace, monospace; }
-button { background: var(--surface-1); color: var(--ink-1); border: 1px solid var(--baseline);
+button, select { background: var(--surface-1); color: var(--ink-1); border: 1px solid var(--baseline);
   border-radius: 7px; padding: 6px 12px; font: 13px system-ui, sans-serif; cursor: pointer; }
 button:hover { border-color: var(--ink-2); }
 button.primary { background: var(--series-1); border-color: var(--series-1); color: #fff; }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 .badge { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px;
   border: 1px solid var(--ring); color: var(--ink-2); }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
-  gap: 12px; margin: 14px 0; }
-.tile { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 10px;
-  padding: 12px 14px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px; margin: 14px 0; }
+.tile { background: var(--surface-1); border: 1px solid var(--ring); border-radius: 10px; padding: 12px 14px; }
 .tile .v { font-size: 26px; font-weight: 650; }
 .tile .l { color: var(--ink-2); font-size: 12px; margin-top: 2px; }
 .tile .d { font-size: 11.5px; margin-top: 2px; color: var(--ink-muted); }
@@ -68,20 +65,23 @@ th { text-align: left; color: var(--ink-2); font-weight: 600; padding: 5px 10px 
 td { padding: 4px 10px 4px 0; border-bottom: 1px solid var(--grid);
   font-variant-numeric: tabular-nums; white-space: nowrap; }
 td.num, th.num { text-align: right; }
-.st { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; }
+.st { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; }
 .st .dot { width: 8px; height: 8px; border-radius: 50%; }
 .ok .dot { background: var(--status-good); } .ok { color: var(--good-text); }
 .warn .dot { background: var(--status-serious); } .warn { color: var(--status-serious); }
-.mut .dot { background: var(--ink-muted); } .mut { color: var(--ink-muted); }
-input.attr { width: 120px; background: var(--page); color: var(--ink-1);
+.over .dot { background: var(--series-1); } .over { color: var(--series-1); }
+.mut .dot { background: var(--ink-muted); } .mut { color: var(--ink-muted); font-weight: 400; }
+input.attr { width: 130px; background: var(--page); color: var(--ink-1);
   border: 1px solid var(--baseline); border-radius: 6px; padding: 3px 6px; font-size: 12px; }
 input.attr.filled { border-color: var(--status-good); }
 #tooltip { position: fixed; pointer-events: none; background: var(--surface-1);
   border: 1px solid var(--ring); border-radius: 7px; padding: 6px 9px; font-size: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,.14); display: none; z-index: 10; }
 .searchbox { background: var(--page); color: var(--ink-1); border: 1px solid var(--baseline);
-  border-radius: 7px; padding: 5px 9px; font-size: 13px; width: 220px; }
+  border-radius: 7px; padding: 5px 9px; font-size: 13px; width: 200px; }
 svg text { fill: var(--ink-muted); font-size: 10.5px; }
+.legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); margin: 4px 0 2px; }
+.legend .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 .scroll { max-height: 420px; overflow-y: auto; }
 </style>
@@ -89,7 +89,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 <body>
 <header>
   <h1>AMPS Quarterly Kitting Dashboard</h1>
-  <span class="sub">Store to Production Operations &middot; Greenwich &middot; paste two exports, everything else is automatic</span>
+  <span class="sub">Planned (ASP) vs Kitted (COOIS) &middot; Store to Production Operations &middot; Greenwich</span>
   <button id="themeBtn" title="Toggle light/dark">◐ theme</button>
 </header>
 <main>
@@ -97,19 +97,23 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 <section class="card">
   <h2>1 · Paste your exports</h2>
   <p class="hint">
-    <b>COOIS</b>: List = <i>Documented Goods Movements</i>, filtered to your GFF material(s) — open the saved .XLS in
-    a text editor or Excel, select all, copy, paste below.&ensp;
-    <b>IQ09</b>: serial list for the same GFF material(s) — open the export in Excel, select all (Ctrl+A), copy, paste below.
-    Data is kept in this browser only (nothing is uploaded anywhere).
+    <b>COOIS</b>: List = <i>Documented Goods Movements</i> over the AMP orders — include movement types 261, 262
+    <b>and 101/102</b>, all component materials, wide date range. One export covers all contracts.&ensp;
+    <b>ASP</b>: open the ASP plan in Excel, select all (Ctrl+A), copy, paste.&ensp;
+    Everything stays in this browser — nothing is uploaded.
   </p>
   <div class="row" style="align-items:flex-start">
-    <div style="flex:1; min-width:300px">
-      <div class="hint">COOIS — Documented Goods Movements <span id="cooisState" class="badge">empty</span></div>
+    <div style="flex:1.1; min-width:300px">
+      <div class="hint">COOIS — goods movements <span id="cooisState" class="badge">empty</span></div>
       <textarea id="cooisIn" placeholder="Paste COOIS export here…"></textarea>
     </div>
     <div style="flex:1; min-width:300px">
-      <div class="hint">IQ09 — Serial number list <span id="iqState" class="badge">empty</span></div>
-      <textarea id="iqIn" placeholder="Paste IQ09 export here…"></textarea>
+      <div class="hint">ASP — demand plan <span id="aspState" class="badge">empty</span></div>
+      <textarea id="aspIn" placeholder="Paste ASP plan here…"></textarea>
+    </div>
+    <div style="flex:.9; min-width:260px">
+      <div class="hint">IQ09 serial list — optional audit layer <span id="iqState" class="badge">empty</span></div>
+      <textarea id="iqIn" placeholder="Optional: paste IQ09 export…"></textarea>
     </div>
   </div>
   <div class="row">
@@ -122,37 +126,45 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 <div class="tiles" id="tiles"></div>
 
 <section class="card">
-  <h2>Weekly consumption — GFF serials ZPRO'd per week</h2>
-  <p class="hint">From IQ09: serials whose status left stock (AVLB/ECUS), grouped by their change date. Hover a bar for detail.</p>
+  <h2>Planned vs kitted — weekly AMPS</h2>
+  <div class="row">
+    <select id="contractSel"></select>
+    <select id="rangeSel">
+      <option value="26">Last 26 weeks + next 8</option>
+      <option value="52" selected>This year</option>
+      <option value="all">Everything</option>
+    </select>
+  </div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--series-1)"></span>Kitted (COOIS)</span>
+    <span><span class="sw" style="background:var(--series-2)"></span>Planned (ASP × fibre pairs)</span>
+  </div>
   <div id="chart"></div>
 </section>
 
 <section class="card">
-  <h2>Date reconciliation — COOIS vs serial history</h2>
-  <p class="hint">Rule: net 261 issues in COOIS must equal serials consumed that day in IQ09.
-    A −n/+n pair on consecutive days is a reversal (262) — the serial keeps only its last change date.</p>
-  <div class="scroll"><table id="reconTable"></table></div>
+  <h2>Contract scoreboard</h2>
+  <p class="hint">Verdict compares cumulative kitted vs cumulative plan up to the current week (±5% = on track).
+    Repeaters = AMPs ÷ fibre pairs. "Built" counts AMP assembly receipts (101).</p>
+  <div class="scroll"><table id="contractTable"></table></div>
 </section>
 
 <section class="card">
-  <h2>Work orders &amp; attribution</h2>
-  <p class="hint">Every order should consume exactly 2 GFFs. <b>Attribution is hybrid</b>: type Contract / Fibre Pair for
-    orders you kitted (you know them from the ASP plan); historical orders can be back-filled from a top-code trace —
-    entries are saved in this browser and can be exported/imported as CSV so nothing is ever retyped.</p>
-  <div class="row">
-    <input class="searchbox" id="orderSearch" placeholder="Filter orders…">
-    <button id="exportMap">Export attribution CSV</button>
-    <button id="importMap">Import attribution CSV</button>
-    <input type="file" id="importFile" accept=".csv,.txt" style="display:none">
-    <span class="hint" id="mapMsg"></span>
-  </div>
-  <div class="scroll"><table id="orderTable"></table></div>
+  <h2>Contract names &amp; fibre pairs</h2>
+  <p class="hint">Contract digits are read automatically from the assembly/RRA codes (last 3 of the 5-digit group);
+    GFF-only orders are attributed by the GFF-variant mapping learned from the data itself. Fill in a name/FP where
+    the plan couldn't supply one — saved in this browser.</p>
+  <div class="scroll"><table id="mapTable"></table></div>
 </section>
 
 <section class="card">
-  <h2>Serial lookup</h2>
-  <p class="hint">Find any GFF serial: its status, consumption date, and the candidate work orders from that day
-    (exact order pairing needs the serial↔material-document link — SER03/OBJK query).</p>
+  <h2>Unattributed orders</h2>
+  <p class="hint">Orders whose contract couldn't be derived. Assign a GFF variant to a contract above and refresh.</p>
+  <div id="unattrib" class="hint"></div>
+</section>
+
+<section class="card">
+  <h2>Serial lookup <span class="badge">audit layer — needs IQ09 paste</span></h2>
   <input class="searchbox" id="serialSearch" placeholder="Type a serial number…">
   <div class="scroll"><table id="serialTable"></table></div>
 </section>
@@ -161,11 +173,13 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   <details>
     <summary>Rules built in (so you can defend the numbers)</summary>
     <ul class="hint">
-      <li>Serial status ESTO = in stock; AVLB = consumed (ZPRO'd); ECUS = at customer.</li>
-      <li>For consumed serials, IQ09 "Changed on" = the ZPRO posting date (validated: daily counts reconcile exactly with COOIS net 261s).</li>
-      <li>Movement 261 = issue to order (+1), 262 = reversal (−1). One kitting = one material document = 2 GFFs.</li>
-      <li>GFF material codes are contract-unique; the contract name is read from the IQ09 description.</li>
-      <li>A serial only keeps its <i>last</i> change date, so a reversal moves it to the re-issue day.</li>
+      <li>1 work order = 1 AMP. A repeater needs FP-count AMPs (24FP repeater = 24 AMP orders).</li>
+      <li>Planned AMPs per week = ASP weekly repeater quantity × fibre pairs (FP parsed from ITEM_ID, e.g. R512.<b>24</b>REPOPT).</li>
+      <li>An order counts as kitted on its first net-positive GFF issue (261 minus 262) — the ZPRO posting date.</li>
+      <li>Movement 101 on the 92YAF… assembly = AMP built (102 = reversal).</li>
+      <li>Contract = last 3 digits of the 5-digit group in assembly/RRA codes; ASP links via PROD_ID digits.</li>
+      <li>GFF variants are contract-unique; the variant→contract mapping is learned from orders where both appear.</li>
+      <li>Serial statuses (IQ09): ESTO = stock, AVLB = consumed, ECUS = at customer; "Changed on" = consumption date.</li>
     </ul>
   </details>
 </section>
@@ -175,56 +189,103 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 <script>
 "use strict";
 const $ = id => document.getElementById(id);
-const LS = { coois: "amps.coois", iq: "amps.iq09", map: "amps.attribution", theme: "amps.theme" };
+const LS = { coois: "amps.coois2", asp: "amps.asp", iq: "amps.iq09", cmap: "amps.contractmap", theme: "amps.theme" };
+// Defaults confirmed with operations: GFF 91CFL00302AFT belongs to Aurora (contract digits 429).
+const DEFAULT_GFF_MAP = { "91CFL00302AFT": "429" };
+const DEFAULT_NAMES = { "429": "Aurora", "295": "Anel Cam", "335": "Medusa", "588": "FIG" };
 
-/* ---------- theme ---------- */
 const savedTheme = localStorage.getItem(LS.theme);
 if (savedTheme) document.documentElement.dataset.theme = savedTheme;
 $("themeBtn").onclick = () => {
   const cur = document.documentElement.dataset.theme ||
     (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  const next = cur === "dark" ? "light" : "dark";
-  document.documentElement.dataset.theme = next;
-  localStorage.setItem(LS.theme, next);
+  document.documentElement.dataset.theme = cur === "dark" ? "light" : "dark";
+  localStorage.setItem(LS.theme, document.documentElement.dataset.theme);
   render();
 };
 
-/* ---------- parsing ---------- */
+/* ---------- date helpers ---------- */
 function parseDate(s) {
   if (!s) return null;
   s = String(s).trim();
-  let m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);      // dd.mm.yyyy
+  let m = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);
   if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
-  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);                  // yyyy-mm-dd
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (m) return new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
   return null;
 }
-const dkey = d => d ? d.toISOString().slice(0, 10) : "";
-const dfmt = k => k ? k.split("-").reverse().join(".") : "";
+function isoWeek(d) {
+  const t = new Date(d); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const y = t.getUTCFullYear();
+  const w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
+  return `${y}-W${String(w).padStart(2, "0")}`;
+}
+const wkey = (y, w) => `${y}-W${String(w).padStart(2, "0")}`;
+const thisWeek = isoWeek(new Date());
 
+/* ---------- COOIS parsing ---------- */
+const fam = m => m.slice(2, 5);            // CFL / CCG / PCL / RRA / YAF …
+function digitsOf(m) {
+  const g = (m.slice(5).match(/\d{5}/) || [])[0];
+  return g ? g.slice(-3) : null;
+}
 function parseCoois(text) {
   const rows = [];
   for (const line of text.split(/\r?\n/)) {
     if (!line.includes("\t")) continue;
     const p = line.split("\t").map(s => s.trim());
-    // data rows: an all-digit order number in one of the first two cells
     const oi = p[1] && /^\d{6,}$/.test(p[1]) ? 1 : (p[0] && /^\d{6,}$/.test(p[0]) ? 0 : -1);
     if (oi < 0) continue;
     const r = p.slice(oi);
-    // layout: Order Material Qty GoodsMvmt GRnonval MatDoc Item Mvmt DocDate StorLoc Batch D/C Amount Curr PstngDate
-    const mvmt = r.find(x => x === "261" || x === "262");
+    const mvmt = r.find(x => ["261", "262", "101", "102"].includes(x));
     if (!mvmt) continue;
     const dates = r.filter(x => /^\d{1,2}\.\d{1,2}\.\d{4}$/.test(x));
-    const matdoc = r.find(x => /^49\d{8}$/.test(x)) || "";
-    rows.push({
-      order: r[0], material: r[1], matdoc, mvmt,
-      date: parseDate(dates[dates.length - 1] || dates[0]),
-      net: mvmt === "261" ? 1 : -1
-    });
+    rows.push({ order: r[0], material: r[1], mvmt, date: parseDate(dates[dates.length - 1] || dates[0]) });
   }
-  return rows.filter(r => r.date);
+  return rows.filter(r => r.date && r.material);
 }
 
+/* ---------- ASP parsing (TSV pasted from Excel) ---------- */
+function parseAsp(text) {
+  const lines = text.split(/\r?\n/).map(l => l.split("\t"));
+  const hi = lines.findIndex(l => l.some(c => (c || "").trim() === "PROJECT_ID"));
+  if (hi < 0) return { rows: [], weeks: [] };
+  const hdr = lines[hi].map(c => (c || "").trim());
+  const yrRow = hi > 0 ? lines[hi - 1].map(c => (c || "").trim()) : [];
+  const pq = hdr.indexOf("Planned Qty");
+  const weekCols = [];
+  for (let j = pq + 1; j < hdr.length; j++) {
+    const w = parseInt(hdr[j]), y = parseInt(yrRow[j]);
+    if (w >= 1 && w <= 53 && y >= 2000) weekCols.push({ j, key: wkey(y, w) });
+  }
+  const col = name => hdr.indexOf(name);
+  const ci = { id: col("PROJECT_ID"), desc: col("PROJECT_DESC"), item: col("ITEM_ID"),
+    prod: col("PROD_ID"), total: col("Total system"), planned: col("Planned Qty"),
+    completed: col("Completed") };
+  const rows = [];
+  for (const l of lines.slice(hi + 1)) {
+    const id = (l[ci.id] || "").trim();
+    if (!id) continue;
+    const item = (l[ci.item] || "").trim();
+    const fpm = item.match(/[./](\d+)REP/);
+    const prod = (l[ci.prod] || "").trim();
+    const dg = (prod.match(/\d{5}/) || [])[0];
+    const weekly = {};
+    for (const { j, key } of weekCols) {
+      const v = parseFloat(l[j]);
+      if (v > 0) weekly[key] = (weekly[key] || 0) + v;
+    }
+    rows.push({
+      id, name: (l[ci.desc] || "").trim(), item, fp: fpm ? +fpm[1] : null,
+      digits: dg ? dg.slice(-3) : null,
+      total: parseFloat(l[ci.total]) || 0, completed: parseFloat(l[ci.completed]) || 0,
+      weekly
+    });
+  }
+  return { rows, weeks: weekCols.map(w => w.key) };
+}
+
+/* ---------- IQ09 parsing (from v1) ---------- */
 function parseIq(text) {
   const lines = text.split(/\r?\n/).filter(l => l.includes("\t"));
   if (!lines.length) return [];
@@ -232,120 +293,200 @@ function parseIq(text) {
   if (hdrIdx < 0) hdrIdx = 0;
   const hdr = lines[hdrIdx].split("\t").map(s => s.trim().toLowerCase());
   const col = re => hdr.findIndex(h => re.test(h));
-  const ci = {
-    material: col(/^material$/), desc: col(/^desc/), serial: col(/serial/),
-    status: col(/status/), equip: col(/^equip(ment)?$/), created: col(/created on/),
-    changed: col(/changed on/), stloc: col(/stor/)
-  };
-  const rows = [];
+  const ci = { material: col(/^material$/), desc: col(/^desc/), serial: col(/serial/),
+    status: col(/status/), changed: col(/changed on/) };
+  const out = [];
   for (const line of lines.slice(hdrIdx + 1)) {
     const p = line.split("\t").map(s => s.trim());
     const serial = ci.serial >= 0 ? p[ci.serial] : "";
     if (!serial || /serial/i.test(serial)) continue;
-    rows.push({
-      material: ci.material >= 0 ? p[ci.material] : "",
-      desc: ci.desc >= 0 ? p[ci.desc] : "",
-      serial,
-      status: ci.status >= 0 ? p[ci.status] : "",
-      equip: ci.equip >= 0 ? p[ci.equip] : "",
-      changed: parseDate(ci.changed >= 0 ? p[ci.changed] : "")
-    });
+    out.push({ material: p[ci.material] || "", desc: p[ci.desc] || "", serial,
+      status: p[ci.status] || "", changed: parseDate(p[ci.changed] || "") });
   }
-  return rows;
+  return out;
 }
 
 /* ---------- model ---------- */
 let M = null;
 function build() {
   const coois = parseCoois($("cooisIn").value);
+  const asp = parseAsp($("aspIn").value);
   const iq = parseIq($("iqIn").value);
-  const attribution = JSON.parse(localStorage.getItem(LS.map) || "{}");
+  const saved = JSON.parse(localStorage.getItem(LS.cmap) || "{}");
+  const cmap = { names: { ...DEFAULT_NAMES, ...(saved.names || {}) },
+                 fps: { ...(saved.fps || {}) },
+                 gff: { ...DEFAULT_GFF_MAP, ...(saved.gff || {}) } };
 
-  const consumed = iq.filter(r => r.status && r.status !== "ESTO");
-  const inStock = iq.filter(r => r.status === "ESTO");
-  // contract name = first word of GFF description (contract-unique GFF rule)
-  const contractOf = {};
-  for (const r of iq) if (r.desc && r.material && !contractOf[r.material])
-    contractOf[r.material] = r.desc.split(/\s+/)[0];
+  // group COOIS rows by order
+  const byOrder = {};
+  for (const r of coois) (byOrder[r.order] = byOrder[r.order] || []).push(r);
 
-  const cooisByDate = {}, ordersByDate = {}, orders = {};
-  for (const r of coois) {
-    const k = dkey(r.date);
-    cooisByDate[k] = (cooisByDate[k] || 0) + r.net;
-    (ordersByDate[k] = ordersByDate[k] || new Set()).add(r.order);
-    const o = orders[r.order] = orders[r.order] || { order: r.order, net: 0, rows: 0, dates: new Set(), matdocs: new Set(), material: r.material };
-    o.net += r.net; o.rows++; o.dates.add(k); o.matdocs.add(r.matdoc);
+  // learn GFF variant -> contract digits from co-occurrence
+  const votes = {};
+  for (const rows of Object.values(byOrder)) {
+    const dg = new Set(rows.map(r => ["RRA", "YAF"].includes(fam(r.material)) ? digitsOf(r.material) : null).filter(Boolean));
+    if (dg.size !== 1) continue;
+    const d = [...dg][0];
+    for (const r of rows) if (fam(r.material) === "CFL")
+      ((votes[r.material] = votes[r.material] || {})[d] = (votes[r.material][d] || 0) + 1);
   }
-  const consByDate = {};
-  for (const r of consumed) {
-    const k = dkey(r.changed);
-    if (k) (consByDate[k] = consByDate[k] || []).push(r);
+  const gffMap = { ...cmap.gff };
+  for (const [g, v] of Object.entries(votes)) {
+    const top = Object.entries(v).sort((a, b) => b[1] - a[1])[0];
+    if (!(g in gffMap)) gffMap[g] = top[0];
   }
-  return { coois, iq, consumed, inStock, contractOf, cooisByDate, ordersByDate, orders, consByDate, attribution };
+
+  // per-order: contract, kitted week, built week
+  const orders = [], unattributed = [];
+  for (const [order, rows] of Object.entries(byOrder)) {
+    const dg = new Set(rows.map(r => ["RRA", "YAF"].includes(fam(r.material)) ? digitsOf(r.material) : null).filter(Boolean));
+    let contract = dg.size === 1 ? [...dg][0] : null;
+    if (!contract) {
+      const viaGff = new Set(rows.filter(r => fam(r.material) === "CFL").map(r => gffMap[r.material]).filter(Boolean));
+      if (viaGff.size === 1) contract = [...viaGff][0];
+    }
+    // kitted = first GFF issue date with positive net; fallback: first 261 of any component
+    const gffNet = rows.filter(r => fam(r.material) === "CFL")
+      .reduce((n, r) => n + (r.mvmt === "261" ? 1 : r.mvmt === "262" ? -1 : 0), 0);
+    const issueDates = rows.filter(r => r.mvmt === "261").map(r => r.date).sort((a, b) => a - b);
+    const kittedDate = gffNet > 0 || (gffNet === 0 && !rows.some(r => fam(r.material) === "CFL"))
+      ? issueDates[0] : null;
+    const builtNet = rows.filter(r => fam(r.material) === "YAF")
+      .reduce((n, r) => n + (r.mvmt === "101" ? 1 : r.mvmt === "102" ? -1 : 0), 0);
+    const builtDate = builtNet > 0
+      ? rows.filter(r => r.mvmt === "101" && fam(r.material) === "YAF").map(r => r.date).sort((a, b) => a - b)[0]
+      : null;
+    const o = { order, contract, kittedWeek: kittedDate ? isoWeek(kittedDate) : null,
+                builtWeek: builtDate ? isoWeek(builtDate) : null,
+                gffs: [...new Set(rows.filter(r => fam(r.material) === "CFL").map(r => r.material))] };
+    orders.push(o);
+    if (!contract) unattributed.push(o);
+  }
+
+  // ASP: aggregate per contract identity (digits when known, else name)
+  const planByC = {};
+  const nameByDigits = { ...cmap.names };
+  for (const r of asp.rows) if (r.digits && r.name && !nameByDigits[r.digits]) nameByDigits[r.digits] = r.name;
+  // second pass: rows without digits attach by name matching a known contract name
+  const digitsByName = {};
+  for (const [d, n] of Object.entries(nameByDigits)) digitsByName[n.toLowerCase()] = d;
+  for (const r of asp.rows) {
+    const key = r.digits || digitsByName[r.name.toLowerCase()] || "name:" + r.name;
+    const p = planByC[key] = planByC[key] || { name: r.name, fp: r.fp, totalReps: 0, totalAmps: 0, completedReps: 0, weeklyAmps: {}, fpSet: new Set() };
+    if (r.fp) p.fpSet.add(r.fp);
+    p.totalReps += r.total; p.completedReps += r.completed;
+    if (r.fp) p.totalAmps += r.total * r.fp;
+    for (const [w, q] of Object.entries(r.weekly)) if (r.fp) p.weeklyAmps[w] = (p.weeklyAmps[w] || 0) + q * r.fp;
+  }
+
+  // actuals per contract per week
+  const kittedByC = {};
+  for (const o of orders) {
+    if (!o.contract) continue;
+    const k = kittedByC[o.contract] = kittedByC[o.contract] || { kitted: {}, built: {}, total: 0, builtTotal: 0 };
+    if (o.kittedWeek) { k.kitted[o.kittedWeek] = (k.kitted[o.kittedWeek] || 0) + 1; k.total++; }
+    if (o.builtWeek) { k.built[o.builtWeek] = (k.built[o.builtWeek] || 0) + 1; k.builtTotal++; }
+  }
+
+  // unified contract list
+  const keys = new Set([...Object.keys(kittedByC), ...Object.keys(planByC)]);
+  const contracts = [];
+  for (const key of keys) {
+    const plan = planByC[key];
+    const act = kittedByC[key] || { kitted: {}, built: {}, total: 0, builtTotal: 0 };
+    const fp = +(cmap.fps[key]) || (plan && plan.fpSet.size === 1 ? [...plan.fpSet][0] : null);
+    contracts.push({
+      key, digits: key.startsWith("name:") ? null : key,
+      name: nameByDigits[key] || plan?.name || "",
+      fp, plan, act
+    });
+  }
+  contracts.sort((a, b) => (b.act.total - a.act.total) || a.key.localeCompare(b.key));
+  return { coois, orders, unattributed, contracts, gffMap, cmap, iq, aspWeeks: asp.weeks, aspRows: asp.rows.length };
 }
 
-/* ---------- render ---------- */
+/* ---------- rendering ---------- */
 function tile(v, l, d) {
   return `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div>${d ? `<div class="d">${d}</div>` : ""}</div>`;
 }
+function cumTo(map, week) {
+  return Object.entries(map).reduce((s, [w, v]) => w <= week ? s + v : s, 0);
+}
+function verdict(c) {
+  if (!c.plan || !c.plan.totalAmps) return null;
+  const p = cumTo(c.plan.weeklyAmps, thisWeek), k = cumTo(c.act.kitted, thisWeek);
+  if (p === 0 && k === 0) return "idle";
+  if (p === 0) return "over";
+  const r = k / p;
+  return r < 0.95 ? "under" : r > 1.05 ? "over" : "ok";
+}
 function render() {
   M = build();
-  const nOrders = Object.keys(M.orders).length;
-  const attributed = Object.values(M.orders).filter(o => M.attribution[o.order]).length;
-  const dates = Object.keys(M.cooisByDate);
-  const exact = dates.filter(k => (M.consByDate[k] || []).length === M.cooisByDate[k]).length;
-  const contracts = [...new Set(Object.values(M.contractOf))].join(", ") || "—";
+  const kittedTotal = M.orders.filter(o => o.kittedWeek).length;
+  const kittedThisWeek = M.orders.filter(o => o.kittedWeek === thisWeek).length;
+  const plannedThisWeek = M.contracts.reduce((s, c) => s + (c.plan?.weeklyAmps[thisWeek] || 0), 0);
+  const vs = M.contracts.map(verdict).filter(Boolean);
   $("tiles").innerHTML =
-    tile(M.inStock.length.toLocaleString(), "GFF serials in stock (ESTO)",
-      `${Math.floor(M.inStock.length / 2).toLocaleString()} AMPs kittable`) +
-    tile(M.consumed.length.toLocaleString(), "GFF serials consumed (ZPRO'd)", `contract: ${contracts}`) +
-    tile(nOrders.toLocaleString(), "work orders in COOIS window",
-      nOrders ? `${Math.round(100 * attributed / nOrders)}% attributed` : "") +
-    tile(dates.length ? `${exact}/${dates.length}` : "—", "posting dates reconciled exactly",
-      "COOIS net = serials that day");
-
-  renderChart();
-  renderRecon();
-  renderOrders();
-  renderSerials($("serialSearch").value);
-  $("cooisState").textContent = M.coois.length ? `${M.coois.length} rows` : "empty";
+    tile(kittedTotal.toLocaleString(), "AMPs kitted (COOIS window)",
+      `${M.orders.filter(o => o.builtWeek).length.toLocaleString()} built (101)`) +
+    tile(`${kittedThisWeek} / ${Math.round(plannedThisWeek)}`, `kitted vs planned — ${thisWeek}`,
+      plannedThisWeek ? `${Math.round(100 * kittedThisWeek / plannedThisWeek)}% of week plan` : "no plan this week") +
+    tile(`${vs.filter(v => v === "ok" || v === "over").length}/${vs.length || "—"}`, "contracts on/ahead of plan",
+      "cumulative to current week") +
+    tile(M.unattributed.length.toLocaleString(), "unattributed orders",
+      M.unattributed.length ? "fix mapping below" : "all orders attributed");
+  renderChart(); renderContracts(); renderMap(); renderUnattrib(); renderSerials($("serialSearch").value);
+  $("cooisState").textContent = M.coois.length ? `${M.coois.length} rows / ${M.orders.length} orders` : "empty";
+  $("aspState").textContent = M.aspRows ? `${M.aspRows} plan lines` : "empty";
   $("iqState").textContent = M.iq.length ? `${M.iq.length} serials` : "empty";
 }
 
-function isoWeek(k) {
-  const d = new Date(k + "T00:00:00Z");
-  const t = new Date(d); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
-  const y = t.getUTCFullYear();
-  const w = Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7);
-  return `${y}-W${String(w).padStart(2, "0")}`;
-}
 function renderChart() {
-  const byWeek = {};
-  for (const k of Object.keys(M.consByDate)) byWeek[isoWeek(k)] = (byWeek[isoWeek(k)] || 0) + M.consByDate[k].length;
-  const weeks = Object.keys(byWeek).sort();
+  const sel = $("contractSel");
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">All contracts</option>` + M.contracts
+    .map(c => `<option value="${c.key}" ${c.key === cur ? "selected" : ""}>${c.name || c.key}${c.digits ? " (" + c.digits + ")" : ""}</option>`).join("");
+  const chosen = M.contracts.filter(c => !sel.value || c.key === sel.value);
+  const kitted = {}, planned = {};
+  for (const c of chosen) {
+    for (const [w, v] of Object.entries(c.act.kitted)) kitted[w] = (kitted[w] || 0) + v;
+    if (c.plan) for (const [w, v] of Object.entries(c.plan.weeklyAmps)) planned[w] = (planned[w] || 0) + v;
+  }
+  let weeks = [...new Set([...Object.keys(kitted), ...Object.keys(planned)])].sort();
+  const range = $("rangeSel").value;
+  if (range === "52") weeks = weeks.filter(w => w.startsWith(thisWeek.slice(0, 4)));
+  else if (range !== "all") {
+    const lo = isoWeek(new Date(Date.now() - 26 * 7 * 864e5)), hi = isoWeek(new Date(Date.now() + 8 * 7 * 864e5));
+    weeks = weeks.filter(w => w >= lo && w <= hi);
+  }
   const el = $("chart");
-  if (!weeks.length) { el.innerHTML = '<p class="hint">Paste the IQ09 export to see consumption.</p>'; return; }
-  const W = Math.max(640, Math.min(1200, el.clientWidth || 900)), H = 220,
-    padL = 36, padB = 34, padT = 12, padR = 8;
-  const max = Math.max(...weeks.map(w => byWeek[w]));
-  const bw = Math.max(3, Math.min(26, (W - padL - padR) / weeks.length - 2));
-  const x = i => padL + (W - padL - padR) * (weeks.length === 1 ? .5 : i / (weeks.length - 1)) - bw / 2;
+  if (!weeks.length) { el.innerHTML = '<p class="hint">No data in this range.</p>'; return; }
+  const W = Math.max(680, Math.min(1240, el.clientWidth || 950)), H = 240, padL = 40, padB = 36, padT = 12, padR = 8;
+  const max = Math.max(1, ...weeks.map(w => Math.max(kitted[w] || 0, planned[w] || 0)));
+  const slot = (W - padL - padR) / weeks.length;
+  const bw = Math.max(2, Math.min(14, (slot - 4) / 2));
   const y = v => padT + (H - padT - padB) * (1 - v / max);
   const css = getComputedStyle(document.documentElement);
-  const c1 = css.getPropertyValue("--series-1").trim();
+  const c1 = css.getPropertyValue("--series-1").trim(), c2 = css.getPropertyValue("--series-2").trim();
   let s = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px">`;
   for (const g of [0, .5, 1]) {
     const gy = padT + (H - padT - padB) * g;
-    s += `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="var(--grid)" stroke-width="1"/>`;
+    s += `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="var(--grid)"/>`;
     s += `<text x="${padL - 6}" y="${gy + 3}" text-anchor="end">${Math.round(max * (1 - g))}</text>`;
   }
   weeks.forEach((w, i) => {
-    const v = byWeek[w], bx = x(i), by = y(v), bh = H - padB - by;
-    s += `<rect data-tip="${w}: ${v} serials (${Math.floor(v / 2)} AMPs)" x="${bx}" y="${by}" width="${bw}" height="${Math.max(bh, 1)}" rx="2.5" fill="${c1}"/>`;
-    if (weeks.length <= 16 || i % Math.ceil(weeks.length / 14) === 0)
-      s += `<text x="${bx + bw / 2}" y="${H - padB + 14}" text-anchor="middle" transform="rotate(35 ${bx + bw / 2} ${H - padB + 14})">${w.slice(2)}</text>`;
+    const x0 = padL + i * slot + (slot - 2 * bw - 2) / 2;
+    const kv = kitted[w] || 0, pv = planned[w] || 0;
+    s += `<rect data-tip="${w} — kitted ${kv}, planned ${Math.round(pv)}" x="${x0}" y="${y(kv)}" width="${bw}" height="${Math.max(H - padB - y(kv), kv ? 1 : 0)}" rx="2" fill="${c1}"/>`;
+    s += `<rect data-tip="${w} — kitted ${kv}, planned ${Math.round(pv)}" x="${x0 + bw + 2}" y="${y(pv)}" width="${bw}" height="${Math.max(H - padB - y(pv), pv ? 1 : 0)}" rx="2" fill="${c2}"/>`;
+    if (weeks.length <= 18 || i % Math.ceil(weeks.length / 16) === 0)
+      s += `<text x="${x0 + bw}" y="${H - padB + 14}" text-anchor="middle" transform="rotate(35 ${x0 + bw} ${H - padB + 14})">${w.slice(2)}</text>`;
   });
-  s += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="var(--baseline)" stroke-width="1"/></svg>`;
+  if (weeks.includes(thisWeek)) {
+    const xi = weeks.indexOf(thisWeek);
+    s += `<line x1="${padL + xi * slot + slot / 2}" y1="${padT}" x2="${padL + xi * slot + slot / 2}" y2="${H - padB}" stroke="var(--baseline)" stroke-dasharray="3 3"/>`;
+  }
+  s += `<line x1="${padL}" y1="${H - padB}" x2="${W - padR}" y2="${H - padB}" stroke="var(--baseline)"/></svg>`;
   el.innerHTML = s;
   el.querySelectorAll("rect[data-tip]").forEach(r => {
     r.addEventListener("mousemove", e => {
@@ -357,113 +498,98 @@ function renderChart() {
   });
 }
 
-function renderRecon() {
-  const keys = [...new Set([...Object.keys(M.cooisByDate), ...Object.keys(M.consByDate)])].sort().reverse();
-  let h = `<tr><th>Date</th><th class="num">Serials consumed</th><th class="num">COOIS net 261</th><th class="num">Orders</th><th>Verdict</th></tr>`;
-  for (const k of keys) {
-    const s = (M.consByDate[k] || []).length, inWin = k in M.cooisByDate,
-      c = inWin ? M.cooisByDate[k] : null,
-      o = M.ordersByDate[k] ? M.ordersByDate[k].size : "";
-    const v = !inWin
-      ? `<span class="st mut"><span class="dot"></span>outside COOIS export</span>`
-      : s === c ? `<span class="st ok"><span class="dot"></span>EXACT MATCH</span>`
-        : `<span class="st warn"><span class="dot"></span>Δ ${s - c} — check reversals</span>`;
-    h += `<tr><td>${dfmt(k)}</td><td class="num">${s}</td><td class="num">${c ?? "—"}</td><td class="num">${o}</td><td>${v}</td></tr>`;
+function renderContracts() {
+  let h = `<tr><th>Contract</th><th class="num">FP</th><th class="num">Plan (reps)</th><th class="num">Plan (AMPs)</th>
+    <th class="num">Kitted (AMPs)</th><th class="num">≈ Reps kitted</th><th class="num">Built</th>
+    <th class="num">% of plan</th><th class="num">This wk plan</th><th class="num">This wk kitted</th><th>Verdict</th></tr>`;
+  for (const c of M.contracts) {
+    const planAmps = c.plan && c.plan.totalAmps ? c.plan.totalAmps : null;
+    const pct = planAmps ? Math.round(100 * c.act.total / planAmps) : null;
+    const v = verdict(c);
+    const badge = v === "ok" ? `<span class="st ok"><span class="dot"></span>ON TRACK</span>`
+      : v === "under" ? `<span class="st warn"><span class="dot"></span>UNDER</span>`
+      : v === "over" ? `<span class="st over"><span class="dot"></span>AHEAD</span>`
+      : v === "idle" ? `<span class="st mut"><span class="dot"></span>not started</span>`
+      : `<span class="st mut"><span class="dot"></span>${c.plan ? "no FP in plan" : "no plan"}</span>`;
+    const fpLabel = c.fp ?? (c.plan && c.plan.fpSet.size > 1 ? "mixed" : "—");
+    h += `<tr><td>${c.name || "?"}${c.digits ? ` <span class="badge">${c.digits}</span>` : ""}</td>
+      <td class="num">${fpLabel}</td>
+      <td class="num">${c.plan ? Math.round(c.plan.totalReps) : "—"}</td>
+      <td class="num">${planAmps ? planAmps.toLocaleString() : "—"}</td>
+      <td class="num">${c.act.total.toLocaleString()}</td>
+      <td class="num">${c.fp && c.act.total ? (c.act.total / c.fp).toFixed(1) : "—"}</td>
+      <td class="num">${c.act.builtTotal || "—"}</td>
+      <td class="num">${pct != null ? pct + "%" : "—"}</td>
+      <td class="num">${c.plan ? Math.round(c.plan.weeklyAmps[thisWeek] || 0) : "—"}</td>
+      <td class="num">${c.act.kitted[thisWeek] || 0}</td>
+      <td>${badge}</td></tr>`;
   }
-  $("reconTable").innerHTML = keys.length ? h : "";
+  $("contractTable").innerHTML = h;
 }
 
-function saveAttr(order, field, value) {
-  const map = JSON.parse(localStorage.getItem(LS.map) || "{}");
-  map[order] = map[order] || {};
-  map[order][field] = value.trim();
-  if (!map[order].contract && !map[order].fp) delete map[order];
-  localStorage.setItem(LS.map, JSON.stringify(map));
-  M.attribution = map;
+function saveCmap(kind, key, value) {
+  const saved = JSON.parse(localStorage.getItem(LS.cmap) || "{}");
+  saved[kind] = saved[kind] || {};
+  if (value.trim()) saved[kind][key] = value.trim(); else delete saved[kind][key];
+  localStorage.setItem(LS.cmap, JSON.stringify(saved));
 }
-function renderOrders() {
-  const q = $("orderSearch").value.trim().toLowerCase();
-  const list = Object.values(M.orders).sort((a, b) => b.order.localeCompare(a.order))
-    .filter(o => !q || o.order.includes(q) ||
-      JSON.stringify(M.attribution[o.order] || {}).toLowerCase().includes(q));
-  let h = `<tr><th>Order</th><th>Date(s)</th><th class="num">Net GFFs</th><th>Check</th><th>Contract</th><th>Fibre pair</th><th>Source</th></tr>`;
-  for (const o of list.slice(0, 400)) {
-    const a = M.attribution[o.order] || {};
-    const chk = o.net === 2
-      ? `<span class="st ok"><span class="dot"></span>2 GFF ✓${o.rows > 2 ? " (rework)" : ""}</span>`
-      : `<span class="st warn"><span class="dot"></span>net ${o.net}</span>`;
-    const auto = M.contractOf[o.material] || "";
-    h += `<tr><td>${o.order}</td><td>${[...o.dates].map(dfmt).join(", ")}</td><td class="num">${o.net}</td><td>${chk}</td>
-      <td><input class="attr ${a.contract ? "filled" : ""}" data-o="${o.order}" data-f="contract" value="${a.contract || ""}" placeholder="${auto}"></td>
-      <td><input class="attr ${a.fp ? "filled" : ""}" data-o="${o.order}" data-f="fp" value="${a.fp || ""}" placeholder="e.g. FP3"></td>
-      <td class="hint">${a.contract || a.fp ? "manual" : auto ? "GFF code → " + auto : ""}</td></tr>`;
+function renderMap() {
+  let h = `<tr><th>Contract digits</th><th>Name</th><th>Fibre pairs (override)</th><th>GFF variants → this contract</th></tr>`;
+  const gffByC = {};
+  for (const [g, d] of Object.entries(M.gffMap)) (gffByC[d] = gffByC[d] || []).push(g);
+  const digitsSeen = [...new Set(M.contracts.filter(c => c.digits).map(c => c.digits))];
+  for (const d of digitsSeen.sort()) {
+    const c = M.contracts.find(x => x.key === d);
+    h += `<tr><td><b>${d}</b></td>
+      <td><input class="attr ${c?.name ? "filled" : ""}" data-k="names" data-key="${d}" value="${c?.name || ""}" placeholder="contract name"></td>
+      <td><input class="attr" style="width:70px" data-k="fps" data-key="${d}" value="${M.cmap.fps[d] || ""}" placeholder="${c?.fp ?? "?"}"></td>
+      <td class="hint">${(gffByC[d] || []).join(", ") || "—"}</td></tr>`;
   }
-  $("orderTable").innerHTML = h;
-  if (list.length > 400) $("orderTable").innerHTML += `<tr><td colspan="7" class="hint">…${list.length - 400} more (use the filter)</td></tr>`;
-  $("orderTable").querySelectorAll("input.attr").forEach(inp =>
-    inp.addEventListener("change", () => { saveAttr(inp.dataset.o, inp.dataset.f, inp.value); setTimeout(renderOrders, 0); }));
+  $("mapTable").innerHTML = h;
+  $("mapTable").querySelectorAll("input.attr").forEach(inp =>
+    inp.addEventListener("change", () => { saveCmap(inp.dataset.k, inp.dataset.key, inp.value); setTimeout(render, 0); }));
 }
-
+function renderUnattrib() {
+  if (!M.unattributed.length) { $("unattrib").textContent = "None — every order has a contract."; return; }
+  const byGff = {};
+  for (const o of M.unattributed) (byGff[o.gffs.join("+") || "no GFF rows"] = byGff[o.gffs.join("+") || "no GFF rows"] || []).push(o.order);
+  $("unattrib").innerHTML = Object.entries(byGff)
+    .map(([g, os]) => `<b>${g}</b>: ${os.length} orders (${os.slice(0, 4).join(", ")}${os.length > 4 ? ", …" : ""})`)
+    .join("<br>");
+}
 function renderSerials(q) {
   q = (q || "").trim().toLowerCase();
-  const rows = M.consumed.concat(M.inStock)
-    .filter(r => !q || r.serial.toLowerCase().includes(q))
-    .slice(0, 250);
-  let h = `<tr><th>Serial</th><th>Status</th><th>Consumed on</th><th>Contract</th><th>Candidate orders that day</th></tr>`;
+  if (!M.iq.length) { $("serialTable").innerHTML = ""; return; }
+  const rows = M.iq.filter(r => !q || r.serial.toLowerCase().includes(q)).slice(0, 200);
+  let h = `<tr><th>Serial</th><th>Material</th><th>Status</th><th>Consumed on</th></tr>`;
   for (const r of rows) {
-    const k = dkey(r.changed);
-    const cand = r.status === "ESTO" ? "" :
-      M.ordersByDate[k] ? (M.ordersByDate[k].size <= 4 ? [...M.ordersByDate[k]].join(", ")
-        : `${M.ordersByDate[k].size} orders on ${dfmt(k)}`) : "outside COOIS export";
     const st = r.status === "ESTO" ? `<span class="st mut"><span class="dot"></span>in stock</span>`
-      : r.status === "ECUS" ? `<span class="st ok"><span class="dot"></span>at customer</span>`
-        : `<span class="st ok"><span class="dot"></span>consumed</span>`;
-    h += `<tr><td>${r.serial}</td><td>${st}</td><td>${r.status === "ESTO" ? "—" : dfmt(k)}</td>
-      <td>${M.contractOf[r.material] || ""}</td><td>${cand}</td></tr>`;
+      : `<span class="st ok"><span class="dot"></span>${r.status === "ECUS" ? "at customer" : "consumed"}</span>`;
+    h += `<tr><td>${r.serial}</td><td>${r.material}</td><td>${st}</td>
+      <td>${r.status === "ESTO" || !r.changed ? "—" : r.changed.toISOString().slice(0, 10).split("-").reverse().join(".")}</td></tr>`;
   }
-  $("serialTable").innerHTML = rows.length ? h : "";
+  $("serialTable").innerHTML = h;
 }
-
-/* ---------- attribution CSV ---------- */
-$("exportMap").onclick = () => {
-  const map = JSON.parse(localStorage.getItem(LS.map) || "{}");
-  const lines = ["order,contract,fibre_pair"];
-  for (const [o, a] of Object.entries(map)) lines.push(`${o},${a.contract || ""},${a.fp || ""}`);
-  const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob); a.download = "amps_attribution.csv"; a.click();
-  $("mapMsg").textContent = `${Object.keys(map).length} attributions exported`;
-};
-$("importMap").onclick = () => $("importFile").click();
-$("importFile").onchange = async e => {
-  const text = await e.target.files[0].text();
-  const map = JSON.parse(localStorage.getItem(LS.map) || "{}");
-  let n = 0;
-  for (const line of text.split(/\r?\n/).slice(1)) {
-    const [o, c, fp] = line.split(",").map(s => (s || "").trim());
-    if (o && /^\d+$/.test(o)) { map[o] = { contract: c, fp }; n++; }
-  }
-  localStorage.setItem(LS.map, JSON.stringify(map));
-  $("mapMsg").textContent = `${n} attributions imported`;
-  render();
-};
 
 /* ---------- wiring ---------- */
 $("runBtn").onclick = () => {
   localStorage.setItem(LS.coois, $("cooisIn").value);
+  localStorage.setItem(LS.asp, $("aspIn").value);
   localStorage.setItem(LS.iq, $("iqIn").value);
   render();
   $("parseMsg").textContent = "Saved in this browser — next visit picks up where you left off.";
 };
 $("clearBtn").onclick = () => {
-  if (!confirm("Clear the saved COOIS/IQ09 pastes? (Attribution entries are kept.)")) return;
-  localStorage.removeItem(LS.coois); localStorage.removeItem(LS.iq);
-  $("cooisIn").value = ""; $("iqIn").value = ""; render();
+  if (!confirm("Clear the saved pastes? (Contract names/mappings are kept.)")) return;
+  [LS.coois, LS.asp, LS.iq].forEach(k => localStorage.removeItem(k));
+  ["cooisIn", "aspIn", "iqIn"].forEach(id => $(id).value = "");
+  render();
 };
-$("orderSearch").addEventListener("input", renderOrders);
+$("contractSel").addEventListener("change", renderChart);
+$("rangeSel").addEventListener("change", renderChart);
 $("serialSearch").addEventListener("input", e => renderSerials(e.target.value));
-
 $("cooisIn").value = localStorage.getItem(LS.coois) || "";
+$("aspIn").value = localStorage.getItem(LS.asp) || "";
 $("iqIn").value = localStorage.getItem(LS.iq) || "";
 render();
 </script>
