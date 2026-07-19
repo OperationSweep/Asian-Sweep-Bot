@@ -244,12 +244,14 @@ def build(coois_path, asp_path, out_path):
     ws["B4"].font = Font(name="Arial", size=9, italic=True, color="898781")
 
     # KPI row (formulas over Weekly Data)
+    tot_p = sum(planned_w.values())
+    tot_k = sum(kitted_w.values())
+    tot_b = sum(built_w.values())
     kpis = [
-        ("Total planned AMPs", f"=SUM('Weekly Data'!F2:F{nW})"),
-        ("Total kitted AMPs", f"=SUM('Weekly Data'!G2:G{nW})"),
-        ("Total built AMPs", f"=SUM('Weekly Data'!H2:H{nW})"),
-        ("Overall % kitted vs plan", f"=IF(SUM('Weekly Data'!F2:F{nW})=0,\"\","
-                                     f"SUM('Weekly Data'!G2:G{nW})/SUM('Weekly Data'!F2:F{nW}))"),
+        ("Total planned AMPs", round(tot_p)),
+        ("Total kitted AMPs", tot_k),
+        ("Total built AMPs", tot_b),
+        ("Overall % kitted vs plan", (tot_k / tot_p) if tot_p else None),
         ("Contracts tracked", len(keys)),
     ]
     r0 = 6
@@ -282,29 +284,27 @@ def build(coois_path, asp_path, out_path):
         label = contract_label(k)
         ws.cell(row=rr, column=2, value=label)
         ws.cell(row=rr, column=3, value=round(plan_totals[k]["reps"]) or None)
-        ws.cell(row=rr, column=4,
-                value=f"=SUMIFS('Weekly Data'!$F$2:$F${nW},'Weekly Data'!$A$2:$A${nW},$B{rr})")
-        ws.cell(row=rr, column=5,
-                value=f"=SUMIFS('Weekly Data'!$G$2:$G${nW},'Weekly Data'!$A$2:$A${nW},$B{rr})")
-        ws.cell(row=rr, column=6,
-                value=f"=SUMIFS('Weekly Data'!$H$2:$H${nW},'Weekly Data'!$A$2:$A${nW},$B{rr})")
         pa = plan_totals[k]["amps"]
-        ws.cell(row=rr, column=7, value=f"=IF(D{rr}=0,\"\",E{rr}/D{rr})").number_format = "0%"
-        ws.cell(row=rr, column=8,
-                value=f"=SUMIFS('Weekly Data'!$G$2:$G${nW},'Weekly Data'!$A$2:$A${nW},$B{rr},"
-                      f"'Weekly Data'!$E$2:$E${nW},\"{cur_q}\")")
-        ws.cell(row=rr, column=9,
-                value=f"=SUMIFS('Weekly Data'!$F$2:$F${nW},'Weekly Data'!$A$2:$A${nW},$B{rr},"
-                      f"'Weekly Data'!$E$2:$E${nW},\"{cur_q}\")")
-        # cumulative-to-date verdict: compare kitted vs planned for weeks <= current
-        cum_p = f"SUMIFS('Weekly Data'!$F$2:$F${nW},'Weekly Data'!$A$2:$A${nW},$B{rr}," \
-                f"'Weekly Data'!$D$2:$D${nW},\"<={cur_wk}\")"
-        cum_k = f"SUMIFS('Weekly Data'!$G$2:$G${nW},'Weekly Data'!$A$2:$A${nW},$B{rr}," \
-                f"'Weekly Data'!$D$2:$D${nW},\"<={cur_wk}\")"
-        ws.cell(row=rr, column=10,
-                value=f"=IF(AND({cum_p}=0,{cum_k}=0),\"not started\","
-                      f"IF({cum_p}=0,\"AHEAD\",IF({cum_k}/{cum_p}<0.95,\"UNDER\","
-                      f"IF({cum_k}/{cum_p}>1.05,\"AHEAD\",\"ON TRACK\"))))")
+        ka = act_totals[k]["kitted"]
+        ws.cell(row=rr, column=4, value=round(pa) or None)
+        ws.cell(row=rr, column=5, value=ka)
+        ws.cell(row=rr, column=6, value=act_totals[k]["built"] or None)
+        ws.cell(row=rr, column=7, value=(ka / pa) if pa else None).number_format = "0%"
+        kq = sum(v for (kk, y, w), v in kitted_w.items()
+                 if kk == k and f"{y}-Q{quarter_of(w)}" == cur_q)
+        pq_ = sum(v for (kk, y, w), v in planned_w.items()
+                  if kk == k and f"{y}-Q{quarter_of(w)}" == cur_q)
+        ws.cell(row=rr, column=8, value=kq)
+        ws.cell(row=rr, column=9, value=round(pq_))
+        cum_p = sum(v for (kk, y, w), v in planned_w.items()
+                    if kk == k and f"{y}-W{w:02d}" <= cur_wk)
+        cum_k = sum(v for (kk, y, w), v in kitted_w.items()
+                    if kk == k and f"{y}-W{w:02d}" <= cur_wk)
+        v = ("not started" if cum_p == 0 and cum_k == 0 else
+             "AHEAD" if cum_p == 0 else
+             "UNDER" if cum_k / cum_p < 0.95 else
+             "AHEAD" if cum_k / cum_p > 1.05 else "ON TRACK")
+        ws.cell(row=rr, column=10, value=v)
     last_score = r1 + 1 + len(keys)
     for row in ws.iter_rows(min_row=r1 + 2, max_row=last_score, min_col=2, max_col=10):
         for c in row:
@@ -320,10 +320,10 @@ def build(coois_path, asp_path, out_path):
     for i, (y, w) in enumerate(all_weeks, start=2):
         wk = f"{y}-W{w:02d}"
         wst.cell(row=i, column=1, value=wk)
-        wst.cell(row=i, column=2,
-                 value=f"=SUMIFS('Weekly Data'!$F$2:$F${nW},'Weekly Data'!$D$2:$D${nW},A{i})")
-        wst.cell(row=i, column=3,
-                 value=f"=SUMIFS('Weekly Data'!$G$2:$G${nW},'Weekly Data'!$D$2:$D${nW},A{i})")
+        wst.cell(row=i, column=2, value=round(sum(
+            v for (kk, yy, ww), v in planned_w.items() if (yy, ww) == (y, w)), 1))
+        wst.cell(row=i, column=3, value=sum(
+            v for (kk, yy, ww), v in kitted_w.items() if (yy, ww) == (y, w)))
     for row in wst.iter_rows(min_row=2):
         for c in row:
             c.font = AR
@@ -336,13 +336,13 @@ def build(coois_path, asp_path, out_path):
     quarters = sorted({f"{y}-Q{quarter_of(w)}" for (y, w) in all_weeks})
     for i, q in enumerate(quarters, start=2):
         wsq.cell(row=i, column=1, value=q)
-        wsq.cell(row=i, column=2,
-                 value=f"=SUMIFS('Weekly Data'!$F$2:$F${nW},'Weekly Data'!$E$2:$E${nW},A{i})")
-        wsq.cell(row=i, column=3,
-                 value=f"=SUMIFS('Weekly Data'!$G$2:$G${nW},'Weekly Data'!$E$2:$E${nW},A{i})")
-        wsq.cell(row=i, column=4, value=f"=IF(B{i}=0,\"\",MIN(1,C{i}/B{i}))").number_format = "0%"
-        wsq.cell(row=i, column=5,
-                 value=f"=SUMIFS('Weekly Data'!$H$2:$H${nW},'Weekly Data'!$E$2:$E${nW},A{i})")
+        qp = sum(v for (kk, y, w), v in planned_w.items() if f"{y}-Q{quarter_of(w)}" == q)
+        qk = sum(v for (kk, y, w), v in kitted_w.items() if f"{y}-Q{quarter_of(w)}" == q)
+        qb = sum(v for (kk, y, w), v in built_w.items() if f"{y}-Q{quarter_of(w)}" == q)
+        wsq.cell(row=i, column=2, value=round(qp, 1))
+        wsq.cell(row=i, column=3, value=qk)
+        wsq.cell(row=i, column=4, value=(min(1, qk / qp) if qp else None)).number_format = "0%"
+        wsq.cell(row=i, column=5, value=qb)
     for row in wsq.iter_rows(min_row=2):
         for c in row:
             c.font = AR
@@ -390,8 +390,9 @@ def build(coois_path, asp_path, out_path):
     notes = [
         ("AMPS KITTING REPORT — HOW TO READ IT", TITLE),
         ("", None),
-        ("Dashboard: KPIs, contract scoreboard (formulas), weekly & quarterly planned-vs-kitted charts.", None),
-        ("Weekly Data: one row per contract-week — the single source every formula aggregates from.", None),
+        ("Dashboard: KPIs, contract scoreboard, weekly & quarterly planned-vs-kitted charts.", None),
+        ("Weekly Data: one row per contract-week. All figures are computed at generation time", None),
+        ("(no fragile formula engine); regenerate the file to refresh from new exports.", None),
         ("Orders: every work order with its contract, kitted week and GFF variant (audit trail).", None),
         ("", None),
         ("RULES", ARB),
