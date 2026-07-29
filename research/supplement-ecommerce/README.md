@@ -76,6 +76,9 @@
 | 10 | [`10-launch-and-content.md`](10-launch-and-content.md) | 16, 17 | MVP → Phase 2 → Phase 3 product roadmap with kill criteria; the faceless content engine; **30 compliant video concepts** |
 | 11 | [`11-risks-and-decision.md`](11-risks-and-decision.md) | 18, 19, 20 | Full risk register with mitigations; established vs emerging opportunities; **the final investment decision, budget tiers and scores** |
 | 12 | [`12-sources.md`](12-sources.md) | — | All sources, grouped by claim, with a source-quality tiering note |
+| 13 | [`13-cac-pressure-test.md`](13-cac-pressure-test.md) | Addendum | **Bottom-up rebuild of the CAC assumption**, three corrections to the original model, and the TikTok Shop first-order economics finding |
+
+> **Read `13-cac-pressure-test.md` alongside `09-financial-model.md`.** It revises the base CAC from £55 to £62, corrects a learning-phase contradiction in the ad-spend ramp, adds seasonality, and finds that TikTok Shop affiliate is first-order profitable where paid social is not. The overall verdict is unchanged.
 
 ---
 
