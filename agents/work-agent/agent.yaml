@@ -1,0 +1,78 @@
+# Operator — deployable agent config.
+# Source of truth. `deploy.py` reads this and pushes to Mistral.
+# Never edit the agent in the Studio console: the next deploy overwrites it and the
+# change is lost with no record of what it was.
+
+name: "Operator — OperationSweep"
+description: >-
+  Working agent for OperationSweep: the Asian Sweep FX bot and the UK supplement
+  ecommerce venture. Keeps a reviewed memory, cites evidence with labels, proposes
+  rather than executes on anything involving money or live customers.
+
+# mistral-medium-latest is the current console default and the right starting point.
+# Move to a large model only if the eval scorecard justifies the cost — check, do not assume.
+model: "mistral-medium-latest"
+
+instructions_file: "instructions.md"
+
+completion_args:
+  temperature: 0.3   # analysis work; wrong numbers cost more than dull prose
+  top_p: 0.95
+
+library:
+  name: "OperationSweep — Operator Memory"
+  description: "Reviewed memory: charter, decisions, playbooks, metrics, failures."
+  # Files synced into the library on every deploy. Order is irrelevant to retrieval;
+  # it is the record schema in SCHEMA.md that makes chunks retrievable.
+  sources:
+    - "memory/00-charter.md"
+    - "memory/10-decisions.md"
+    - "memory/20-playbooks.md"
+    - "memory/30-metrics.md"
+    - "memory/40-failures.md"
+  # Also indexed: the research corpus. It is long-lived, factual, and the agent is
+  # explicitly told to treat it as authoritative for the ecommerce venture.
+  extra_globs:
+    - "../../research/supplement-ecommerce/*.md"
+    # Trading: the spec is authoritative for strategy rules, and the README carries
+    # the not-cleared-for-live status the agent must never contradict.
+    - "../../strategy_spec.md"
+    - "../../build_plan.md"
+    - "../../README.md"
+  # Set after the first `deploy.py --create`. Committed, so every machine deploys
+  # to the same library rather than quietly creating duplicates.
+  id: null
+
+tools:
+  - type: "document_library"   # library id injected at deploy time
+  - type: "web_search"
+  - type: "code_interpreter"
+
+# MCP servers registered as managed connectors, executed server-side.
+# `write` is the scope the agent may use, NOT the scope of the credential —
+# grant read-only credentials wherever the platform allows it and treat this
+# block as documentation of intent, not as enforcement.
+connectors:
+  gmail:      { enabled: true,  write: "draft_only" }
+  calendar:   { enabled: true,  write: "propose_only" }
+  drive:      { enabled: true,  write: "create_only" }   # never overwrite existing files
+  github:     { enabled: true,  write: "draft_pr_only" }
+  shopify:    { enabled: true,  write: "unpublished_only" }
+  n8n:        { enabled: true,  write: "none" }
+  stripe:     { enabled: false, write: "none" }          # needs OAuth; read-only when enabled
+  motion:     { enabled: false, write: "none" }          # spends credits — human-initiated only
+
+# Enforced in instructions §5. Restated here so the policy is greppable and so a
+# reviewer can diff intent without reading the whole prompt.
+hard_limits:
+  - "no live trade execution or broker credential access"
+  - "no money movement: charges, refunds, ad budgets, purchase commitments, credit purchases"
+  - "no public publishing or external sends without in-conversation approval"
+  - "no medicinal claims (MHRA Guidance Note 8)"
+  - "no work on the excluded product list; melatonin and DHEA are POM in GB"
+  - "no secrets or customer PII in output"
+  - "no irreversible action without confirmation"
+
+metadata:
+  repo: "OperationSweep/asian-sweep-bot"
+  managed_by: "agents/work-agent/deploy.py"
