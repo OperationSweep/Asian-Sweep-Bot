@@ -125,5 +125,6 @@ figures. Each one, once measured, supersedes an `[ESTIMATE]` above.
 | Actual COGS per SKU (from RFQ) | CHR-006 estimates | `[NOT MEASURED]` |
 | Subscription retention M1 / M3 / M6 | LTV model in `07` | `[NOT MEASURED]` |
 | Bundle mix (% of orders) | DEC-004 assumption | `[NOT MEASURED]` |
-| Trading win rate and average R, ≥50 trades | — | `[NOT MEASURED]` |
+| Dry-run signal count and skip-reason breakdown | — | `[NOT MEASURED]` |
+| Spec-conformance rate (observed vs `strategy_spec.md`) | — | `[NOT MEASURED]` |
 | Content engine conversion (videos → orders) | `10-launch-and-content.md` | `[NOT MEASURED]` |

@@ -125,9 +125,10 @@ cannot read is an agent list you cannot trust.
   than retrieval does. Revisit at ~10k graded interactions, not before.
 - **No autonomous spend, ever.** Not on ads, not on Stripe, not on inventory, not on
   Motion credits. The agent proposes; a human commits money.
-- **No live trade execution.** The bot places trades. The agent reads logs and proposes
-  config diffs. That boundary is in `agent.yaml` and in the instructions, and it is not a
-  performance concern — it is that a wrong tool call would cost real money.
+- **No live trade execution, and no turning off dry-run.** The bot is a research scaffold
+  (`DRY_RUN = True`) and not cleared for live money. The agent reads journals and proposes
+  config diffs; it never places an order and never proposes flipping the flag that would
+  make orders real. That boundary is in `agent.yaml` and in the instructions.
 - **No multi-agent fan-out yet.** One good agent with real memory beats five agents with
   none. Mistral supports `handoffs` when a genuine specialist is warranted; the first
   candidate is a compliance reviewer, and it should wait until the ecommerce venture

@@ -53,8 +53,11 @@ bundle mix, subscription retention, AOV, repeat rate — every `[NOT MEASURED]` 
 `30-metrics.md` is a Shopify query away, and each one that gets measured supersedes an
 estimate the entire financial model currently rests on.
 
-**Trading.** GitHub for config diffs and the weekly review issue. `bot.log` parsed via code
-interpreter for `PLB-001`.
+**Trading.** GitHub for config diffs and the weekly review issue. The journals —
+`signals.csv`, `trades.csv`, `events.jsonl` — parsed via code interpreter for `PLB-001`.
+Note they are gitignored, so they reach the agent by upload or by a local run, not through
+the GitHub connector. The durable journal is the main thing the scaffold rebuild bought;
+without it, a weekly signal review would have nothing to read.
 
 **Ops.** Calendar and Gmail for the daily brief. n8n for its own health.
 
@@ -104,8 +107,9 @@ is the agent turning up to work.
 
 ## Deployment
 
-Not on the trading VPS. The bot is latency-sensitive and its host should stay boring —
-`bot.py`, `config.py`, nothing else.
+Not alongside the bot. Its host stays boring — the bot modules and nothing else. (The
+README is explicit that the bot is not cleared for VPS deployment for live money at all
+yet; this keeps the two concerns separate either way.)
 
 `deploy.py` and `evaluate.py` run in GitHub Actions on merge to `main`. n8n runs wherever it
 runs today. The only shared secret is `MISTRAL_API_KEY`, which lives in Actions secrets and

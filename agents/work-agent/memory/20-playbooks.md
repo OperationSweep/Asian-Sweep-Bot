@@ -7,28 +7,38 @@ with reality.
 
 ---
 
-### PLB-001 · Weekly trading review
+### PLB-001 · Weekly signal review (dry-run)
 
 - **type:** PLAYBOOK
 - **venture:** trading
 - **recorded:** 2026-07-31
 - **confidence:** medium
-- **evidence:** seeded from `bot.py` behaviour — not yet run
+- **evidence:** `journal.py`, `strategy_spec.md`, `build_plan.md` — not yet run
 
-Runs Sunday. The agent produces, unprompted:
+Runs Sunday, over `signals.csv`, `trades.csv` and `events.jsonl`. **The bot is in dry-run,
+so this review is about rule quality and evidence, not P&L.** Reporting simulated profit as
+though it were performance is the main way a pre-live review misleads.
 
-1. **Trades taken** — count, win rate, average R, largest drawdown. From `bot.log`.
-2. **Setups missed** — sweeps detected but not traded, and why the filter rejected them.
-   This is the more informative half: a bot that takes nothing is failing silently, and
-   nothing in the P&L reveals it.
-3. **Session behaviour** — did the Asian range form as expected? Force-close hit before
-   TP? How often?
-4. **Config drift** — anything in `config.py` changed since last review, and by whom.
-5. **One proposed change, or explicitly none.** Never a list. A weekly review that
-   proposes five changes is a review that will be ignored.
+1. **Signals generated** — count, direction, and which qualified versus which were filtered.
+2. **Why days were skipped.** The most informative section by far. Neutral H4 bias? Range
+   never swept? Sweep with no BOS? Spread or stop-distance filter? A scaffold that skips
+   every day is failing silently and nothing else reveals it.
+3. **Filter attribution** — which of `MAX_SPREAD_PIPS`, `MIN_STOP_PIPS`, `MAX_STOP_PIPS`,
+   `MIN_H4_STRUCTURE_PIPS`, `MIN_SWEEP_BUFFER_PIPS` is doing the rejecting. If one filter
+   accounts for nearly all rejections, that is the parameter to examine.
+4. **Spec conformance** — did observed behaviour match `strategy_spec.md`? A divergence is
+   a bug report, not a tuning opportunity.
+5. **Config drift** — anything changed in `config.py` since last review, and by whom.
+   `DRY_RUN` and `PAPER_MODE` are checked explicitly and flagged loudly if either is `False`.
+6. **One proposed change, or explicitly none.** Never a list. A review proposing five
+   changes is a review that gets ignored.
 
 Statistics via code interpreter, never mental arithmetic. Sample size stated with every
-rate — a 70% win rate over 9 trades is noise and must be labelled as such.
+rate. Simulated results are labelled `[DRY-RUN]` wherever they appear, every time — the
+label is what stops a promising backtest quietly becoming a reason to go live.
+
+Progress is measured against the README milestones: lock rules → dry-run → validate signals
+and skipped days → demo execution → only then consider a live pilot.
 
 ---
 

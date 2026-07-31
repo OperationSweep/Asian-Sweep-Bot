@@ -109,11 +109,27 @@ def memory_files(cfg: dict) -> list[Path]:
     return out
 
 
+def repo_root() -> Path:
+    top = git("rev-parse", "--show-toplevel", default="")
+    return Path(top) if top else HERE.parent.parent
+
+
 def doc_name(path: Path) -> str:
-    """Stable, collision-free document name. Library documents have no path,
-    so research/foo.md and memory/foo.md would otherwise overwrite each other."""
-    parent = path.parent.name
-    return f"{parent}__{path.name}" if parent not in {"work-agent", ""} else path.name
+    """Stable, collision-free document name. Library documents have no path, so
+    research/foo.md and memory/foo.md would otherwise overwrite each other.
+
+    Derived from the repo-relative path so it does not change with the name of
+    the directory the repo happens to be cloned into — a rename would otherwise
+    orphan every document in the library under its old name."""
+    try:
+        rel = path.resolve().relative_to(repo_root().resolve())
+    except ValueError:
+        return path.name
+    parts = list(rel.parts)
+    # Strip the agents/work-agent/ prefix; memory files keep just memory__<file>.
+    if parts[:2] == ["agents", "work-agent"]:
+        parts = parts[2:]
+    return "__".join(parts)
 
 
 # ── library ───────────────────────────────────────────────────────────────────

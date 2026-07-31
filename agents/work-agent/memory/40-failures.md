@@ -87,6 +87,37 @@ the addressable one.
 
 ---
 
+### FAIL-005 · Memory was seeded from a stale branch and called the bot "live"
+
+- **type:** FAILURE
+- **venture:** ops
+- **recorded:** 2026-07-31
+- **confidence:** high
+- **evidence:** agent build; caught by diffing the working branch against `origin/main`
+
+The first draft of this memory described the Asian Sweep Bot as *"live algorithmic FX —
+capital at risk today"*, with `confidence: high` and `config.py` cited as evidence. It was
+read from a branch whose base did not include main's scaffold rebuild. On main the bot runs
+`DRY_RUN = True` with every `order_send` gated behind that flag, and the README states it
+is not cleared for live deployment.
+
+The record was internally consistent, correctly cited, and wrong. Nothing in the writing
+process could have caught it — the citation was real, it just pointed at a stale file. It
+was caught only by fetching `origin/main` and diffing, which happened for an unrelated
+reason.
+
+Note what would have followed: the agent would have answered trading questions in a live
+frame, treated simulated results as performance, and recorded those answers as memory.
+Every downstream step would have been locally consistent too.
+
+**Rule:** before recording any `FACT` sourced from a repository file, confirm the file is
+current on the default branch — not merely present in the working tree. A citation proves
+where a claim came from, never that it is still true. When a `FACT` is about deployment
+status, safety flags or anything gating real money, re-read the source at the time of use
+rather than trusting the record.
+
+---
+
 ## Template for the agent's own failures
 
 When the agent gets something wrong, the record looks like this:

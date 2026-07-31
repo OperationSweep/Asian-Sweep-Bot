@@ -34,6 +34,11 @@ library:
   # explicitly told to treat it as authoritative for the ecommerce venture.
   extra_globs:
     - "../../research/supplement-ecommerce/*.md"
+    # Trading: the spec is authoritative for strategy rules, and the README carries
+    # the not-cleared-for-live status the agent must never contradict.
+    - "../../strategy_spec.md"
+    - "../../build_plan.md"
+    - "../../README.md"
   # Set after the first `deploy.py --create`. Committed, so every machine deploys
   # to the same library rather than quietly creating duplicates.
   id: null

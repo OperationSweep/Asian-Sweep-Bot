@@ -16,12 +16,15 @@ business and one that is guessing politely.
 - **confidence:** high
 - **evidence:** repository contents
 
-Venture one is **Asian Sweep Bot**, live algorithmic FX on MT5 — capital at risk today,
-automated, fast feedback. Venture two is **UK supplement ecommerce**, pre-launch, £25k
-committed, slow feedback measured in months. They fail in opposite ways: the bot fails
-fast and visibly, the ecommerce venture fails slowly and quietly. The agent's attention
-should be inverted accordingly — watch the ecommerce venture for silent drift, watch the
-bot for sudden change.
+Venture one is **Asian Sweep Bot**, an MT5 signal-research scaffold — **pre-live**, running
+dry-run only, working toward demo validation. No capital at risk. Venture two is **UK
+supplement ecommerce**, pre-launch, £25k committed, slow feedback measured in months.
+
+Both are therefore pre-revenue, and both fail the same quiet way: by drifting from a
+written plan while everything still looks fine. The bot has `strategy_spec.md` and
+`build_plan.md`; the ecommerce venture has the research corpus and signed kill criteria.
+**The agent's main job on both is to notice divergence from the written plan early**, since
+neither venture will produce a P&L signal to notice it for you.
 
 ---
 
@@ -54,20 +57,37 @@ Estimating into that gap to seem useful is the failure the standard exists to pr
 
 ---
 
-### CHR-004 · Trading system parameters
+### CHR-004 · The bot is a research scaffold, not a live system
 
 - **type:** FACT
 - **venture:** trading
 - **recorded:** 2026-07-31
 - **confidence:** high
-- **evidence:** `config.py`
+- **evidence:** `README.md`, `config.py`, `execution.py`
 
-`EURUSD`, lot `0.10`, max 1 concurrent trade, RR 2.0, magic `20260518`, deviation 20
-points. Asian range 19:00–00:00 NY. Sweep scan 09:00–13:00 Dubai. Force close 13:00,
-reset 13:05. Swing lookback 60 candles, fractal window 2. Operator timezone Asia/Dubai.
+`DRY_RUN = True`, `PAPER_MODE = True`. `execution.py` gates every `order_send` behind that
+flag, so no order reaches a broker. The README states plainly that the repository is **not
+a production-ready live trading bot** and must not be deployed for live money, listing six
+unmet preconditions: tighter rule validation, forward testing, broker-specific execution
+checks, spread/slippage evaluation, demo verification, and restart/recovery testing.
 
-Changes here are proposed as a diff to `config.py` with the reasoning, never applied by the
-agent.
+This supersedes any impression that the venture is live. It was rebuilt into this shape
+after an audit found the original single-file prototype unsafe to deploy — ambiguous rules,
+crude BOS logic, in-memory-only state, no durable journal, weak restart safety.
+
+**Parameters:** `EURUSD`, H4 bias / M5 setup, lot `0.10`, max 1 trade, RR 2.0, magic
+`20260518`, deviation 20 points. Asian range 19:00–00:00 NY, scan 09:00–13:00 Dubai, force
+close 13:00, reset 13:05. Execution-quality filters: `MAX_SPREAD_PIPS` 1.5, `MIN_STOP_PIPS`
+2.0, `MAX_STOP_PIPS` 15.0, `SL_BUFFER_PIPS` 0.5, `MIN_SWEEP_BUFFER_PIPS` 1.0,
+`MIN_H4_STRUCTURE_PIPS` 20.0, `MOVE_TO_BE_AT_R` 1.0, `MIN_MINUTES_BEFORE_FORCE_CLOSE` 30.
+
+**Modules:** `bot.py` scheduler · `datafeed.py` MT5 data · `strategy.py` bias/range/sweep/BOS
+· `execution.py` order scaffolding · `state_store.py` persistent daily state · `journal.py`
+structured journaling. **`strategy_spec.md` is authoritative for strategy rules** — where
+code and spec disagree, that is a bug to report.
+
+Config changes are proposed as a diff with reasoning, never applied by the agent, and
+`DRY_RUN` is never among them.
 
 ---
 
