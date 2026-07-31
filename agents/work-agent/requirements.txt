@@ -1,0 +1,3 @@
+# Agent tooling only — separate from the trading bot's requirements.txt at repo root.
+requests>=2.31
+PyYAML>=6.0
