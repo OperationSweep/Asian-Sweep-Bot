@@ -62,8 +62,12 @@ class RunReport:
         ]
 
         if posted:
-            first, last = state.print_range()
-            lines += [f"First order:  {first}", f"Last order:   {last}", ""]
+            blocks = state.contiguous_blocks()
+            lines.append(f"Print range{'s' if len(blocks) > 1 else ' '}:")
+            for first, last in blocks:
+                count = len(state.orders_in_block(first, last))
+                lines.append(f"  {first} - {last}  ({count} orders)")
+            lines.append("")
 
         for record in jobs:
             lines.append(
@@ -360,41 +364,62 @@ class Orchestrator:
     def _print_documents(
         self, state: RunState, audit: AuditLog, report: RunReport
     ) -> bool:
+        """Reprint the posted orders, one CO04 run per contiguous block.
+
+        A batch is not always one unbroken range - the orders may come from two
+        series - and a single From/To would reprint everything in between. So
+        each block is selected and printed separately, and the PDFs are pooled.
+        """
         state.set_phase(Phase.CO04)
-        first, last = state.print_range()
-        gaps = state.unposted_in_range()
+        blocks = state.contiguous_blocks()
+        if not blocks:
+            return self._halt(report, state, audit, "no posted orders to print") and False
+
+        if len(blocks) > 1:
+            log.info(
+                "posted orders form %d blocks; running CO04 once per block "
+                "so the reprint cannot pull in orders this run did not post: %s",
+                len(blocks),
+                ", ".join(f"{first}-{last}" for first, last in blocks),
+            )
 
         flow = Co04Flow(self.session, self.controls, self.config.get("co04", {}))
-        result = flow.reprint(first, last, len(state.posted), gaps)
+        collected: Dict[str, Path] = {}
 
-        if not result.printed:
-            self._halt(report, state, audit, f"CO04: {result.error}")
-            return False
+        for first, last in blocks:
+            orders = state.orders_in_block(first, last)
+            result = flow.reprint(first, last, len(orders))
 
-        audit.record(
-            "co04_printed", transaction="CO04", result="PRINTED",
-            work_order=f"{first}-{last}", serial_count=result.selected_count,
-        )
+            if not result.printed:
+                self._halt(report, state, audit, f"CO04 {first}-{last}: {result.error}")
+                return False
 
-        state.set_phase(Phase.PRINT)
+            audit.record(
+                "co04_printed", transaction="CO04", result="PRINTED",
+                work_order=f"{first}-{last}", serial_count=result.selected_count,
+            )
+
+            if state.dry_run:
+                continue
+
+            state.set_phase(Phase.PRINT)
+            try:
+                output = pdf_writer.capture(self.config.get("printing", {}), orders)
+            except KittingError as exc:
+                self._halt(report, state, audit, f"PDF capture {first}-{last}: {exc}")
+                return False
+            collected.update(output.pdfs)
+
         if state.dry_run:
             log.info("[dry-run] skipping PDF capture")
             state.set_phase(Phase.VERIFY_FILES)
             return True
 
-        try:
-            output = pdf_writer.capture(
-                self.config.get("printing", {}), sorted(state.posted, key=int)
-            )
-        except KittingError as exc:
-            self._halt(report, state, audit, f"PDF capture: {exc}")
-            return False
-
-        state.pdf_paths = {w: str(p) for w, p in output.pdfs.items()}
+        state.pdf_paths = {w: str(p) for w, p in collected.items()}
         state.set_phase(Phase.VERIFY_FILES)
 
         report.pdf_report = pdf_validator.verify(
-            output.pdfs, sorted(state.posted, key=int)
+            collected, sorted(state.posted, key=int)
         )
         for check in report.pdf_report.checks:
             audit.record(

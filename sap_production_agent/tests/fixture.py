@@ -22,9 +22,19 @@ from typing import List
 import openpyxl
 
 COLUMNS = 24
-FIRST_ORDER = 900000001
-WORK_ORDERS: List[str] = [str(FIRST_ORDER + i) for i in range(COLUMNS)]
+
+# A real batch is not one unbroken run of order numbers: the production sheet
+# carries two orders from one series and twenty-two from another. A single CO04
+# From/To across that span would select hundreds of unrelated orders, so the
+# fixture reproduces the split.
+BLOCK_A = [str(900000001 + i) for i in range(2)]
+BLOCK_B = [str(900000101 + i) for i in range(COLUMNS - 2)]
+WORK_ORDERS: List[str] = BLOCK_A + BLOCK_B
+BLOCKS = [(BLOCK_A[0], BLOCK_A[-1]), (BLOCK_B[0], BLOCK_B[-1])]
+FIRST_ORDER = int(WORK_ORDERS[0])
 LAST_ORDER = WORK_ORDERS[-1]
+# Orders that would be swept in by printing first..last as one range.
+SPAN = int(WORK_ORDERS[-1]) - int(WORK_ORDERS[0]) + 1
 
 # Orders from this index on have no amp tray fitted - row 3 holds 0.
 NO_TRAY_FROM = 16
@@ -68,8 +78,13 @@ def _serial(row_index: int, column_index: int) -> str:
     return f"SN{letter}{row_index:03d}{column_index:04d}"
 
 
-def build(path: Path, computed_headers: bool = True) -> Path:
-    """Write the fixture. computed_headers reproduces the formula-driven rows."""
+def build(path: Path, tray_gaps: bool = True) -> Path:
+    """Write the fixture.
+
+    tray_gaps reproduces the earlier sheet, where the last eight orders had a
+    literal 0 instead of an amp tray serial. Set False for the shape of a
+    normal full batch, where every order carries a tray.
+    """
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = "Sheet1"
@@ -84,7 +99,7 @@ def build(path: Path, computed_headers: bool = True) -> Path:
         sheet.cell(2, column, int(WORK_ORDERS[index]))
         sheet.cell(
             3, column,
-            0 if index >= NO_TRAY_FROM else f"TRY{index + 1:07d}",
+            0 if (tray_gaps and index >= NO_TRAY_FROM) else f"TRY{index + 1:07d}",
         )
 
     # Interleave serialised and bulk materials the way the real sheet does.

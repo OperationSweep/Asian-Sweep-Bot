@@ -27,10 +27,11 @@ The uploaded `ZPRO.xlsx` was inspected before any design work. It is
 One column = one fibre pair = one work order. One row = one component material.
 A serial lives at the intersection.
 
-**Measured:** 24 work orders, contiguous and ascending, 35 component
-rows, **496 serial numbers, zero duplicates**.
+**Measured** (second revision of the sheet, a normal full 24-pair
+transaction): 24 work orders, 35 component rows, **504 serial numbers, zero
+duplicates**.
 
-Five findings that changed the design:
+Six findings that changed the design:
 
 **1. `Serial Number missing for …` names a *material*, not a serial.**
 The material you quoted has the shape `92RRA…`, and column A holds a
@@ -60,15 +61,37 @@ cached last**. A stale cache posts serials against the wrong orders.
 Pre-flight raises `COMPUTED_WORK_ORDERS` every run. If the cache is empty the
 run stops with instructions rather than a confusing "no order numbers".
 
-**3. Eight orders have `0` where the amp tray serial goes.**
-`R3:Y3` — the last eight orders in the batch. A literal zero, not a blank. Never sent
-to SAP as `"0"`; each is reported, and those orders carry 20 serials, not 21.
+**3. The work orders are not one unbroken run — and CO04 selects by range.**
+This batch is two orders from one series and twenty-two from another, with a
+gap of hundreds between them. A single `From`/`To` across that gap would select
+**344 orders** where only 24 belong to the run, reprinting hundreds of
+unrelated production documents.
 
-**4. One stray cell.** `N45` holds a lone `TQ2603A…` serial, seven rows below the
+So the reprint runs **once per contiguous block**, and pre-flight shows the
+split before anything starts:
+
+```
+CO04 print ranges:
+  <first> - <second>       (2 orders)
+  <third> - <last>         (22 orders)
+  These orders are not one unbroken run. Printed as a single range, CO04
+  would select 344 orders instead of 24, so each block is selected separately.
+```
+
+Blocks are derived from *posted* orders only, so this also handles the other
+case for free: an order that fails mid-batch splits the block around itself and
+is excluded from the reprint.
+
+**4. An earlier revision had `0` where the amp tray serial goes.**
+Eight orders, a literal zero rather than a blank. The current sheet has a tray
+serial on every order, but the handling stays: a `0` is never sent to SAP as
+`"0"`, it is reported, and those orders simply carry one serial fewer.
+
+**5. One stray cell.** `N45` holds a lone `TQ2603A…` serial, seven rows below the
 block, under the 13th order. Not a duplicate of anything in the grid. It is reported,
 never silently swept into a posting — someone should say what it was meant to be.
 
-**5. The fibre-pair count does not need asking.** Row 1 labels M1/M2…M47/M48
+**6. The fibre-pair count does not need asking.** Row 1 labels M1/M2…M47/M48
 and row 38 numbers 1–24. The sheet says 24. So the prompt is replaced by
 detect-and-confirm, with `--limit N` when you are running a partial batch. One
 less thing to mistype at 6am.
@@ -262,7 +285,7 @@ inbound network at all.
 
 ## Stage 8 — Testing
 
-**146 tests, no SAP required.** `python -m pytest tests/ -q`
+**157 tests, no SAP required.** `python -m pytest tests/ -q`
 
 `sap/mock.py` is a scriptable fake session, so tests assert on the exact
 keystroke sequence that would reach production:
@@ -274,13 +297,16 @@ keystroke sequence that would reach production:
 - resume does not repost; an `UNCERTAIN` order is never auto-retried
 - PDFs shuffled in the print job still get the right names
 - a PDF named for one order but containing another fails verification
+- a two-series batch splits into the right print blocks, and a failed order
+  splits the block around it
 - the audit log drops a password even when handed one
 
 **The real workbook is not in this repo.** It holds live serial numbers, ASN
 part numbers and an internal SharePoint link, and this repository is public.
 `tests/fixture.py` generates a synthetic workbook with the identical structure
 — same layout, same formula-driven rows, same zero-instead-of-serial cells,
-same stray cell — so the tests exercise the same paths. `tests/*.xlsx` is
+same stray cell, same two-block order numbering — so the tests exercise the
+same paths. `tests/*.xlsx` is
 gitignored.
 
 ---

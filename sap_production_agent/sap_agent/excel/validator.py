@@ -127,6 +127,32 @@ def _check_expected_pairs(book: Workbook, expected: Optional[int]) -> List[Anoma
     )]
 
 
+def print_blocks(jobs) -> List[tuple]:
+    """Contiguous runs of work orders, which become the CO04 selections.
+
+    Shown in pre-flight because a batch spanning two order series prints as two
+    ranges, not one - and one range across the gap would select every order in
+    between.
+    """
+    try:
+        numbers = sorted(int(job.work_order) for job in jobs)
+    except ValueError:
+        return []
+    if not numbers:
+        return []
+
+    blocks = []
+    start = previous = numbers[0]
+    for number in numbers[1:]:
+        if number == previous + 1:
+            previous = number
+            continue
+        blocks.append((str(start), str(previous), previous - start + 1))
+        start = previous = number
+    blocks.append((str(start), str(previous), previous - start + 1))
+    return blocks
+
+
 def preview(book: Workbook, anomalies: List[Anomaly], limit: Optional[int] = None) -> str:
     """The operator-facing summary shown before any posting begins."""
     jobs = book.jobs[:limit] if limit else book.jobs
@@ -154,6 +180,20 @@ def preview(book: Workbook, anomalies: List[Anomaly], limit: Optional[int] = Non
             f"  {job.column_letter:>2}  {job.work_order}{pair}"
             f"  serials: {len(job.serials)}"
         )
+
+    blocks = print_blocks(jobs)
+    if blocks:
+        lines += ["", f"CO04 print range{'s' if len(blocks) > 1 else ''}:"]
+        for first, last, count in blocks:
+            lines.append(f"  {first} - {last}  ({count} orders)")
+        if len(blocks) > 1:
+            span = int(blocks[-1][1]) - int(blocks[0][0]) + 1
+            lines.append(
+                f"  These orders are not one unbroken run. Printed as a single "
+                f"{blocks[0][0]}-{blocks[-1][1]} range, CO04 would select "
+                f"{span} orders instead of {len(jobs)}, so each block is "
+                f"selected separately."
+            )
 
     if book.non_serialised_materials:
         lines += [

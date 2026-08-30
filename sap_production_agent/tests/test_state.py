@@ -7,7 +7,8 @@ import pytest
 import fixture as fx
 from sap_agent.workflow.state import OrderState, Phase, RunState, fingerprint
 
-WO = fx.WORK_ORDERS
+WO = fx.BLOCK_B          # a contiguous run
+ALL = fx.WORK_ORDERS     # the full batch, which spans two blocks
 
 
 @pytest.fixture
@@ -119,12 +120,54 @@ class TestPrintRange:
         self._post(state, WO[0], WO[1], WO[2])
         assert state.contiguous_range() is True
         assert state.unposted_in_range() == []
+        assert state.contiguous_blocks() == [(WO[0], WO[2])]
 
     def test_a_gap_is_detected(self, state):
         """CO04 prints by range, so a hole would reprint an unposted order."""
         self._post(state, WO[0], WO[2])
         assert state.contiguous_range() is False
         assert state.unposted_in_range() == [WO[1]]
+
+
+class TestContiguousBlocks:
+    """Real batches span more than one order series."""
+
+    def _post_all(self, tmp_path, orders):
+        state = RunState(dry_run=False).bind(tmp_path / "blocks.json")
+        for work_order in orders:
+            state.register(work_order, 21)
+            state.begin(work_order)
+            state.finish(work_order, OrderState.POSTED)
+        return state
+
+    def test_a_two_series_batch_splits_into_two_blocks(self, tmp_path):
+        state = self._post_all(tmp_path, ALL)
+        assert state.contiguous_blocks() == fx.BLOCKS
+
+    def test_a_gap_becomes_a_block_boundary(self, tmp_path):
+        state = self._post_all(tmp_path, [WO[0], WO[1], WO[3], WO[4]])
+        assert state.contiguous_blocks() == [(WO[0], WO[1]), (WO[3], WO[4])]
+
+    def test_each_block_reports_only_its_own_orders(self, tmp_path):
+        state = self._post_all(tmp_path, ALL)
+        first, last = state.contiguous_blocks()[1]
+        assert state.orders_in_block(first, last) == list(fx.BLOCK_B)
+
+    def test_blocks_cover_every_posted_order_exactly_once(self, tmp_path):
+        state = self._post_all(tmp_path, ALL)
+        covered = [
+            w for first, last in state.contiguous_blocks()
+            for w in state.orders_in_block(first, last)
+        ]
+        assert sorted(covered) == sorted(ALL)
+
+    def test_one_order_is_a_block_of_one(self, tmp_path):
+        state = self._post_all(tmp_path, [WO[0]])
+        assert state.contiguous_blocks() == [(WO[0], WO[0])]
+
+    def test_nothing_posted_means_no_blocks(self, tmp_path):
+        state = self._post_all(tmp_path, [])
+        assert state.contiguous_blocks() == []
 
 
 class TestPhases:

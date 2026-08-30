@@ -186,8 +186,8 @@ class TestSummary:
 
         assert "PRODUCTION AUTOMATION COMPLETE" in text
         assert "Successful:   3" in text
-        assert f"First order:  {WO[0]}" in text
-        assert f"Last order:   {WO[2]}" in text
+        assert WO[0] in text
+        assert WO[2] in text
 
     def test_summary_says_halted_and_why(self, tmp_path, sample_path):
         session = MockSession(responses={
@@ -197,3 +197,50 @@ class TestSummary:
 
         assert "HALTED" in report.summary()
         assert "did not land" in report.summary()
+
+
+class TestPrintBlocks:
+    """A batch spanning two order series must not print as one range."""
+
+    def test_posted_orders_split_into_their_blocks(self, tmp_path, sample_path):
+        report = run(tmp_path, MockSession(), sample_path, limit=fx.COLUMNS)
+        assert report.state.contiguous_blocks() == fx.BLOCKS
+
+    def test_a_single_range_would_sweep_in_unrelated_orders(self, tmp_path, sample_path):
+        """The reason blocks exist: first..last spans far more than we posted."""
+        report = run(tmp_path, MockSession(), sample_path, limit=fx.COLUMNS)
+        first, last = report.state.print_range()
+
+        assert int(last) - int(first) + 1 == fx.SPAN
+        assert fx.SPAN > fx.COLUMNS
+        assert len(report.state.unposted_in_range()) == fx.SPAN - fx.COLUMNS
+
+    def test_each_block_holds_only_its_own_orders(self, tmp_path, sample_path):
+        report = run(tmp_path, MockSession(), sample_path, limit=fx.COLUMNS)
+        counts = [
+            len(report.state.orders_in_block(first, last))
+            for first, last in report.state.contiguous_blocks()
+        ]
+        assert counts == [len(fx.BLOCK_A), len(fx.BLOCK_B)]
+        assert sum(counts) == fx.COLUMNS
+
+    def test_a_failed_order_splits_the_block_around_it(self, tmp_path, sample_path):
+        """The reprint must exclude an order this run did not post."""
+        session = MockSession(responses={
+            fx.BLOCK_B[3]: [("W", f"Serial Number missing for {A_SERIALISED}")],
+        })
+        orchestrator = build(tmp_path, session)
+        orchestrator.config["run"]["stop_on_error"] = False
+        report = orchestrator.run(
+            sample_path, limit=8, do_zpro=True, do_print=False
+        )
+
+        assert fx.BLOCK_B[3] not in report.state.posted
+        for first, last in report.state.contiguous_blocks():
+            assert not (int(first) <= int(fx.BLOCK_B[3]) <= int(last))
+
+    def test_the_summary_lists_every_block(self, tmp_path, sample_path):
+        report = run(tmp_path, MockSession(), sample_path, limit=fx.COLUMNS)
+        text = report.summary()
+        for first, last in fx.BLOCKS:
+            assert f"{first} - {last}" in text

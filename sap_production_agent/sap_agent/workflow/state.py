@@ -193,16 +193,47 @@ class RunState:
         return ordered[0], ordered[-1]
 
     def contiguous_range(self) -> bool:
-        """True when the posted orders form an unbroken numeric run.
+        """True when the posted orders form an unbroken numeric run."""
+        return len(self.contiguous_blocks()) <= 1
 
-        CO04 selects by range, so a gap means the reprint would pull in orders
-        this run did not post. The caller must handle that rather than print.
+    def contiguous_blocks(self) -> List[tuple[str, str]]:
+        """Split the posted orders into unbroken numeric runs.
+
+        CO04 selects by range, so one From/To over a set with a gap would
+        reprint every order sitting in the gap - orders this run never touched.
+        A real batch is not always contiguous: a sheet may carry, say, two
+        orders from one series and twenty-two from another, where a single
+        range would span hundreds of unrelated orders.
+
+        So the print step runs once per block. Blocks are derived from posted
+        orders only, which also means an order that failed mid-run splits the
+        block around it and is excluded from the reprint.
         """
         try:
             numbers = sorted(int(w) for w in self.posted)
         except ValueError:
-            return False
-        return bool(numbers) and numbers == list(range(numbers[0], numbers[-1] + 1))
+            return [(w, w) for w in sorted(self.posted)]
+        if not numbers:
+            return []
+
+        blocks: List[tuple[str, str]] = []
+        start = previous = numbers[0]
+        for number in numbers[1:]:
+            if number == previous + 1:
+                previous = number
+                continue
+            blocks.append((str(start), str(previous)))
+            start = previous = number
+        blocks.append((str(start), str(previous)))
+        return blocks
+
+    def orders_in_block(self, first: str, last: str) -> List[str]:
+        """The posted orders inside one block, in numeric order."""
+        try:
+            low, high = int(first), int(last)
+            return [w for w in sorted(self.posted, key=int) if low <= int(w) <= high]
+        except ValueError:
+            return [w for w in sorted(self.posted) if first <= w <= last]
 
     def unposted_in_range(self) -> List[str]:
         """Orders that fall inside the print range but were not posted."""
