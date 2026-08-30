@@ -1,0 +1,83 @@
+# ---------------------------------------------------------------------------
+# Copy to config.yaml and fill in. config.yaml is gitignored - it is per-site.
+# Nothing here is a secret: credentials come from environment variables.
+# ---------------------------------------------------------------------------
+
+sap:
+  # Exact description string of the entry in SAP Logon. Used only when no SAP
+  # GUI session is already open; if you are already logged in we attach to the
+  # running session instead and never touch these.
+  connection_name: "PRD - Production"
+  client: "100"
+  language: "EN"
+  # Credentials are read from SAP_USER / SAP_PASSWORD env vars, never from file.
+  # If a multiple-logon prompt appears, keep the existing session and continue:
+  multi_logon: "continue_and_end_others"   # or "keep_others"
+
+transaction:
+  code: "ZPRO"
+
+  # -------------------------------------------------------------------------
+  # ZPRO is a custom (Z) transaction, so these element IDs are specific to your
+  # system - nobody can guess them. Run:  python inspect_screen.py --dump
+  # while ZPRO is open, and paste the IDs it prints here.
+  # -------------------------------------------------------------------------
+  fields:
+    order_number: "wnd[0]/usr/ctxtP_AUFNR"   # <-- REPLACE from inspect_screen
+  submit_vkey: 0        # 0 = Enter, 8 = F8 / Execute. Most Z reports use 8.
+
+  # Status-bar messages that mean "this order is fine, carry on".
+  ok_message_types: ["S", "W"]
+
+pdf:
+  strategy: "pdf_printer"     # pdf_printer | spool | preview_button
+  output_dir: "C:/kitting/pdf"
+  # {order} is the work order number, {date} is YYYYMMDD.
+  filename_template: "{order}.pdf"
+  overwrite: false
+
+  pdf_printer:
+    # Name of the SAP output device that maps to a Windows PDF printer.
+    sap_output_device: "LOCL"
+    # Name of the Windows printer as it appears in Settings > Printers.
+    windows_printer: "Microsoft Print to PDF"
+    save_dialog_title: "Save Print Output As"
+    save_dialog_timeout_s: 30
+
+  spool:
+    # Only used when strategy: spool. Requires a PDF device type from Basis.
+    sap_output_device: "PDF1"
+
+sheet:
+  # Sheet name, or ~ for the first sheet.
+  sheet_name: ~
+  # Row index (0-based) of the header row.
+  header_row: 0
+  columns:
+    # left = logical name used by the code, right = your column header text.
+    order_number: "Work Order"
+    part_number: "Material"
+    serial: "Serial Number"
+    quantity: "Qty"
+    component_type: "Type"        # e.g. "optic filter" / "coupler"
+  # Rows where order_number is blank inherit the last non-blank value above,
+  # which is how most scan sheets are laid out (order on the first row only).
+  forward_fill_order: true
+
+run:
+  # Never send keystrokes to SAP unless this is explicitly turned off.
+  dry_run: true
+  # Stop the whole batch on the first order that errors, rather than continuing.
+  stop_on_error: true
+  screenshot_on_error: true
+  screenshot_dir: "C:/kitting/errors"
+  log_file: "C:/kitting/kitting.log"
+
+brain:
+  # "none"    - fully deterministic, no LLM in the loop (recommended to start)
+  # "mistral" - Mistral parses messy sheets and triages unexpected SAP screens
+  mode: "none"
+  model: "mistral-medium-3505"
+  # The LLM is never allowed to invent an order number or press a key in SAP;
+  # see brain.py - it only calls the whitelisted read/triage tools.
+  allow_write_tools: false

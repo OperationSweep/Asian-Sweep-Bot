@@ -1,0 +1,6 @@
+config.yaml
+*.log
+tests/sample_kitting.xlsx
+__pycache__/
+*.pyc
+.pytest_cache/

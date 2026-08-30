@@ -1,0 +1,7 @@
+# Runs on Windows, on the same desktop as SAP GUI for Windows.
+pywin32>=306          # SAP GUI Scripting COM bridge
+pywinauto>=0.6.8      # drives the Windows "Save Print Output As" dialog
+pandas>=2.0
+openpyxl>=3.1         # .xlsx reader
+PyYAML>=6.0
+mistralai>=1.0        # optional: only needed for --brain mistral
