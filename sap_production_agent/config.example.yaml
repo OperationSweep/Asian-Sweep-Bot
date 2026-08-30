@@ -8,6 +8,12 @@ excel:
   # case-insensitively as a substring, so "Work Order s/n" is found by
   # "work order".
   work_order_label: "work order"
+  # Cells below the data block that are known leftovers in the template. They
+  # are still detected and logged, just not raised as a warning every run.
+  # Anything NOT listed here is reported - a stray value near production data
+  # should be explained once, not ignored by default.
+  ignore_cells: []
+  #  - "N45"
 
 sap:
   connection_name: "PRD - Production"

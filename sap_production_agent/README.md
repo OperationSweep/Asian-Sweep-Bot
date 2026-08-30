@@ -67,8 +67,9 @@ gap of hundreds between them. A single `From`/`To` across that gap would select
 **344 orders** where only 24 belong to the run, reprinting hundreds of
 unrelated production documents.
 
-So the reprint runs **once per contiguous block**, and pre-flight shows the
-split before anything starts:
+CO04's selection screen takes a single `From`/`To` — confirmed against the live
+screen — so the reprint runs **once per contiguous block**, and pre-flight shows
+the split before anything starts:
 
 ```
 CO04 print ranges:
@@ -82,14 +83,23 @@ Blocks are derived from *posted* orders only, so this also handles the other
 case for free: an order that fails mid-batch splits the block around itself and
 is excluded from the reprint.
 
+**The CO04 selection screen also keeps the previous run's entries.** Plant and
+an order range are typically still sitting there. A leftover Order Type,
+Material or date range would silently narrow the selection and print fewer
+documents than the batch posted — so everything listed in `co04.clear_fields`
+is blanked before the range is set. `controls.example.yaml` maps each label on
+that screen to its slot.
+
 **4. An earlier revision had `0` where the amp tray serial goes.**
 Eight orders, a literal zero rather than a blank. The current sheet has a tray
 serial on every order, but the handling stays: a `0` is never sent to SAP as
 `"0"`, it is reported, and those orders simply carry one serial fewer.
 
-**5. One stray cell.** `N45` holds a lone `TQ2603A…` serial, seven rows below the
-block, under the 13th order. Not a duplicate of anything in the grid. It is reported,
-never silently swept into a posting — someone should say what it was meant to be.
+**5. One stray cell.** `N45` holds a lone serial seven rows below the block.
+Confirmed as a leftover paste in the template, so it is listed in
+`excel.ignore_cells` — still detected and logged, no longer a warning on every
+run. Anything *not* listed is still reported: a stray value sitting next to
+production data should be explained once rather than ignored by default.
 
 **6. The fibre-pair count does not need asking.** Row 1 labels M1/M2…M47/M48
 and row 38 numbers 1–24. The sheet says 24. So the prompt is replaced by
@@ -285,7 +295,7 @@ inbound network at all.
 
 ## Stage 8 — Testing
 
-**157 tests, no SAP required.** `python -m pytest tests/ -q`
+**175 tests, no SAP required.** `python -m pytest tests/ -q`
 
 `sap/mock.py` is a scriptable fake session, so tests assert on the exact
 keystroke sequence that would reach production:
@@ -299,6 +309,8 @@ keystroke sequence that would reach production:
 - a PDF named for one order but containing another fails verification
 - a two-series batch splits into the right print blocks, and a failed order
   splits the block around it
+- CO04 clears stale criteria *before* typing the range, and refuses to print
+  when the document count does not match what was posted
 - the audit log drops a password even when handed one
 
 **The real workbook is not in this repo.** It holds live serial numbers, ASN

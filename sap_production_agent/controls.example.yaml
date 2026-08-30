@@ -43,21 +43,65 @@ zpro:
   confirm_button: null
 
 co04:
-  # Print mode. Either a radio button for Reprint, or a field taking a code.
+  # --------------------------------------------------------------------------
+  # Transaction CO04, "Print Shop Papers: Initial Screen".
+  #
+  # Unlike ZPRO this is a standard SAP transaction, so the screen is the same
+  # everywhere - but the control IDs still have to be read off your system.
+  # Run tools/discover_controls.py on this screen; the fields come out in the
+  # same order as the labels below, so mapping them is mechanical.
+  #
+  #   Print mode        Original printout / Reprint  -> reprint_radio
+  #   Order selection   Plant                        -> plant_field
+  #                     MRP Controller               -> clear_fields
+  #                     Production scheduler         -> clear_fields
+  #                     Order Type                   -> clear_fields
+  #                     Order [    ] to [    ]       -> order_from_field / order_to_field
+  #                     Material                     -> clear_fields
+  #                     Sales order (two fields)     -> clear_fields
+  #                     WBS element                  -> clear_fields
+  #   Date selection    Release / Scheduled start /
+  #                     Scheduled finish (from-to)   -> clear_fields
+  #   Status req.       Selection profile            -> clear_fields
+  # --------------------------------------------------------------------------
+
+  # "Reprint" is a radio button on this screen, so this is the one to fill in.
   reprint_radio: null
+  # Only for a system where print mode is a code field rather than radios.
   print_mode_field: null
 
   plant_field: null
   order_from_field: null
   order_to_field: null
 
-  # Leave null to send F8.
+  # Every other selection criterion on the screen.
+  #
+  # The selection screen keeps whatever was entered last - a range and a plant
+  # are usually sitting there from the previous run. A leftover Order Type,
+  # Material or date would silently narrow the selection and print fewer
+  # documents than the batch posted, so these are blanked before the range is
+  # set. List them here; ids that do not exist on your screen are skipped.
+  clear_fields: []
+  #  - "wnd[0]/usr/ctxt..."   # MRP Controller
+  #  - "wnd[0]/usr/ctxt..."   # Production scheduler
+  #  - "wnd[0]/usr/ctxt..."   # Order Type
+  #  - "wnd[0]/usr/ctxt..."   # Material
+  #  - "wnd[0]/usr/ctxt..."   # Sales order (both fields)
+  #  - "wnd[0]/usr/ctxt..."   # WBS element
+  #  - "wnd[0]/usr/ctxt..."   # Release from / to
+  #  - "wnd[0]/usr/ctxt..."   # Scheduled start from / to
+  #  - "wnd[0]/usr/ctxt..."   # Scheduled finish from / to
+  #  - "wnd[0]/usr/ctxt..."   # Selection profile
+
+  # Leave null to send F8. On this screen Execute is the clock icon in the
+  # toolbar, next to the green tick.
   execute_button: null
 
+  # The next screen, where the documents are listed.
   select_all_button: null
 
-  # Optional: the results table, used to verify the document count matches the
-  # number of orders posted before anything prints.
+  # Optional but recommended: the results table, so the document count can be
+  # checked against the number of orders posted before anything prints.
   results_table: null
 
   print_button: null

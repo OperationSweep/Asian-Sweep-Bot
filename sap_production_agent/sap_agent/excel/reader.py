@@ -17,8 +17,9 @@ Discovered from the sample workbook (ZPRO.xlsx):
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 import openpyxl
 from openpyxl.utils import get_column_letter
@@ -34,6 +35,8 @@ from ..models import (
     normalise_serial,
     normalise_work_order,
 )
+
+log = logging.getLogger(__name__)
 
 DEFAULT_WORK_ORDER_LABEL = "work order"
 
@@ -199,8 +202,13 @@ def read_workbook(
     path: str | Path,
     sheet_name: Optional[str] = None,
     work_order_label: str = DEFAULT_WORK_ORDER_LABEL,
+    ignore_cells: Sequence[str] = (),
 ) -> Workbook:
-    """Parse the workbook into jobs, recording anomalies rather than guessing."""
+    """Parse the workbook into jobs, recording anomalies rather than guessing.
+
+    ignore_cells names cells already identified as leftovers in the template -
+    they are still detected and logged, just not raised as warnings every run.
+    """
     path = Path(path)
     if not path.exists():
         raise KittingError(f"spreadsheet not found: {path}")
@@ -307,9 +315,16 @@ def read_workbook(
 
         result.jobs.append(job)
 
+    ignored = {c.strip().upper() for c in ignore_cells}
     for coordinate, column, value in _find_stray_cells(
         sheet, component_rows[-1], columns
     ):
+        if coordinate.upper() in ignored:
+            log.info(
+                "%s holds %r below the data block; ignored by configuration",
+                coordinate, value,
+            )
+            continue
         owner = ""
         if column in columns:
             owning = normalise_work_order(sheet.cell(work_order_row, column).value)

@@ -159,3 +159,31 @@ class TestJobShape:
 
     def test_job_lookup_misses_cleanly(self, book):
         assert book.job("000000000") is None
+
+
+class TestIgnoredCells:
+    """A leftover paste in the template should be reported once, then silenced."""
+
+    def test_a_stray_cell_is_reported_by_default(self, sample_path):
+        book = read_workbook(sample_path)
+        assert [a.code for a in book.warnings].count("STRAY_CELL") == 1
+
+    def test_an_ignored_cell_raises_no_warning(self, sample_path):
+        book = read_workbook(sample_path, ignore_cells=[fx.STRAY_CELL])
+        assert "STRAY_CELL" not in [a.code for a in book.warnings]
+
+    def test_ignoring_is_case_insensitive(self, sample_path):
+        book = read_workbook(sample_path, ignore_cells=[fx.STRAY_CELL.lower()])
+        assert "STRAY_CELL" not in [a.code for a in book.warnings]
+
+    def test_ignoring_one_cell_does_not_silence_others(self, sample_path, tmp_path):
+        import openpyxl
+
+        workbook = openpyxl.load_workbook(sample_path)
+        workbook.active["P44"] = "SNY0000001"
+        target = tmp_path / "two_strays.xlsx"
+        workbook.save(target)
+
+        book = read_workbook(target, ignore_cells=[fx.STRAY_CELL])
+        strays = [a for a in book.warnings if a.code == "STRAY_CELL"]
+        assert [a.cell for a in strays] == ["P44"]

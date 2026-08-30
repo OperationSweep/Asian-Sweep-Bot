@@ -12,6 +12,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+from ..models import KittingError
+
 
 class MockSession:
     dry_run = False
@@ -112,5 +114,7 @@ class MockSession:
         ]
 
     def _guard(self, element_id: str) -> None:
+        """Match SapSession: an absent control raises KittingError, not a bare
+        RuntimeError, so callers that handle one handle the other."""
         if element_id in self.missing_controls:
-            raise RuntimeError(f"control {element_id} not on screen")
+            raise KittingError(f"control {element_id} not on screen")

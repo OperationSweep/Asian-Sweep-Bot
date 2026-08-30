@@ -74,11 +74,22 @@ class Controls:
         return str(node)
 
     def optional(self, path: str, default: Any = None) -> Any:
-        try:
-            value = self.get(path)
-        except KittingError:
+        """Fetch a control that the flow can work without.
+
+        Returns the raw node for anything that is not a single id string, so a
+        list of ids (co04.clear_fields) comes back as a list.
+        """
+        node: Any = self._data
+        for part in path.split("."):
+            if not isinstance(node, dict) or part not in node:
+                return default
+            node = node[part]
+
+        if node is None or (isinstance(node, str) and not node.strip()):
             return default
-        return default if value.startswith("<UNSET ") else value
+        if isinstance(node, str) and node.startswith("<UNSET "):
+            return default
+        return node
 
     def missing(self) -> list[str]:
         """Every unfilled control, so pre-flight can report them all at once."""

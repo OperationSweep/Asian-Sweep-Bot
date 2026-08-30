@@ -147,6 +147,7 @@ class Orchestrator:
             work_order_label=self.config.get("excel", {}).get(
                 "work_order_label", "work order"
             ),
+            ignore_cells=self.config.get("excel", {}).get("ignore_cells", []),
         )
 
         anomalies = validate(book, expected_pairs=limit)

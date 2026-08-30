@@ -96,11 +96,31 @@ class Co04Flow:
         )
 
     def _set_selection(self, order_from: str, order_to: str) -> None:
+        """Clear the other selection criteria, then set plant and order range.
+
+        The CO04 selection screen keeps whatever was entered last. A leftover
+        order type, material or date range from a previous run would silently
+        narrow the selection, so anything listed in co04.clear_fields is blanked
+        before ours are set. Fields already empty cost nothing to blank again.
+        """
+        self._clear_selection()
         self.session.set_text(
             self.controls.get("co04.plant_field"), str(self.config.get("plant", "8000"))
         )
         self.session.set_text(self.controls.get("co04.order_from_field"), order_from)
         self.session.set_text(self.controls.get("co04.order_to_field"), order_to)
+
+    def _clear_selection(self) -> None:
+        for element_id in self.controls.optional("co04.clear_fields", []) or []:
+            if not element_id:
+                continue
+            try:
+                self.session.set_text(element_id, "")
+            except Exception as exc:  # noqa: BLE001
+                # A field absent from this system's screen is not a problem: it
+                # cannot be carrying a stale value either. Anything worse fails
+                # again immediately when the plant and range are set below.
+                log.info("clear_fields: skipping %s (%s)", element_id, exc)
 
     def _execute(self) -> None:
         execute = self.controls.optional("co04.execute_button")
