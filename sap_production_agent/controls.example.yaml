@@ -1,0 +1,110 @@
+# ---------------------------------------------------------------------------
+# SAP GUI control IDs. Copy to controls.yaml and fill in.
+#
+# ZPRO is a custom transaction, so NOBODY can supply these - they exist only on
+# your system. Get them by opening the relevant SAP screen and running:
+#
+#     python tools/discover_controls.py
+#
+# Every null below is a slot waiting for a real ID. Pre-flight lists the ones
+# still empty, so you find out before a run rather than during one.
+# ---------------------------------------------------------------------------
+
+zpro:
+  # Selection screen: where the work order number is typed.
+  # Looks like wnd[0]/usr/ctxtP_AUFNR or wnd[0]/usr/txtCAUFVD-AUFNR
+  work_order_field: null
+
+  # Optional but strongly recommended: a field on the *opened* order that shows
+  # the order number back. Used to confirm SAP is displaying the order we mean
+  # before any serial is written. Without it that check is skipped.
+  order_display_field: null
+
+  # Button that opens/executes the order after the number is keyed.
+  # Leave null to send Enter (or F8, per zpro.open_order_vkey in config.yaml).
+  execute_button: null
+
+  # The "+" control that expands Components View.
+  components_expand_button: null
+
+  # The table or ALV grid holding the components.
+  # discover_controls.py shows its Type: GuiTableControl or GuiShell (ALV).
+  serial_table: null
+
+  # Serial Number column. For a GuiTableControl this is the column INDEX as a
+  # number-in-a-string ("7"). For an ALV grid it is the column NAME ("SERNR").
+  serial_column: null
+
+  post_goods_issue_checkbox: null
+  post_button: null
+
+  # Button that dismisses the confirmation popup after posting.
+  # Leave null to send Enter to wnd[1].
+  confirm_button: null
+
+co04:
+  # --------------------------------------------------------------------------
+  # Transaction CO04, "Print Shop Papers: Initial Screen".
+  #
+  # Unlike ZPRO this is a standard SAP transaction, so the screen is the same
+  # everywhere - but the control IDs still have to be read off your system.
+  # Run tools/discover_controls.py on this screen; the fields come out in the
+  # same order as the labels below, so mapping them is mechanical.
+  #
+  #   Print mode        Original printout / Reprint  -> reprint_radio
+  #   Order selection   Plant                        -> plant_field
+  #                     MRP Controller               -> clear_fields
+  #                     Production scheduler         -> clear_fields
+  #                     Order Type                   -> clear_fields
+  #                     Order [    ] to [    ]       -> order_from_field / order_to_field
+  #                     Material                     -> clear_fields
+  #                     Sales order (two fields)     -> clear_fields
+  #                     WBS element                  -> clear_fields
+  #   Date selection    Release / Scheduled start /
+  #                     Scheduled finish (from-to)   -> clear_fields
+  #   Status req.       Selection profile            -> clear_fields
+  # --------------------------------------------------------------------------
+
+  # "Reprint" is a radio button on this screen, so this is the one to fill in.
+  reprint_radio: null
+  # Only for a system where print mode is a code field rather than radios.
+  print_mode_field: null
+
+  plant_field: null
+  order_from_field: null
+  order_to_field: null
+
+  # Every other selection criterion on the screen.
+  #
+  # The selection screen keeps whatever was entered last - a range and a plant
+  # are usually sitting there from the previous run. A leftover Order Type,
+  # Material or date would silently narrow the selection and print fewer
+  # documents than the batch posted, so these are blanked before the range is
+  # set. List them here; ids that do not exist on your screen are skipped.
+  clear_fields: []
+  #  - "wnd[0]/usr/ctxt..."   # MRP Controller
+  #  - "wnd[0]/usr/ctxt..."   # Production scheduler
+  #  - "wnd[0]/usr/ctxt..."   # Order Type
+  #  - "wnd[0]/usr/ctxt..."   # Material
+  #  - "wnd[0]/usr/ctxt..."   # Sales order (both fields)
+  #  - "wnd[0]/usr/ctxt..."   # WBS element
+  #  - "wnd[0]/usr/ctxt..."   # Release from / to
+  #  - "wnd[0]/usr/ctxt..."   # Scheduled start from / to
+  #  - "wnd[0]/usr/ctxt..."   # Scheduled finish from / to
+  #  - "wnd[0]/usr/ctxt..."   # Selection profile
+
+  # Leave null to send F8. On this screen Execute is the clock icon in the
+  # toolbar, next to the green tick.
+  execute_button: null
+
+  # The next screen, where the documents are listed.
+  select_all_button: null
+
+  # Optional but recommended: the results table, so the document count can be
+  # checked against the number of orders posted before anything prints.
+  results_table: null
+
+  print_button: null
+
+  # The SAP print dialogue's confirm button, before Windows takes over.
+  print_dialog_confirm: null

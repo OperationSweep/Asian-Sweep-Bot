@@ -1,0 +1,68 @@
+# Copy to config.yaml. Nothing here is secret - credentials come from the
+# environment. config.yaml is gitignored.
+
+excel:
+  # null = first worksheet. The sample workbook uses "Sheet1".
+  sheet_name: null
+  # The label in column A that marks the work-order row. Matched
+  # case-insensitively as a substring, so "Work Order s/n" is found by
+  # "work order".
+  work_order_label: "work order"
+  # Cells below the data block that are known leftovers in the template. They
+  # are still detected and logged, just not raised as a warning every run.
+  # Anything NOT listed here is reported - a stray value near production data
+  # should be explained once, not ignored by default.
+  ignore_cells: []
+  #  - "N45"
+
+sap:
+  connection_name: "PRD - Production"
+  client: "100"
+  language: "EN"
+  multi_logon: "continue_and_end_others"
+  # auto | table | alv. "auto" picks by inspecting the control's type.
+  serial_table_kind: "auto"
+
+zpro:
+  transaction: "ZPRO"
+  # Key that opens the order after the number is typed: 0 = Enter, 8 = F8.
+  open_order_vkey: 0
+  # First row index in the serial table. SAP table controls are 0-based;
+  # ALV grids are usually 0-based too. Confirm with discover_controls.py.
+  serial_first_row: 0
+
+co04:
+  transaction: "CO04"
+  plant: "8000"
+  # Only used when co04.print_mode_field is configured rather than a radio.
+  print_mode: "2"
+
+printing:
+  # combined_split : SAP emits one PDF; split it by reading the work order off
+  #                  each page. Safest, and the default.
+  # per_document   : SAP raises one save dialog per document.
+  mode: "combined_split"
+  output_dir: "C:/Production/ZPRO_Output"
+  date_subfolder: true
+  overwrite: false
+  combined_name: "_combined.pdf"
+  windows_printer: "Microsoft Print to PDF"
+  # Localised - set to whatever the dialog is actually titled on your Windows.
+  save_dialog_title: "Save Print Output As"
+  save_dialog_timeout_s: 60
+  first_dialog_timeout_s: 120
+
+run:
+  # Retries for RETRYABLE_ERROR only. Never applies after a Post that SAP did
+  # not confirm - that is recorded as UNCERTAIN and left for a human.
+  max_retries: 1
+  screenshot_dir: "logs/screenshots"
+
+logs_dir: "logs"
+state_dir: "logs"
+
+mistral:
+  # false = fully deterministic, no API calls at all. Start here.
+  enabled: false
+  model: "mistral-medium-3505"
+  timeout_s: 30
