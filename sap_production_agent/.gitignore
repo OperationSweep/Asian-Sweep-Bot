@@ -1,0 +1,12 @@
+config.yaml
+controls.yaml
+.env
+logs/
+*.pdf
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Never commit production data: real serials, part numbers and internal links.
+tests/*.xlsx
+*.xlsm

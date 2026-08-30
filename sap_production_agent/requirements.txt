@@ -1,0 +1,13 @@
+# Windows, on the same desktop as SAP GUI for Windows.
+pywin32>=306          # SAP GUI Scripting COM bridge
+pywinauto>=0.6.8      # drives the Windows save dialog
+openpyxl>=3.1         # reads the scan workbook
+pypdf>=4.0            # splits and verifies the printed PDFs
+PyYAML>=6.0
+python-dotenv>=1.0
+
+# Optional - only when mistral.enabled is true
+mistralai>=1.0
+
+# Development
+pytest>=7.4
