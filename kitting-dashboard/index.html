@@ -1,0 +1,616 @@
+<title>R5B Kitting Plan WK 40</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: control-room sheet. Contract strip → KPI rail → coverage + pipeline → grouped assembly ledger with WO chips. Accent is erbium rose (erbium-doped glass is pink). */
+:root {
+  --bg: #f3f4f7;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --ink: #131826;
+  --muted: #5d6576;
+  --faint: #8a91a0;
+  --line: #e2e5ec;
+  --line-strong: #cfd4de;
+  --accent: #b0245e;
+  --accent-soft: #fbe8ef;
+  --accent-ink: #ffffff;
+  --ok: #1f8a5b;
+  --ok-soft: #e3f4ec;
+  --warn: #a8660b;
+  --warn-soft: #fbf0dc;
+  --crit: #c0392b;
+  --crit-soft: #fbe6e3;
+  --info: #3558b8;
+  --info-soft: #e6ecfa;
+  --track: #eceef3;
+  --shadow: 0 1px 2px rgba(19,24,38,.04), 0 8px 24px -12px rgba(19,24,38,.12);
+  --f-display: "Familjen Grotesk", "Hanken Grotesk", system-ui, sans-serif;
+  --f-body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0c0f15; --surface: #141922; --surface-2: #10141c; --ink: #e8ebf2; --muted: #98a0b0; --faint: #6c7486;
+  --line: #222937; --line-strong: #2f3747; --accent: #ef6b9c; --accent-soft: #3a1626; --accent-ink: #1a0610;
+  --ok: #4cc48b; --ok-soft: #12301f; --warn: #e6a94a; --warn-soft: #33250d; --crit: #f07a6c; --crit-soft: #3a1714;
+  --info: #84a3f5; --info-soft: #18223d; --track: #1d2330; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0c0f15; --surface: #141922; --surface-2: #10141c; --ink: #e8ebf2; --muted: #98a0b0; --faint: #6c7486;
+  --line: #222937; --line-strong: #2f3747; --accent: #ef6b9c; --accent-soft: #3a1626; --accent-ink: #1a0610;
+  --ok: #4cc48b; --ok-soft: #12301f; --warn: #e6a94a; --warn-soft: #33250d; --crit: #f07a6c; --crit-soft: #3a1714;
+  --info: #84a3f5; --info-soft: #18223d; --track: #1d2330; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.5 var(--f-body); }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: clamp(16px, 3vw, 32px); padding-block: 20px 56px; display: grid; gap: 20px; }
+.mono { font-family: var(--f-mono); font-size: .92em; letter-spacing: -.01em; }
+.num { font-variant-numeric: tabular-nums; }
+.label { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); font-weight: 600; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* Header */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.brand { display: grid; gap: 4px; min-width: 0; }
+.brand h1 { font: 700 clamp(26px, 3.4vw, 36px)/1.05 var(--f-display); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.brand h1 em { font-style: normal; color: var(--accent); }
+.brand p { margin: 0; color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); background: var(--surface); padding: 9px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; transition: border-color .15s, background .15s; }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn svg { width: 15px; height: 15px; }
+
+/* Contract strip */
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.strip div { padding: 12px 16px; border-right: 1px solid var(--line); display: grid; gap: 2px; min-width: 0; }
+.strip div:last-child { border-right: 0; }
+.strip b { font: 600 15px/1.3 var(--f-display); overflow-wrap: anywhere; }
+
+/* KPI */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px; display: grid; gap: 8px; box-shadow: var(--shadow); min-width: 0; }
+.kpi .big { font: 700 34px/1 var(--f-display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.kpi .big small { font: 500 14px var(--f-body); color: var(--muted); letter-spacing: 0; margin-left: 4px; }
+.kpi .sub { color: var(--muted); font-size: 13px; }
+.meter { height: 6px; background: var(--track); border-radius: 99px; overflow: hidden; display: flex; }
+.meter i { display: block; height: 100%; }
+.stack-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); }
+.stack-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* Panels */
+.duo { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; }
+@media (max-width: 900px) { .duo { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.panel h2 { font: 600 16px/1.2 var(--f-display); margin: 0; letter-spacing: -.01em; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.seqbars { display: grid; gap: 12px; }
+.seqbar { display: grid; grid-template-columns: 110px minmax(0, 1fr) 92px; align-items: center; gap: 12px; }
+.seqbar .nm { font-weight: 600; font-size: 13px; }
+.seqbar .bar { height: 10px; background: var(--track); border-radius: 99px; overflow: hidden; }
+.seqbar .bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .4s ease; }
+.seqbar .val { text-align: right; font-size: 12px; color: var(--muted); }
+.seqbar .val b { color: var(--ink); font-weight: 600; }
+@media (max-width: 480px) { .seqbar { grid-template-columns: 84px minmax(0, 1fr) 70px; gap: 8px; } }
+
+.pipe { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stage { border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: grid; gap: 2px; background: var(--surface-2); }
+.stage b { font: 700 24px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.stage span { font-size: 12px; color: var(--muted); }
+.stage em { font-style: normal; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+.checks { display: grid; gap: 8px; }
+.check { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding: 10px 12px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); font-size: 13px; }
+.check svg { width: 16px; height: 16px; color: var(--warn); margin-top: 2px; }
+.check.ok { background: var(--ok-soft); }
+.check.ok svg { color: var(--ok); }
+
+/* Ledger */
+.ledger { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); min-width: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line-strong); background: transparent; border-radius: 999px; padding: 5px 11px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.tools-right { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.seg { display: inline-flex; background: var(--track); border-radius: 999px; padding: 3px; }
+.seg button { border: 0; background: transparent; padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.search { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); border-radius: 999px; padding: 5px 12px; background: var(--surface); }
+.search input { border: 0; outline: 0; background: transparent; font: inherit; font-size: 13px; color: var(--ink); width: 170px; }
+.search svg { width: 14px; height: 14px; color: var(--faint); }
+.tablebox { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 980px; }
+th { text-align: left; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 600; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--surface-2); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr.group td { background: var(--surface-2); padding: 8px 14px; font: 600 12px var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+tr.group td span { color: var(--faint); font: 500 12px var(--f-body); letter-spacing: 0; text-transform: none; margin-left: 8px; }
+tbody tr.row:hover td { background: color-mix(in srgb, var(--accent-soft) 35%, transparent); }
+td.r, th.r { text-align: right; }
+.code { font-family: var(--f-mono); font-size: 13px; font-weight: 500; white-space: nowrap; }
+.desc { color: var(--muted); font-size: 13px; max-width: 320px; }
+.qty { font: 600 15px var(--f-display); font-variant-numeric: tabular-nums; }
+.qty small { display: block; font: 500 11px var(--f-body); color: var(--faint); }
+.flag { display: inline-flex; vertical-align: middle; margin-left: 4px; color: var(--warn); }
+.flag svg { width: 14px; height: 14px; }
+.cov { display: grid; gap: 5px; min-width: 150px; }
+.cov .meter { height: 5px; }
+.cov-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; }
+.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.p-none { background: var(--track); color: var(--muted); }
+.p-partial { background: var(--warn-soft); color: var(--warn); }
+.p-full { background: var(--ok-soft); color: var(--ok); }
+.p-over { background: var(--crit-soft); color: var(--crit); }
+.wos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 220px; }
+.wo { display: inline-flex; align-items: stretch; border: 1px solid var(--line-strong); border-radius: 7px; overflow: hidden; font-size: 12px; background: var(--surface); }
+.wo .id { padding: 3px 8px; font-family: var(--f-mono); font-weight: 500; }
+.wo .q { padding: 3px 7px; border-left: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
+.wo .st { border: 0; border-left: 1px solid var(--line); padding: 3px 8px; font-size: 11px; font-weight: 600; }
+.wo .x { border: 0; border-left: 1px solid var(--line); background: transparent; padding: 0 7px; color: var(--faint); }
+.wo .x:hover { color: var(--crit); }
+.wo .x.arm { background: var(--crit); color: #fff; padding: 0 8px; font-size: 11px; font-weight: 600; }
+.s-planned { background: var(--track); color: var(--muted); }
+.s-released { background: var(--info-soft); color: var(--info); }
+.s-kitted { background: var(--warn-soft); color: var(--warn); }
+.s-closed { background: var(--ok-soft); color: var(--ok); }
+.addwo { border: 1px dashed var(--line-strong); background: transparent; border-radius: 7px; padding: 3px 9px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.addwo:hover { border-color: var(--accent); color: var(--accent); }
+.empty-note { font-size: 12px; color: var(--faint); }
+.foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; padding: 12px 16px; color: var(--muted); font-size: 12px; }
+.sync { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Dialog */
+dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; width: min(540px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: 0 30px 80px -20px rgba(0,0,0,.45); }
+dialog::backdrop { background: rgba(10,12,18,.45); backdrop-filter: blur(3px); }
+.dlg-head { padding: 18px 20px 0; display: grid; gap: 12px; }
+.dlg-head h3 { margin: 0; font: 600 19px var(--f-display); }
+.dlg-body { padding: 16px 20px; display: grid; gap: 14px; }
+.dlg-foot { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; background: var(--surface-2); border-radius: 0 0 14px 14px; }
+.field { display: grid; gap: 5px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.field input, .field select, .field textarea { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 11px; width: 100%; }
+.field textarea { font-family: var(--f-mono); font-size: 13px; min-height: 150px; resize: vertical; }
+.field .hint { font-size: 12px; color: var(--faint); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+.err { color: var(--crit); font-size: 13px; min-height: 1em; }
+.preview { font-size: 12px; color: var(--muted); max-height: 140px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface-2); }
+.preview div { display: flex; justify-content: space-between; gap: 10px; }
+.preview .bad { color: var(--crit); }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; max-width: calc(100vw - 32px); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="label">Kitting plan · Week 40</span>
+      <h1>R5B <em>24FP</em> Kitting Control</h1>
+      <p>Assembly release against work orders for repeaters 1–3.</p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="exportBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg>Export CSV</button>
+      <button class="btn" id="bulkBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Paste work orders</button>
+      <button class="btn primary" id="newBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>New work order</button>
+    </div>
+  </header>
+
+  <section class="strip" aria-label="Contract details">
+    <div><span class="label">Contract</span><b>R5B</b></div>
+    <div><span class="label">Program</span><b class="mono">WKE-R24P-T1-C</b></div>
+    <div><span class="label">ERP item</span><b class="mono">92ERP24543A++</b></div>
+    <div><span class="label">Config</span><b>24FP</b></div>
+    <div><span class="label">Kitting week</span><b>WK 40</b></div>
+    <div><span class="label">Repeaters</span><b>1–3 · 3 to release</b></div>
+  </section>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="duo">
+    <div class="panel">
+      <div class="panel-head"><h2>Work-order coverage by sequence</h2><span class="label" id="covScope">All repeaters</span></div>
+      <div class="seqbars" id="seqbars"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Work-order pipeline</h2><span class="label">Click a status to advance it</span></div>
+      <div class="pipe" id="pipe"></div>
+      <div class="checks" id="checks"></div>
+    </div>
+  </section>
+
+  <section class="ledger">
+    <div class="toolbar">
+      <div class="chips" id="seqChips" role="group" aria-label="Filter by sequence"></div>
+      <div class="tools-right">
+        <div class="seg" id="repSeg" role="group" aria-label="Repeater view"></div>
+        <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search code, description, WO"></label>
+      </div>
+    </div>
+    <div class="tablebox">
+      <table>
+        <thead><tr>
+          <th>Assy code</th><th>Description</th><th class="r" id="qtyHead">Release</th><th class="r">Default / rep</th><th>WO coverage</th><th>Work orders</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="foot"><span id="footCount"></span><span class="sync" id="sync"><span class="dot" style="background:var(--faint)"></span>Connecting…</span></div>
+  </section>
+</div>
+
+<dialog id="woDlg">
+  <form id="woForm" method="dialog">
+    <div class="dlg-head"><span class="label" id="woEyebrow">New work order</span><h3 id="woTitle">Add work order</h3></div>
+    <div class="dlg-body">
+      <div class="field"><label for="fCode">Assembly</label><select id="fCode"></select></div>
+      <div class="grid3">
+        <div class="field"><label for="fWo">WO number</label><input id="fWo" autocomplete="off" placeholder="e.g. WO-4012871" required></div>
+        <div class="field"><label for="fRep">Repeater</label><select id="fRep"><option value="ALL">All (1–3)</option><option value="1">Repeater 1</option><option value="2">Repeater 2</option><option value="3">Repeater 3</option></select></div>
+        <div class="field"><label for="fQty">Quantity</label><input id="fQty" type="number" min="1" step="1" inputmode="numeric" required></div>
+      </div>
+      <div class="field"><label for="fStatus">Status</label><select id="fStatus"><option value="planned">Planned</option><option value="released">Released</option><option value="kitted">Kitted</option><option value="closed">Closed</option></select>
+        <span class="hint" id="qtyHint"></span></div>
+      <div class="err" id="woErr"></div>
+    </div>
+    <div class="dlg-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit">Add work order</button></div>
+  </form>
+</dialog>
+
+<dialog id="bulkDlg">
+  <form id="bulkForm" method="dialog">
+    <div class="dlg-head"><span class="label">Bulk entry</span><h3>Paste work orders</h3></div>
+    <div class="dlg-body">
+      <div class="field"><label for="fBulk">One work order per line: WO number, assy code, quantity (optional), repeater (optional)</label>
+        <textarea id="fBulk" placeholder="WO-4012871, 92YLS00543AAA&#10;WO-4012872, 92YLS00543ABA&#10;WO-4012880, 92RRA00543AAA, 48, 1"></textarea>
+        <span class="hint">Quantity defaults to the release qty listed for that code, or the default qty when a repeater is given. Tabs from Excel work too.</span></div>
+      <div class="preview" id="bulkPreview" hidden></div>
+      <div class="err" id="bulkErr"></div>
+    </div>
+    <div class="dlg-foot"><button class="btn" type="button" data-close>Cancel</button><button class="btn primary" type="submit" id="bulkSubmit">Add work orders</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const PLAN = [
+  { seq: "LASER ASSY",  code: "92YLS00543AAA", desc: "R5B LASER ASSEMBLY 4P-4P BOAT 1 - WKE", rel: 3, def: 1 },
+  { seq: "LASER ASSY",  code: "92YLS00543ABA", desc: "R5B LASER ASSEMBLY 4P-4P BOAT 2 - WKE", rel: 3, def: 1 },
+  { seq: "LASER ASSY",  code: "92YLS00543ACA", desc: "R5B LASER ASSEMBLY 4P-4P BOAT 3 - WKE", rel: 3, def: 1 },
+  { seq: "PSB ASSY",    code: "91YAF03404AAA", desc: "R5B PSB SUB ASSEMBLY 4P-4FP", rel: 18, def: 6 },
+  { seq: "OPF ASSY",    code: "92YFD44543AAA", desc: "R5B OPF ASSEMBLY 2X(4P-4FP) BOAT 1 - WKE", rel: 3, def: 1 },
+  { seq: "OPF ASSY",    code: "92YFD44543ABA", desc: "R5B OPF ASSEMBLY 2X(4P-4FP) BOAT 2 - WKE", rel: 3, def: 1 },
+  { seq: "OPF ASSY",    code: "92YFD44543ACA", desc: "R5B OPF ASSEMBLY 2X(4P-4FP) BOAT 3 - WKE", rel: 3, def: 1 },
+  { seq: "POB ASSY",    code: "92YWS04543AAA", desc: "R5B 4FP POB LUMENTUM SUB ASSEMBLY - WKE", rel: 18, def: 6 },
+  { seq: "ERBIUM ASSY", code: "92YRA01543AAA", desc: "R5B ERBIUM ASSEMBLY 1 - WKE", rel: 18, def: 6 },
+  { seq: "ERBIUM ASSY", code: "92YRA02543AAA", desc: "R5B ERBIUM ASSEMBLY 2 - WKE", rel: 3, def: 6 },
+  { seq: "ERBIUM ASSY", code: "92YRA03543AAA", desc: "R5B ERBIUM ASSEMBLY 3 - WKE", rel: 18, def: 6 },
+  { seq: "ERBIUM ASSY", code: "92YRA04543AAA", desc: "R5B ERBIUM ASSEMBLY 4 - WKE", rel: 18, def: 6 },
+  { seq: "ERBIUM ASSY", code: "92RRA00543AAA", desc: "R5B ERBIUM SPOOL ASSEMBLY - WKE", rel: 144, def: 48 },
+  { seq: "BOAT ASSY",   code: "92UAP44543AAA", desc: "R5B BOAT 1 ASSY 2X(4P-4FP) L - WKE", rel: 3, def: 1 },
+  { seq: "BOAT ASSY",   code: "92UAP44543ABA", desc: "R5B BOAT 2 ASSY 2X(4P-4FP) L - WKE", rel: 3, def: 1 },
+  { seq: "BOAT ASSY",   code: "92UAP44543ACA", desc: "R5B BOAT 3 ASSY 2X(4P-4FP) L - WKE", rel: 3, def: 1 },
+];
+const REPS = 3;
+const SEQS = [...new Set(PLAN.map(p => p.seq))];
+const BY_CODE = Object.fromEntries(PLAN.map(p => [p.code, p]));
+const STATUSES = ["planned", "released", "kitted", "closed"];
+const STATUS_LABEL = { planned: "Planned", released: "Released", kitted: "Kitted", closed: "Closed" };
+const STATUS_COLOR = { planned: "var(--faint)", released: "var(--info)", kitted: "var(--warn)", closed: "var(--ok)" };
+
+const state = { wos: [], seq: "ALL", rep: "ALL", q: "", readOnly: false, mode: "loading" };
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v; else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else if (v != null) n.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) n.append(k);
+  return n;
+};
+const fmt = n => (Math.round(n * 10) / 10).toLocaleString();
+
+/* ---------- Store: shared db when available, browser storage otherwise ---------- */
+const LS_KEY = "r5b-wk40-workorders";
+let dbCol = null;
+const store = {
+  async add(w) {
+    if (dbCol) return dbCol.add(w);
+    w = { ...w, id: "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
+    state.wos.push(w); saveLocal(); render();
+  },
+  async update(id, patch) {
+    if (dbCol) return dbCol.doc(id).update(patch);
+    const w = state.wos.find(x => x.id === id); Object.assign(w, patch); saveLocal(); render();
+  },
+  async remove(id) {
+    if (dbCol) return dbCol.doc(id).delete();
+    state.wos = state.wos.filter(x => x.id !== id); saveLocal(); render();
+  },
+};
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(state.wos)); } catch (e) {} }
+function loadLocal() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch (e) { return []; } }
+function writeFailed(e) {
+  if (e && e.code === "invalid_argument") { state.readOnly = true; render(); toast("You have view-only access to this plan"); }
+  else if (e && e.code === "quota_exceeded") toast("The work-order store is full. Delete closed work orders to make room.");
+  else toast("Couldn't save. Check your connection and try again.");
+}
+
+async function connect() {
+  const fallback = () => { state.mode = "local"; state.wos = loadLocal(); render(); };
+  if (!window.claude || !window.claude.use) return fallback();
+  const db = await window.claude.use("db");
+  if (!db) return fallback();
+  try {
+    const user = await window.claude.use("user");
+    if (user && user.can) { const c = await user.can("data.write"); if (c === false) state.readOnly = true; }
+  } catch (e) {}
+  dbCol = db.collection("workorders");
+  state.mode = "shared";
+  dbCol.onSnapshot(snap => {
+    state.wos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  }, err => { state.mode = "offline"; render(); });
+}
+
+/* ---------- Coverage math ---------- */
+// "ALL" view: required = release qty, covered = every WO for the code.
+// Repeater n view: required = default qty, covered = WOs for repeater n plus a third of each all-repeater WO.
+function required(p) { return state.rep === "ALL" ? p.rel : p.def; }
+function covered(p) {
+  let c = 0;
+  for (const w of state.wos) {
+    if (w.code !== p.code) continue;
+    const q = Number(w.qty) || 0;
+    if (state.rep === "ALL") c += q;
+    else if (w.rep === state.rep) c += q;
+    else if (w.rep === "ALL" || !w.rep) c += q / REPS;
+  }
+  return c;
+}
+function covStatus(req, cov) {
+  if (cov <= 0) return ["none", "No WO"];
+  if (cov > req + 1e-9) return ["over", "Over by " + fmt(cov - req)];
+  if (cov >= req - 1e-9) return ["full", "Covered"];
+  return ["partial", "Short " + fmt(req - cov)];
+}
+const anomalies = PLAN.filter(p => p.rel !== p.def * REPS);
+
+/* ---------- Render ---------- */
+function render() {
+  renderKpis(); renderSeqBars(); renderPipe(); renderChecks(); renderChips(); renderRows(); renderSync();
+}
+
+function renderKpis() {
+  let req = 0, cov = 0, full = 0;
+  for (const p of PLAN) { const r = required(p), c = covered(p); req += r; cov += Math.min(c, r); if (c >= r - 1e-9) full++; }
+  const pct = req ? Math.round(cov / req * 100) : 0;
+  const counts = Object.fromEntries(STATUSES.map(s => [s, 0]));
+  state.wos.forEach(w => counts[w.status in counts ? w.status : "planned"]++);
+  const total = state.wos.length;
+  const scope = state.rep === "ALL" ? "across 3 repeaters" : "for repeater " + state.rep;
+  const box = $("#kpis"); box.replaceChildren(
+    el("div", { class: "kpi" }, el("span", { class: "label", text: "Assemblies" }),
+      el("div", { class: "big", text: String(PLAN.length) }, el("small", { text: "codes" })),
+      el("div", { class: "sub", text: SEQS.length + " sequences · " + full + " fully covered" })),
+    el("div", { class: "kpi" }, el("span", { class: "label", text: state.rep === "ALL" ? "Release quantity" : "Default quantity" }),
+      el("div", { class: "big", text: fmt(req) }, el("small", { text: "units" })),
+      el("div", { class: "sub", text: scope })),
+    el("div", { class: "kpi" }, el("span", { class: "label", text: "WO coverage" }),
+      el("div", { class: "big", text: pct + "%" }, el("small", { text: fmt(cov) + " / " + fmt(req) })),
+      meter([[pct, "var(--accent)"]])),
+    el("div", { class: "kpi" }, el("span", { class: "label", text: "Work orders" }),
+      el("div", { class: "big", text: String(total) }, el("small", { text: counts.closed + " closed" })),
+      total ? meter(STATUSES.map(s => [counts[s] / total * 100, STATUS_COLOR[s]])) : el("div", { class: "meter" }),
+      el("div", { class: "stack-legend" }, ...STATUSES.map(s => el("span", {}, el("i", { class: "dot", style: "background:" + STATUS_COLOR[s] }), STATUS_LABEL[s] + " " + counts[s]))))
+  );
+}
+function meter(parts) { return el("div", { class: "meter" }, ...parts.map(([w, c]) => el("i", { style: `width:${Math.max(0, Math.min(100, w))}%;background:${c}` }))); }
+
+function renderSeqBars() {
+  $("#covScope").textContent = state.rep === "ALL" ? "All repeaters" : "Repeater " + state.rep;
+  $("#seqbars").replaceChildren(...SEQS.map(s => {
+    let req = 0, cov = 0;
+    PLAN.filter(p => p.seq === s).forEach(p => { const r = required(p); req += r; cov += Math.min(covered(p), r); });
+    const pct = req ? cov / req * 100 : 0;
+    return el("div", { class: "seqbar" },
+      el("span", { class: "nm", text: s.replace(" ASSY", "") }),
+      el("div", { class: "bar", role: "img", "aria-label": `${s}: ${Math.round(pct)}% covered` }, el("i", { style: `width:${pct}%` })),
+      el("span", { class: "val num" }, el("b", { text: fmt(cov) }), " / " + fmt(req)));
+  }));
+}
+
+function renderPipe() {
+  const counts = {}, qty = {};
+  STATUSES.forEach(s => { counts[s] = 0; qty[s] = 0; });
+  state.wos.forEach(w => { const s = w.status in counts ? w.status : "planned"; counts[s]++; qty[s] += Number(w.qty) || 0; });
+  $("#pipe").replaceChildren(...STATUSES.map(s => el("div", { class: "stage" },
+    el("span", {}, el("i", { class: "dot", style: "background:" + STATUS_COLOR[s] + ";margin-right:6px" }), STATUS_LABEL[s]),
+    el("b", { text: String(counts[s]) }), el("em", { text: fmt(qty[s]) + " units" }))));
+}
+
+const warnIcon = () => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor"); s.setAttribute("stroke-width", "2"); s.innerHTML = '<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18v.5"/>'; return s; };
+const okIcon = () => { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor"); s.setAttribute("stroke-width", "2.2"); s.innerHTML = '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>'; return s; };
+
+function renderChecks() {
+  const items = anomalies.map(p => el("div", { class: "check" }, warnIcon(), el("div", {},
+    el("b", { class: "mono", text: p.code }), ` releases ${p.rel}, but default qty ${p.def} × ${REPS} repeaters = ${p.def * REPS}. Confirm which quantity the WO should carry.`)));
+  const dupes = {};
+  state.wos.forEach(w => { const k = String(w.wo).trim().toUpperCase(); dupes[k] = (dupes[k] || 0) + 1; });
+  Object.entries(dupes).filter(([, n]) => n > 1).forEach(([k, n]) => items.push(el("div", { class: "check" }, warnIcon(), el("div", {}, "WO ", el("b", { class: "mono", text: k }), ` is used on ${n} lines.`))));
+  const over = PLAN.filter(p => covered(p) > required(p) + 1e-9);
+  over.forEach(p => items.push(el("div", { class: "check" }, warnIcon(), el("div", {}, el("b", { class: "mono", text: p.code }), ` has ${fmt(covered(p))} on work orders against ${fmt(required(p))} required.`))));
+  if (!items.length) items.push(el("div", { class: "check ok" }, okIcon(), el("div", { text: "Release quantities match default qty × 3 repeaters on every code." })));
+  $("#checks").replaceChildren(...items);
+}
+
+function renderChips() {
+  $("#seqChips").replaceChildren(...["ALL", ...SEQS].map(s => el("button", { class: "chip", type: "button", "aria-pressed": String(state.seq === s), text: s === "ALL" ? "All sequences" : s.replace(" ASSY", ""), onclick: () => { state.seq = s; render(); } })));
+  $("#repSeg").replaceChildren(...["ALL", "1", "2", "3"].map(r => el("button", { type: "button", "aria-pressed": String(state.rep === r), text: r === "ALL" ? "All reps" : "Rep " + r, onclick: () => { state.rep = r; render(); } })));
+  $("#qtyHead").textContent = state.rep === "ALL" ? "Release" : "Required (rep " + state.rep + ")";
+}
+
+function matches(p) {
+  if (state.seq !== "ALL" && p.seq !== state.seq) return false;
+  const q = state.q.trim().toLowerCase(); if (!q) return true;
+  if (p.code.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)) return true;
+  return state.wos.some(w => w.code === p.code && String(w.wo).toLowerCase().includes(q));
+}
+
+function woChip(w) {
+  const st = w.status in STATUS_LABEL ? w.status : "planned";
+  const x = el("button", { class: "x", type: "button", "aria-label": "Delete " + w.wo, text: "×" });
+  let armed = false, t;
+  x.addEventListener("click", () => {
+    if (state.readOnly) return;
+    if (!armed) { armed = true; x.textContent = "Delete?"; x.classList.add("arm"); t = setTimeout(() => { armed = false; x.textContent = "×"; x.classList.remove("arm"); }, 2500); return; }
+    clearTimeout(t); store.remove(w.id).then(() => toast("Deleted " + w.wo)).catch(writeFailed);
+  });
+  const stBtn = el("button", { class: "st s-" + st, type: "button", title: "Advance status", text: STATUS_LABEL[st],
+    onclick: () => { if (state.readOnly) return; const next = STATUSES[(STATUSES.indexOf(st) + 1) % STATUSES.length]; store.update(w.id, { status: next }).catch(writeFailed); } });
+  if (state.readOnly) stBtn.disabled = true;
+  return el("span", { class: "wo" },
+    el("span", { class: "id", text: w.wo }),
+    el("span", { class: "q", title: w.rep && w.rep !== "ALL" ? "Repeater " + w.rep : "All repeaters", text: "×" + fmt(Number(w.qty) || 0) + (w.rep && w.rep !== "ALL" ? " · R" + w.rep : "") }),
+    stBtn, state.readOnly ? null : x);
+}
+
+function renderRows() {
+  const out = []; let shown = 0;
+  for (const s of SEQS) {
+    const items = PLAN.filter(p => p.seq === s && matches(p));
+    if (!items.length) continue;
+    const req = items.reduce((a, p) => a + required(p), 0);
+    out.push(el("tr", { class: "group" }, el("td", { colspan: "6" }, s, el("span", { text: items.length + (items.length > 1 ? " codes" : " code") + " · " + fmt(req) + " units" }))));
+    for (const p of items) {
+      shown++;
+      const r = required(p), c = covered(p), [k, lbl] = covStatus(r, c);
+      const wos = state.wos.filter(w => w.code === p.code && (state.rep === "ALL" || w.rep === state.rep || w.rep === "ALL" || !w.rep))
+        .sort((a, b) => String(a.wo).localeCompare(String(b.wo)));
+      const isAnom = p.rel !== p.def * REPS;
+      out.push(el("tr", { class: "row" },
+        el("td", { class: "code", text: p.code }),
+        el("td", { class: "desc", text: p.desc }),
+        el("td", { class: "r" }, el("span", { class: "qty", text: fmt(r) }), isAnom ? el("span", { class: "flag", title: `Release ${p.rel} ≠ default ${p.def} × ${REPS}` }, warnIcon()) : null),
+        el("td", { class: "r" }, el("span", { class: "qty", text: String(p.def) }, el("small", { text: "× " + REPS + " = " + p.def * REPS }))),
+        el("td", {}, el("div", { class: "cov" },
+          el("div", { class: "cov-top" }, el("span", { class: "pill p-" + k, text: lbl }), el("span", { class: "num", style: "color:var(--muted)", text: fmt(c) + " / " + fmt(r) })),
+          meter([[r ? Math.min(c, r) / r * 100 : 0, k === "over" ? "var(--crit)" : k === "full" ? "var(--ok)" : "var(--accent)"]]))),
+        el("td", {}, el("div", { class: "wos" }, ...wos.map(woChip),
+          state.readOnly ? (wos.length ? null : el("span", { class: "empty-note", text: "No work orders" }))
+            : el("button", { class: "addwo", type: "button", text: wos.length ? "+ WO" : "+ Add WO", onclick: () => openWo(p.code) })))
+      ));
+    }
+  }
+  if (!out.length) out.push(el("tr", {}, el("td", { colspan: "6", style: "text-align:center;color:var(--muted);padding:32px", text: "No assemblies match this filter." })));
+  $("#rows").replaceChildren(...out);
+  $("#footCount").textContent = `Showing ${shown} of ${PLAN.length} assemblies · ${state.wos.length} work orders`;
+  ["#newBtn", "#bulkBtn"].forEach(s => $(s).hidden = state.readOnly);
+}
+
+function renderSync() {
+  const m = { loading: ["var(--faint)", "Connecting…"], shared: ["var(--ok)", "Live · shared with everyone on this page"], local: ["var(--warn)", "Saved in this browser only"], offline: ["var(--crit)", "Sync paused · reload to reconnect"] }[state.mode];
+  $("#sync").replaceChildren(el("span", { class: "dot", style: "background:" + m[0] }), m[1] + (state.readOnly ? " · view only" : ""));
+}
+
+/* ---------- Single WO dialog ---------- */
+const woDlg = $("#woDlg");
+$("#fCode").append(...SEQS.map(s => el("optgroup", { label: s }, ...PLAN.filter(p => p.seq === s).map(p => el("option", { value: p.code, text: p.code + " — " + p.desc })))));
+function syncQty() {
+  const p = BY_CODE[$("#fCode").value], rep = $("#fRep").value;
+  $("#fQty").value = rep === "ALL" ? p.rel : p.def;
+  $("#qtyHint").textContent = rep === "ALL"
+    ? `Quantity set to the release qty (${p.rel}) for all three repeaters.`
+    : `Quantity set to the default qty (${p.def}) for repeater ${rep}.`;
+}
+$("#fCode").addEventListener("change", syncQty);
+$("#fRep").addEventListener("change", syncQty);
+function openWo(code) {
+  $("#woForm").reset(); $("#woErr").textContent = "";
+  $("#fCode").value = code || PLAN[0].code;
+  $("#fRep").value = state.rep;
+  syncQty();
+  woDlg.showModal(); $("#fWo").focus();
+}
+$("#newBtn").addEventListener("click", () => openWo());
+$("#woForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const wo = $("#fWo").value.trim(), qty = Number($("#fQty").value);
+  if (!wo) return $("#woErr").textContent = "Enter a WO number.";
+  if (!(qty > 0)) return $("#woErr").textContent = "Quantity must be a whole number above 0.";
+  const w = { code: $("#fCode").value, wo, qty: Math.round(qty), rep: $("#fRep").value, status: $("#fStatus").value, created: new Date().toISOString() };
+  try { await store.add(w); woDlg.close(); toast(`Added ${wo} · ${w.code} × ${w.qty}`); } catch (err) { writeFailed(err); }
+});
+
+/* ---------- Bulk paste ---------- */
+const bulkDlg = $("#bulkDlg");
+function parseBulk(text) {
+  return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(line => {
+    const parts = line.split(/\t|,|;/).map(s => s.trim()).filter(Boolean);
+    const [wo, codeRaw, qtyRaw, repRaw] = parts;
+    const code = (codeRaw || "").toUpperCase(), p = BY_CODE[code];
+    if (!wo || !p) return { line, error: p ? "missing WO" : "unknown code " + (codeRaw || "") };
+    const rep = repRaw && /^[123]$/.test(repRaw.replace(/^r(ep)?/i, "")) ? repRaw.replace(/^r(ep)?/i, "") : "ALL";
+    const qty = qtyRaw && Number(qtyRaw) > 0 ? Math.round(Number(qtyRaw)) : (rep === "ALL" ? p.rel : p.def);
+    return { wo, code, qty, rep, status: "planned" };
+  });
+}
+$("#fBulk").addEventListener("input", () => {
+  const rows = parseBulk($("#fBulk").value), box = $("#bulkPreview");
+  box.hidden = !rows.length;
+  box.replaceChildren(...rows.map(r => r.error
+    ? el("div", { class: "bad" }, el("span", { text: r.line }), el("span", { text: r.error }))
+    : el("div", {}, el("span", { class: "mono", text: r.wo + " → " + r.code }), el("span", { class: "num", text: "×" + r.qty + (r.rep !== "ALL" ? " · R" + r.rep : "") }))));
+  const ok = rows.filter(r => !r.error).length;
+  $("#bulkSubmit").textContent = ok ? `Add ${ok} work order${ok > 1 ? "s" : ""}` : "Add work orders";
+});
+$("#bulkBtn").addEventListener("click", () => { $("#bulkForm").reset(); $("#bulkPreview").hidden = true; $("#bulkErr").textContent = ""; $("#bulkSubmit").textContent = "Add work orders"; bulkDlg.showModal(); $("#fBulk").focus(); });
+$("#bulkForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const rows = parseBulk($("#fBulk").value), good = rows.filter(r => !r.error);
+  if (!good.length) return $("#bulkErr").textContent = rows.length ? "No valid lines. Each line needs a WO number and a code from this plan." : "Paste at least one line.";
+  try {
+    for (const r of good) await store.add({ ...r, created: new Date().toISOString() });
+    bulkDlg.close();
+    toast(`Added ${good.length} work order${good.length > 1 ? "s" : ""}` + (rows.length > good.length ? `, skipped ${rows.length - good.length}` : ""));
+  } catch (err) { writeFailed(err); }
+});
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+/* ---------- Export ---------- */
+function csv() {
+  const esc = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+  const lines = [["Contract", "Sequence", "Assy code", "Description", "Release qty", "Default qty", "WO", "WO qty", "Repeater", "Status"]];
+  for (const p of PLAN) {
+    const wos = state.wos.filter(w => w.code === p.code);
+    if (!wos.length) lines.push(["R5B", p.seq, p.code, p.desc, p.rel, p.def, "", "", "", ""]);
+    wos.forEach(w => lines.push(["R5B", p.seq, p.code, p.desc, p.rel, p.def, w.wo, w.qty, w.rep === "ALL" || !w.rep ? "1-3" : w.rep, STATUS_LABEL[w.status] || "Planned"]));
+  }
+  return lines.map(l => l.map(esc).join(",")).join("\n");
+}
+$("#exportBtn").addEventListener("click", async () => {
+  const data = csv();
+  const dl = window.claude && window.claude.use ? await window.claude.use("downloads").catch(() => null) : null;
+  if (dl) { try { await dl.save({ filename: "R5B-WK40-kitting-workorders.csv", data }); return; } catch (e) { /* declined: fall through to copy */ } }
+  try { await navigator.clipboard.writeText(data); toast("CSV copied. Paste it into Excel."); }
+  catch (e) { toast("Export isn't available in this view"); }
+});
+
+$("#q").addEventListener("input", e => { state.q = e.target.value; renderRows(); });
+
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600); }
+
+render();
+connect();
+</script>
