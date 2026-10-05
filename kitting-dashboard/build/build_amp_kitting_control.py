@@ -300,22 +300,30 @@ pf.column_dimensions["C"].width=30
 
 # ================= How To Use =================
 hu=wb.create_sheet("How To Use"); hu.sheet_view.showGridLines=False
-hu.column_dimensions["B"].width=26; hu.column_dimensions["C"].width=110
+hu.column_dimensions["B"].width=34; hu.column_dimensions["C"].width=110
 hu["B2"]="R5B AMP KITTING CONTROL — HOW IT WORKS"; hu["B2"].font=font(18,True,NAVY)
-rows=[("Every day","",True),
- ("Release kits","When you release kits to production, add one line per assy code on 'Release Log': date, contract, assy code, qty, your name, note (e.g. Rep 14 / WO). A mistake? Add a line with a negative qty.",False),
- ("Show management","'Dashboard': pick the contract in the pink cell. 'Portfolio': every R5B contract on one page. Press Ctrl+F1 to hide the ribbon when projecting.",False),
- ("New contract (once)","",True),
- ("1. Contracts","Add a row: friendly name (e.g. E2A-R12P-T5-C), project, top code (++), FP, amps per repeater (= FP), total repeaters. Change total repeaters any time (e.g. 109 → 117 when a new batch is given).",False),
- ("2. Kit Lists","From ZMRP on the top code: one row per sub-assembly with the qty needed for ONE repeater.",False),
- ("3. Weekly Plan","From the plan / CO41: one row per release week — ISO year, ISO week, repeaters to release that week.",False),
- ("How it counts","",True),
- ("Repeaters kitted","For each sub-assembly: released ÷ qty per repeater, rounded down. The contract figure is the LOWEST across all sub-assemblies, because a repeater needs every one.",False),
- ("Amps kitted","Repeaters kitted × amps per repeater.",False),
- ("Plan to date","Sum of the weekly plan for weeks starting on or before the 'As of' week (Dashboard top right; defaults to today).",False),
- ("Vs plan","Repeaters kitted − plan to date. + = ahead, − = behind.",False),
- ("Release target","Defaults to plan to date + next 4 weeks. Overwrite the pink number to plan a specific batch (e.g. management asks for 2 more = kitted + 2). 'To Release' shows exactly what to release per assy code.",False),
- ("Why it stays fast","No SAP dumps are stored. Only the plan numbers and your release lines — a few hundred rows per contract.",False)]
+rows=[("1. Update what has been kitted (every release)","",True),
+ ("Where","Sheet 'Release Log'. This is the ONLY sheet you touch day to day.",False),
+ ("What to type","One line per assy code you release: Date · Contract (drop-down) · Assy Code (drop-down) · Qty Released · Released By · Note (e.g. 'Rep 14' or the WO number). Description and Check fill in by themselves.",False),
+ ("Example — 1 repeater of E2A-R12P-T5-C","14 lines, same date: 92YLS00548BAA 1 · 92YLS00548BBA 2 · 91YAF03404AAA 3 · 92YFD04548BAA 1 · 92YFD04548BBA 2 · 92YWS04548AAA 3 · 92RRA00548AAA 24 · 92YRA01548AAA 3 · 92YRA02548AAA 3 · 92YRA03548AAA 3 · 92YRA04548AAA 3 · 92UAP04548BAA 1 · 92UAP04548BBA 1 · 92UAP04548BCA 1. Tip: copy the 'To Release' column from the Dashboard.",False),
+ ("Part release","Log only what actually went out (e.g. spool 16 of 24). The repeater counts once every code reaches a full set; the Dashboard 'Toward Next' column shows the part.",False),
+ ("Mistake","Never delete. Add a correcting line with a negative qty (e.g. -3) and a note.",False),
+ ("Check column","Red = something's wrong on that line (missing qty, code not on this contract's kit list, etc.).",False),
+ ("2. Where the assembly codes go (once per contract)","",True),
+ ("Where","Sheet 'Kit Lists'. One row per assy code: Contract · Sequence (LASER ASSY, PSB ASSY, OPF ASSY, POB ASSY, ERBIUM ASSY, BOAT ASSY…) · Assy Code · Description · Qty per Repeater.",False),
+ ("Where it comes from","ZMRP breakdown of the contract's top code (++). Qty per Repeater = how many of that code go into ONE repeater (e.g. spool 24).",False),
+ ("Order","Rows show on the Dashboard in the order you type them, grouped by sequence. Keep each contract's rows together.",False),
+ ("New contract","First add the contract on 'Contracts' (friendly name, project, top code ++, FP, amps per repeater, total repeaters), then its rows on 'Kit Lists', then its weeks on 'Weekly Plan'.",False),
+ ("3. Kitted ahead of time","",True),
+ ("Just log it","Log the release with the real date you released it. The Dashboard compares kitted with the plan up to the 'As of' week: kitting early shows as AHEAD +n (green). Nothing else to change.",False),
+ ("Plan moved","If the plan itself changes (CO41 dates move), edit the week/qty on 'Weekly Plan'. Kitting history stays untouched.",False),
+ ("Planning the next batch","On the Dashboard, type the number of repeaters you want to reach in the pink 'Release Target' cell (e.g. management asks for 2 more: kitted + 2). 'To Release' shows exactly what to release per code.",False),
+ ("4. Reading the Dashboard","",True),
+ ("Repeaters kitted","Per code: released ÷ qty per repeater (rounded down). Contract figure = the LOWEST code, because a repeater needs every code. The limiting code is highlighted red.",False),
+ ("Amps kitted","Repeaters kitted × amps per repeater (= FP).",False),
+ ("Plan to date / Vs plan","Sum of 'Weekly Plan' for weeks up to the 'As of' week (top right, defaults to today; type a date to look back). Vs plan = kitted − plan to date.",False),
+ ("Contract total changes","Change 'Total Repeaters' on 'Contracts' (e.g. 109 → 117). Everything recalculates.",False),
+ ("Why it stays fast","No SAP dumps. Only your plan numbers and release lines — a few hundred rows per contract.",False)]
 r=4
 for k,v,h in rows:
     if h: r+=1; hu[f"B{r}"]=k; hu[f"B{r}"].font=font(12,True,ROSE); r+=1; continue
