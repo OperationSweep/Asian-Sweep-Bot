@@ -74,6 +74,7 @@ def make_table(ws, name, top, cols, rows, calc, widths, style="TableStyleLight1"
     t.tableStyleInfo=TableStyleInfo(name=style,showRowStripes=False)
     t._initialise_columns()
     for j,(h,kind) in enumerate(cols):
+        t.tableColumns[j].name=h          # must equal the header cell text exactly (Excel requirement)
         if kind=="calc": t.tableColumns[j].calculatedColumnFormula=TableFormula(attr_text=calc[h])
     ws.add_table(t)
     for j,w in enumerate(widths,1): ws.column_dimensions[CL(j)].width=w
@@ -203,8 +204,8 @@ GROW=5000
 def dv(ws,rule,rng,err,title="Check entry",style="stop"):
     rule.error=err; rule.errorTitle=title; rule.showErrorMessage=True; rule.errorStyle=style
     ws.add_data_validation(rule); rule.add(rng)
-dv(asm,DataValidation(type="list",formula1="=ContractList",allow_blank=True),f"A{AH+1}:A{AH+GROW}","Pick a contract that exists on the Contracts sheet.")
-dv(plan,DataValidation(type="list",formula1="=ContractList",allow_blank=True),f"A{PH+1}:A{PH+GROW}","Pick a contract that exists on the Contracts sheet.")
+dv(asm,DataValidation(type="list",formula1="ContractList",allow_blank=True),f"A{AH+1}:A{AH+GROW}","Pick a contract that exists on the Contracts sheet.")
+dv(plan,DataValidation(type="list",formula1="ContractList",allow_blank=True),f"A{PH+1}:A{PH+GROW}","Pick a contract that exists on the Contracts sheet.")
 dv(asm,DataValidation(type="whole",operator="greaterThan",formula1="0",allow_blank=True),f"E{AH+1}:E{AH+GROW}","Qty per repeater must be a whole number above 0.")
 dv(asm,DataValidation(type="whole",operator="greaterThanOrEqual",formula1="0",allow_blank=True),f"F{AH+1}:F{AH+GROW}","Enter the cumulative total supplied to date (whole number, 0 or more).")
 dv(asm,DataValidation(type="date",operator="greaterThan",formula1="43831",allow_blank=True),f"G{AH+1}:G{AH+GROW}","Enter a date, e.g. 05/10/2026.")
@@ -234,7 +235,7 @@ ds["B3"]="CONTRACT ▸"; ds["B3"].font=font(10,True,MUTE); ds["B3"].alignment=Al
 ds.merge_cells("C3:D3"); SEL="$C$3"
 ds["C3"]="E2A-R12P-T5-C"; ds["C3"].font=font(15,True,NAVY); ds["C3"].fill=fill(INPUT_FILL); ds["C3"].alignment=C; ds["C3"].protection=UNLOCK
 ds["D3"].fill=fill(INPUT_FILL)
-dv(ds,DataValidation(type="list",formula1="=ContractList",allow_blank=False),"C3","Pick a contract from the list (Contracts sheet).")
+dv(ds,DataValidation(type="list",formula1="ContractList",allow_blank=False),"C3","Pick a contract from the list (Contracts sheet).")
 CI=f'MATCH({SEL},tblContracts[Contract ID],0)'
 def cv(col): return f'INDEX(tblContracts[{col}],{CI})'
 ds.merge_cells("E3:I3")
@@ -398,7 +399,7 @@ gt["B2"]="R5B AMP KITTING — WEEKLY SCHEDULE"; gt["B2"].font=font(18,True,WHITE
 gt["B3"]="CONTRACT ▸"; gt["B3"].font=font(10,True,MUTE); gt["B3"].alignment=Alignment(horizontal="right",vertical="center")
 gt["C3"]="E2A-R12P-T5-C"; gt["C3"].font=font(12,True,NAVY); gt["C3"].fill=fill(INPUT_FILL); gt["C3"].alignment=C; gt["C3"].protection=UNLOCK
 gt.merge_cells("C3:D3"); gt["D3"].fill=fill(INPUT_FILL)
-dv(gt,DataValidation(type="list",formula1="=ContractList",allow_blank=False),"C3","Pick a contract from the list.")
+dv(gt,DataValidation(type="list",formula1="ContractList",allow_blank=False),"C3","Pick a contract from the list.")
 GS="$C$3"; GCI=f'MATCH({GS},tblContracts[Contract ID],0)'
 def gcv(col): return f'INDEX(tblContracts[{col}],{GCI})'
 gt.merge_cells("E3:Z3")
