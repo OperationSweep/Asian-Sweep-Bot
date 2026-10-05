@@ -31,8 +31,8 @@ wb=Workbook()
 ct=wb.active; ct.title="Contracts"; ct.sheet_view.showGridLines=False
 title(ct,"CONTRACTS — R5B AMP KITTING","One row per top-level code (++). Blue = inputs. Total repeaters can change when batches change (e.g. 109 → 117).")
 C0=6; C1=C0+NC-1
-ch=["Contract (Friendly name)","Project","Top Code (++)","FP","Amps / Repeater","Total Repeaters","Notes","Kit Lines","Repeaters Kitted","Amps Kitted","Plan to Date","Vs Plan","Total in Weekly Plan","% Kitted","Status","Last Release"]
-for j,h in enumerate(ch,1): hdr(ct,C0-1,j,h,ROSE if j<=7 else NAVY)
+ch=["Contract (Friendly name)","Project","Top Code (++)","FP","Amps / Repeater","Total Repeaters","Notes","Kit Lines","Repeaters Kitted","Amps Kitted","Plan to Date","Vs Plan","Total in Weekly Plan","% Kitted","Status","Last Release","Kit Lead (wks)"]
+for j,h in enumerate(ch,1): hdr(ct,C0-1,j,h,ROSE if (j<=7 or j==17) else NAVY)
 ct.row_dimensions[C0-1].height=32
 KA=f"'Kit Lists'!$A$6:$A${5+NK}"; KI=f"'Kit Lists'!$I$6:$I${5+NK}"
 WA=f"'Weekly Plan'!$A$6:$A${5+NW}"; WD=f"'Weekly Plan'!$D$6:$D${5+NW}"; WE=f"'Weekly Plan'!$E$6:$E${5+NW}"
@@ -43,20 +43,21 @@ for i in range(NC):
     if i<len(S["contracts"]):
         c=S["contracts"][i]
         for j,k in enumerate(["name","project","top","fp","amps","total","note"],1): ct.cell(r,j,c.get(k))
+        ct.cell(r,17,c.get("lead",2))
     ct[f"H{r}"]=f'=IF(A{r}="","",COUNTIF({KA},A{r}))'
     ct[f"I{r}"]=f'=IF(OR(A{r}="",H{r}=0),"",_xlfn.MINIFS({KI},{KA},A{r}))'
     ct[f"J{r}"]=f'=IF(I{r}="","",I{r}*E{r})'
-    ct[f"K{r}"]=f'=IF(A{r}="","",SUMIFS({WD},{WA},A{r},{WE},"<="&{ASOF}))'
+    ct[f"K{r}"]=f'=IF(A{r}="","",SUMIFS({WD},{WA},A{r},{WE},"<="&({ASOF}+7*N(Q{r}))))'
     ct[f"L{r}"]=f'=IF(I{r}="","",I{r}-K{r})'
     ct[f"M{r}"]=f'=IF(A{r}="","",SUMIFS({WD},{WA},A{r}))'
     ct[f"N{r}"]=f'=IF(OR(I{r}="",N(F{r})=0),"",I{r}/F{r})'
     ct[f"O{r}"]=(f'=IF(A{r}="","",IF(H{r}=0,"NO KIT LIST",IF(I{r}>=F{r},"COMPLETE",IF(L{r}>0,"AHEAD +"&L{r},IF(L{r}=0,"ON PLAN","BEHIND "&L{r})))))')
     ct[f"P{r}"]=f'=IF(A{r}="","",IF(COUNTIF({LB},A{r})=0,"–",_xlfn.MAXIFS({LA},{LB},A{r})))'
-    for j in range(1,17):
+    for j in range(1,18):
         x=ct.cell(r,j); x.border=BOX; x.alignment=L if j in (1,2,3,7) else C
-        x.font=font(10,j==1,BLUE if j<=7 else INK)
+        x.font=font(10,j==1,BLUE if (j<=7 or j==17) else INK)
     ct[f"N{r}"].number_format="0%"; ct[f"P{r}"].number_format="dd-mmm-yy"
-for c,w in zip("ABCDEFGHIJKLMNOP",[20,22,16,6,10,11,26,8,11,10,10,9,12,9,15,11]): ct.column_dimensions[c].width=w
+for c,w in zip("ABCDEFGHIJKLMNOPQ",[20,22,16,6,10,11,26,8,11,10,10,9,12,9,15,11,10]): ct.column_dimensions[c].width=w
 ct.freeze_panes="B6"
 for v,fc,bc in (("COMPLETE",OK,OK_S),("AHEAD",OK,OK_S),("ON PLAN",INFO,INFO_S),("BEHIND",CRIT,CRIT_S),("NO KIT",GREY,"ECEEF3")):
     ct.conditional_formatting.add(f"O{C0}:O{C1}",FormulaRule(formula=[f'LEFT($O{C0},{len(v)})="{v}"'],fill=fill(bc),font=Font(name=F,color=fc,bold=True)))
@@ -142,11 +143,11 @@ for s in range(SLOTS):
         col=CL(4+c)
         ca[f"{col}{r}"]=f'=IF($B{r}="","",INT(SUMIFS({LD},{LB},{SEL},{LC},$B{r},{LA},"<="&MIN({col}$2+6,{ASOF}+6))/$C{r}))'
 KR=4+SLOTS+1  # rows: week label, plan cum, kitted cum
-ca[f"C{KR}"]="Week"; ca[f"C{KR+1}"]="Plan (cumulative)"; ca[f"C{KR+2}"]="Kitted (flat after today)"; ca[f"C{KR+3}"]="Contract total"
+ca[f"C{KR}"]="Week"; ca[f"C{KR+1}"]="Kit plan (cumulative)"; ca[f"C{KR+2}"]="Kitted (flat after today)"; ca[f"C{KR+3}"]="Contract total"
 for c in range(WEEKS):
     col=CL(4+c)
     ca[f"{col}{KR}"]=f'="W"&_xlfn.ISOWEEKNUM({col}$2)'
-    ca[f"{col}{KR+1}"]=f'=SUMIFS({WD},{WA},{SEL},{WE},"<="&{col}$2)'
+    ca[f"{col}{KR+1}"]=f'=SUMIFS({WD},{WA},{SEL},{WE},"<="&({col}$2+7*Dashboard!$S$3))'
     ca[f"{col}{KR+2}"]=f'=IF(COUNT({col}4:{col}{3+SLOTS})=0,0,MIN({col}4:{col}{3+SLOTS}))'
     ca[f"{col}{KR+3}"]=f"=Dashboard!$H$3"
 ca.sheet_state="hidden"
@@ -169,6 +170,7 @@ ds["G3"]="TOTAL REPS"; ds["G3"].font=font(9,True,MUTE); ds["G3"].alignment=Align
 ds["H3"]=f"=IFERROR({cv('F')},0)"; ds["H3"].font=font(16,True,WHITE); ds["H3"].alignment=C
 ds["I3"]="AMPS / REP"; ds["I3"].font=font(9,True,MUTE); ds["I3"].alignment=Alignment(horizontal="right",vertical="center",wrap_text=True)
 ds["J3"]=f"=IFERROR({cv('E')},0)"; ds["J3"].font=font(16,True,WHITE); ds["J3"].alignment=C
+ds["S3"]=f"=IFERROR(N({cv('Q')}),2)"; ds["S3"].font=font(8,c=NAVY)
 ds["P3"]="AS OF ▸"; ds["P3"].font=font(10,True,MUTE); ds["P3"].alignment=Alignment(horizontal="right",vertical="center")
 ds["Q2"]="=TODAY()"; ds["Q2"].font=font(10,c=MUTE); ds["Q2"].number_format="dd-mmm-yy"; ds["Q2"].alignment=C
 ds["Q3"]="=Q2-WEEKDAY(Q2,2)+1"; ds["Q3"].font=font(13,True,WHITE); ds["Q3"].number_format='"W"00'; ds["Q3"].alignment=C
@@ -182,9 +184,9 @@ ds["B4"].font=font(10,c=MUTE)
 KIT=f"IFERROR({cv('I')},0)"
 tiles=[("B","C","REPEATERS KITTED",f'=IF({cv("H")}=0,"–",{cv("I")}&" / "&$H$3)',f'=IFERROR(TEXT({cv("N")},"0%")&" of contract · "&($H$3-{KIT})&" to go","add a kit list for this contract")'),
        ("D","D","AMPS KITTED",f"=IFERROR({cv('J')},0)",f'="of "&TEXT($H$3*$J$3,"#,##0")&" amps ("&$J$3&" per repeater)"'),
-       ("E","G","PLAN TO DATE",f"=IFERROR({cv('K')},0)",f'="repeaters due by "&$Q$4'),
+       ("E","G","PLAN TO DATE",f"=IFERROR({cv('K')},0)",f'="kits due by "&$Q$4&" (housing "&"W"&_xlfn.ISOWEEKNUM($Q$3+7*$S$3)&", "&$S$3&"-wk lead)"'),
        ("H","J","VS PLAN",f'=IFERROR(IF({cv("H")}=0,"–",IF({cv("L")}>0,"+"&{cv("L")},{cv("L")})),"–")',f'=IFERROR({cv("O")},"")'),
-       ("L","N","NEXT 4 WEEKS",f'=SUMIFS({WD},{WA},{SEL},{WE},">"&$Q$3,{WE},"<="&($Q$3+28))','="repeaters planned to release"'),
+       ("L","N","NEXT 4 WEEKS",f'=SUMIFS({WD},{WA},{SEL},{WE},">"&($Q$3+7*$S$3),{WE},"<="&($Q$3+7*$S$3+28))','="repeaters to kit next 4 weeks"'),
        ("O","Q","LAST RELEASE",f"=IFERROR({cv('P')},\"–\")",f'=COUNTIF({LB},{SEL})&" release lines logged"')]
 ds.row_dimensions[6].height=20; ds.row_dimensions[7].height=52; ds.row_dimensions[8].height=28
 for a,b,lab,val,sub in tiles:
@@ -298,6 +300,89 @@ pf.conditional_formatting.add(f"B6:L{5+NC}",FormulaRule(formula=['$B6<>""'],bord
 pf.page_setup.orientation="landscape"; pf.page_setup.fitToWidth=1; pf.page_setup.fitToHeight=0; pf.sheet_properties.pageSetUpPr.fitToPage=True
 pf.column_dimensions["C"].width=30
 
+
+# ================= Gantt =================
+GW=S.get("gantt_weeks",52); GB=S.get("gantt_blocks",15); G0C=5  # first week column = E
+gt=wb.create_sheet("Gantt",2); gt.sheet_view.showGridLines=False; gt.sheet_view.zoomScale=80
+gc=wb.create_sheet("GanttCalc")
+gt.column_dimensions["A"].width=2; gt.column_dimensions["B"].width=20; gt.column_dimensions["C"].width=17; gt.column_dimensions["D"].width=9
+for c in range(G0C,G0C+GW): gt.column_dimensions[CL(c)].width=7.2
+LASTG=CL(G0C+GW-1)
+for c in range(2,G0C+GW):
+    for r in (1,2): gt.cell(r,c).fill=fill(NAVY)
+gt.row_dimensions[1].height=34
+gt["B1"]="R5B AMP KITTING — RELEASE GANTT"; gt["B1"].font=font(20,True,WHITE); gt["B1"].alignment=Alignment(vertical="center")
+gt["B2"]='="Repeater numbers per ISO week · housing (final build) = plan week W · AMPS build = W−1 · kit release = W−" & "lead (Contracts, default 2) · as of "&TEXT(Dashboard!$Q$3,"dd-mmm-yy")&" (W"&_xlfn.ISOWEEKNUM(Dashboard!$Q$3)&")"'
+gt["B2"].font=font(10,c=MUTE)
+gt["B4"]="START WEEK (Mon) ▸"; gt["B4"].font=font(9,True,GREY); gt["B4"].alignment=Alignment(horizontal="right",vertical="center")
+gt["C4"]="=Dashboard!$Q$3-7*6"; gt["C4"].number_format="dd-mmm-yy"; gt["C4"].font=font(11,True,WHITE); gt["C4"].fill=fill(ROSE); gt["C4"].alignment=C
+gt["C4"].comment=Comment("Defaults to 6 weeks before today. Type any Monday (e.g. 01/06/2026) to scroll the Gantt.","Gantt")
+# legend
+leg=[("E4","Kit planned",ROSE,"F9DCE7"),("G4","Kitted",OK,OK_S),("I4","Kit overdue",WHITE,CRIT),("K4","AMPS build",WARN,WARN_S),("M4","Housing / final",INFO,INFO_S),("O4","This week",NAVY,"FFF2B3")]
+for cell,t,fc,bc in leg:
+    x=gt[cell]; x.value=t; x.font=font(8,True,fc); x.fill=fill(bc); x.alignment=C
+    nc=gt.cell(x.row,x.column+1); nc.fill=fill(bc)
+    gt.merge_cells(start_row=x.row,start_column=x.column,end_row=x.row,end_column=x.column+1)
+# header rows 6 year, 7 week, 8 date
+HY,HW,HD=6,7,8
+hdr(gt,HW,2,"Contract"); hdr(gt,HW,3,"Stage"); hdr(gt,HW,4,"Reps")
+for r in (HY,HD):
+    for c in (2,3,4): gt.cell(r,c).fill=fill(INK)
+for k in range(GW):
+    c=G0C+k; col=CL(c)
+    gt[f"{col}{HD}"]=f"=$C$4-WEEKDAY($C$4,2)+1+{7*k}"; gt[f"{col}{HD}"].number_format="dd-mmm"
+    gt[f"{col}{HW}"]=f'="W"&TEXT(_xlfn.ISOWEEKNUM({col}{HD}),"00")'
+    gt[f"{col}{HY}"]=f'=IF(OR({k}=0,_xlfn.ISOWEEKNUM({col}{HD})=1),YEAR({col}{HD}+3),"")'
+    for r,fz,fc in ((HY,9,MUTE),(HW,10,WHITE),(HD,8,MUTE)):
+        x=gt[f"{col}{r}"]; x.font=font(fz,r==HW,fc); x.fill=fill(INK); x.alignment=C
+gt.row_dimensions[HW].height=20
+# GanttCalc: row 2 dates (helper col j=0..GW+2 -> col B+j), rows 4.. per block cumulative
+gc["A1"]="Helper for Gantt — do not edit"; gc["A2"]="Week start"
+for j in range(GW+3):
+    gc.cell(2,2+j,f"=Gantt!$C$4-WEEKDAY(Gantt!$C$4,2)+1+{7*(j-1)}").number_format="dd-mmm"
+B0=10
+for b in range(GB):
+    cr=C0+b; gr=4+b
+    gc[f"A{gr}"]=f"=Contracts!$A${cr}"
+    for j in range(GW+3):
+        col=CL(2+j)
+        gc[f"{col}{gr}"]=f'=IF($A{gr}="","",SUMIFS({WD},{WA},$A{gr},{WE},"<="&{col}$2))'
+    r0=B0+b*4
+    rows=[("Kit release","W−lead",2),("AMPS build","W−1",1),("Final build","Housing",0)]
+    gt[f"B{r0}"]=f'=IF(Contracts!$A${cr}="","",Contracts!$A${cr})'; gt[f"B{r0}"].font=font(10,True)
+    gt[f"B{r0+1}"]=f'=IF(Contracts!$A${cr}="","",Contracts!$C${cr})'; gt[f"B{r0+1}"].font=font(8,c=GREY)
+    gt[f"B{r0+2}"]=f'=IF(Contracts!$A${cr}="","",IF(Contracts!$I${cr}="","no kit list","kitted: "&Contracts!$I${cr}&" / "&Contracts!$F${cr}))'; gt[f"B{r0+2}"].font=font(8,True,ROSE)
+    for i,(lab,sub,off) in enumerate(rows):
+        r=r0+i
+        gt[f"C{r}"]=f'=IF(Contracts!$A${cr}="","","{lab}")'; gt[f"C{r}"].font=font(9,True,[ROSE,WARN,INFO][i])
+        # total reps in visible window for that stage
+        for k in range(GW):
+            c=G0C+k; col=CL(c)
+            if i==0: hi=f"OFFSET(GanttCalc!$B${gr},0,{k+1}+N(Contracts!$Q${cr}))"; lo=f"OFFSET(GanttCalc!$B${gr},0,{k}+N(Contracts!$Q${cr}))"
+            else:
+                hi=f"GanttCalc!{CL(2+k+1+off)}{gr}"; lo=f"GanttCalc!{CL(2+k+off)}{gr}"
+            gt[f"{col}{r}"]=f'=IF($B${r0}="","",IF(N({hi})-N({lo})<=0,"",IF(N({hi})-N({lo})=1,"R"&{hi},"R"&({lo}+1)&"-"&{hi})))'
+            x=gt[f"{col}{r}"]; x.font=font(8,True,INK); x.alignment=C
+        gt[f"D{r}"]=f'=IF($B${r0}="","",SUMPRODUCT(--(E{r}:{LASTG}{r}<>""))&" wks")'; gt[f"D{r}"].font=font(8,c=GREY); gt[f"D{r}"].alignment=C
+    # CF for this block
+    kr=r0; ar=r0+1; hr=r0+2; rng=lambda rr:f"E{rr}:{LASTG}{rr}"
+    lastrep=f"OFFSET(GanttCalc!$B${gr},0,COLUMN(E{kr})-COLUMN($E${kr})+1+N(Contracts!$Q${cr}))"
+    gt.conditional_formatting.add(rng(kr),FormulaRule(formula=[f'AND(E{kr}<>"",N(Contracts!$I${cr})>={lastrep})'],fill=fill(OK_S),font=Font(name=F,size=8,bold=True,color=OK)))
+    gt.conditional_formatting.add(rng(kr),FormulaRule(formula=[f'AND(E{kr}<>"",E${HD}<=Dashboard!$Q$3)'],fill=fill(CRIT),font=Font(name=F,size=8,bold=True,color=WHITE)))
+    gt.conditional_formatting.add(rng(kr),FormulaRule(formula=[f'E{kr}<>""'],fill=fill("F9DCE7"),font=Font(name=F,size=8,bold=True,color=ROSE)))
+    gt.conditional_formatting.add(rng(ar),FormulaRule(formula=[f'E{ar}<>""'],fill=fill(WARN_S),font=Font(name=F,size=8,bold=True,color=WARN)))
+    gt.conditional_formatting.add(rng(hr),FormulaRule(formula=[f'E{hr}<>""'],fill=fill(INFO_S),font=Font(name=F,size=8,bold=True,color=INFO)))
+    for rr in (kr,ar,hr): gt.row_dimensions[rr].height=17
+    gt.row_dimensions[r0+3].height=6
+    for c in range(2,G0C+GW): gt.cell(r0+3,c).border=Border(top=Side(style="thin",color=LINE))
+# this-week column highlight
+GEND=B0+GB*4
+gt.conditional_formatting.add(f"E{HW}:{LASTG}{HD}",FormulaRule(formula=[f'E${HD}=Dashboard!$Q$3'],fill=fill("FFF2B3"),font=Font(name=F,bold=True,color=NAVY)))
+gt.conditional_formatting.add(f"E{B0}:{LASTG}{GEND}",FormulaRule(formula=[f'AND(E${HD}=Dashboard!$Q$3,E{B0}="")'],fill=fill("FFFBE6")))
+gt.freeze_panes=gt[f"E{B0}"]
+gt.page_setup.orientation="landscape"; gt.page_setup.fitToWidth=1; gt.page_setup.fitToHeight=0; gt.sheet_properties.pageSetUpPr.fitToPage=True
+gc.sheet_state="hidden"
+
 # ================= How To Use =================
 hu=wb.create_sheet("How To Use"); hu.sheet_view.showGridLines=False
 hu.column_dimensions["B"].width=34; hu.column_dimensions["C"].width=110
@@ -321,7 +406,8 @@ rows=[("1. Update what has been kitted (every release)","",True),
  ("4. Reading the Dashboard","",True),
  ("Repeaters kitted","Per code: released ÷ qty per repeater (rounded down). Contract figure = the LOWEST code, because a repeater needs every code. The limiting code is highlighted red.",False),
  ("Amps kitted","Repeaters kitted × amps per repeater (= FP).",False),
- ("Plan to date / Vs plan","Sum of 'Weekly Plan' for weeks up to the 'As of' week (top right, defaults to today; type a date to look back). Vs plan = kitted − plan to date.",False),
+ ("Plan to date / Vs plan","'Weekly Plan' weeks are FINAL BUILD (housing) weeks. Kits are due 'Kit Lead' weeks earlier (Contracts, default 2: kit W−2, AMPS build W−1, housing W). Plan to date = repeaters whose housing week is up to 'As of' + lead. Vs plan = kitted − plan to date.",False),
+ ("Gantt","Sheet 'Gantt': ISO weeks across, three rows per contract — Kit release (W−2), AMPS build (W−1), Final build / housing (W) — with the repeater numbers in each week. Kit cells turn green once kitted, red if overdue. Change the start week in the pink cell.",False),
  ("Contract total changes","Change 'Total Repeaters' on 'Contracts' (e.g. 109 → 117). Everything recalculates.",False),
  ("Why it stays fast","No SAP dumps. Only your plan numbers and release lines — a few hundred rows per contract.",False)]
 r=4
@@ -330,7 +416,7 @@ for k,v,h in rows:
     hu[f"B{r}"]=k; hu[f"B{r}"].font=font(11,True); hu[f"B{r}"].alignment=Alignment(vertical="top")
     hu[f"C{r}"]=v; hu[f"C{r}"].font=font(11); hu[f"C{r}"].alignment=Alignment(wrap_text=True,vertical="top"); hu.row_dimensions[r].height=34; r+=1
 
-wb.move_sheet("Calc",offset=10)
+wb.move_sheet("Calc",offset=10); wb.move_sheet("GanttCalc",offset=10)
 wb.calculation=CalcProperties(fullCalcOnLoad=True)
 wb.active=0
 wb.save(OUT)
