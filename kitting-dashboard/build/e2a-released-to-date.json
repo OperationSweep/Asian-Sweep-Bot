@@ -1,0 +1,182 @@
+{
+ "title": "R5B E2A 12FP COLD T5  \u00b7  RELEASED TO DATE",
+ "details": {
+  "contract": "R5B",
+  "program": "E2A 12FP Cold T5",
+  "erp": "92ERP12548A++",
+  "config": "12FP",
+  "week": "COOIS 03-Oct-26"
+ },
+ "repeaters": 13,
+ "reps_to_release": 13,
+ "plan": [
+  [
+   "LASER ASSY",
+   "92YLS00548BAA",
+   "R5B LASER ASSEMBLY 4P BOAT 1 - E2A",
+   13,
+   1
+  ],
+  [
+   "LASER ASSY",
+   "92YLS00548BBA",
+   "R5B LASER ASSEMBLY 4P BOAT 2/3 - E2A",
+   26,
+   2
+  ],
+  [
+   "PSB ASSY",
+   "91YAF03404AAA",
+   "R5B PSB SUB ASSEMBLY 4P-4FP",
+   39,
+   3
+  ],
+  [
+   "OPF ASSY",
+   "92YFD04548BAA",
+   "R5B OPF ASSEMBLY (4P-4FP) BOAT 1 - E2A",
+   13,
+   1
+  ],
+  [
+   "OPF ASSY",
+   "92YFD04548BBA",
+   "R5B OPF ASSEMBLY (4P-4FP) BOAT 2/3 - E2A",
+   26,
+   2
+  ],
+  [
+   "POB ASSY",
+   "92YWS04548AAA",
+   "R5B 4FP POB LUMENTUM SUB ASSEMBLY - E2A",
+   39,
+   3
+  ],
+  [
+   "ERBIUM ASSY",
+   "92RRA00548AAA",
+   "R5B ERBIUM SPOOL ASSEMBLY - E2A",
+   312,
+   24
+  ],
+  [
+   "ERBIUM ASSY",
+   "92YRA01548AAA",
+   "R5B ERBIUM ASSEMBLY POSITION 1",
+   39,
+   3
+  ],
+  [
+   "ERBIUM ASSY",
+   "92YRA02548AAA",
+   "R5B ERBIUM ASSEMBLY POSITION 2",
+   39,
+   3
+  ],
+  [
+   "ERBIUM ASSY",
+   "92YRA03548AAA",
+   "R5B ERBIUM ASSEMBLY POSITION 3",
+   39,
+   3
+  ],
+  [
+   "ERBIUM ASSY",
+   "92YRA04548AAA",
+   "R5B ERBIUM ASSEMBLY POSITION 4",
+   39,
+   3
+  ],
+  [
+   "BOAT ASSY",
+   "92UAP04548BAA",
+   "R5B BOAT 1 ASSY (4P-4FP)",
+   13,
+   1
+  ],
+  [
+   "BOAT ASSY",
+   "92UAP04548BBA",
+   "R5B BOAT 2 ASSY (4P-4FP)",
+   13,
+   1
+  ],
+  [
+   "BOAT ASSY",
+   "92UAP04548BCA",
+   "R5B BOAT 3 ASSY (4P-4FP)",
+   13,
+   1
+  ]
+ ],
+ "howto": [
+  [
+   "Where the numbers come from",
+   "",
+   true
+  ],
+  [
+   "Source",
+   "SAP COOIS export (new_e2a) run on the 14 E2A assy codes, all orders released to date (20-Apr-26 to 03-Oct-26). 691 work orders, 1 EA each. Each SAP Order number is a WO on the 'Work Orders' tab.",
+   false
+  ],
+  [
+   "Required qty",
+   "Release per repeater from the kitting plan \u00d7 13 repeaters (1\u201313). Example: erbium spool 24 \u00d7 13 = 312.",
+   false
+  ],
+  [
+   "Status mapping",
+   "SAP system status \u2192 dashboard: DLV (delivered) = Delivered \u00b7 CNF/PCNF (confirmed / partly confirmed) = In Progress \u00b7 REL only = Released. The full SAP status is kept in the Remarks column.",
+   false
+  ],
+  [
+   "Reading the dashboard",
+   "",
+   true
+  ],
+  [
+   "Status column",
+   "COVERED = WOs released match the contract qty \u00b7 OVER = more WOs than the 13-repeater qty (check for scrap/re-work replacements) \u00b7 SHORT n = n units still to release \u00b7 NO WO = nothing released.",
+   false
+  ],
+  [
+   "Repeater sets",
+   "Full repeater sets released = the lowest number of complete repeaters across all 14 codes. 'Fully delivered' does the same using delivered WOs only.",
+   false
+  ],
+  [
+   "Open WOs",
+   "WOs released but not yet delivered (Released + In Progress). These are the ones to chase.",
+   false
+  ],
+  [
+   "Trace a WO",
+   "'Latest WO' shows the newest order number per code. For the full list filter column B on 'Work Orders'.",
+   false
+  ],
+  [
+   "Switch repeater view",
+   "Pick a repeater 1\u201313 in the pink cell to see the per-repeater requirement (default qty) against an even share of released WOs.",
+   false
+  ],
+  [
+   "Keeping it current",
+   "",
+   true
+  ],
+  [
+   "Adding new WOs",
+   "Add new COOIS orders at the bottom of 'Work Orders': WO No., Assy Code, Qty Override = order qty (1), Status. Or send the new export and it can be reloaded.",
+   false
+  ],
+  [
+   "Projecting on a screen",
+   "Open the Dashboard tab and press Ctrl+F1 to hide the ribbon. It fits one landscape screen.",
+   false
+  ]
+ ],
+ "sample": [],
+ "wo_rows": 1000,
+ "orders": "e2a_orders.json"
+}

@@ -1,0 +1,45 @@
+{
+ "title": "R5B E2A 12FP COLD T5 KITTING CONTROL  ·  WK 40",
+ "details": {"contract":"R5B","program":"E2A 12FP Cold T5","erp":"92ERP12548A++","config":"12FP","week":"WK 40"},
+ "repeaters": 13,
+ "reps_to_release": 1,
+ "plan": [
+  ["LASER ASSY","92YLS00548BAA","R5B LASER ASSEMBLY 4P BOAT 1 - E2A",1,1],
+  ["LASER ASSY","92YLS00548BBA","R5B LASER ASSEMBLY 4P BOAT 2/3 - E2A",2,2],
+  ["PSB ASSY","91YAF03404AAA","R5B PSB SUB ASSEMBLY 4P-4FP",3,3],
+  ["OPF ASSY","92YFD04548BAA","R5B OPF ASSEMBLY (4P-4FP) BOAT 1 - E2A",1,1],
+  ["OPF ASSY","92YFD04548BBA","R5B OPF ASSEMBLY (4P-4FP) BOAT 2/3 - E2A",2,2],
+  ["POB ASSY","92YWS04548AAA","R5B 4FP POB LUMENTUM SUB ASSEMBLY - E2A",3,3],
+  ["ERBIUM ASSY","92RRA00548AAA","R5B ERBIUM SPOOL ASSEMBLY - E2A",24,24],
+  ["ERBIUM ASSY","92YRA01548AAA","R5B ERBIUM ASSEMBLY POSITION 1",3,3],
+  ["ERBIUM ASSY","92YRA02548AAA","R5B ERBIUM ASSEMBLY POSITION 2",3,3],
+  ["ERBIUM ASSY","92YRA03548AAA","R5B ERBIUM ASSEMBLY POSITION 3",3,3],
+  ["ERBIUM ASSY","92YRA04548AAA","R5B ERBIUM ASSEMBLY POSITION 4",3,3],
+  ["BOAT ASSY","92UAP04548BAA","R5B BOAT 1 ASSY (4P-4FP)",1,1],
+  ["BOAT ASSY","92UAP04548BBA","R5B BOAT 2 ASSY (4P-4FP)",1,1],
+  ["BOAT ASSY","92UAP04548BCA","R5B BOAT 3 ASSY (4P-4FP)",1,1]
+ ],
+ "howto": [
+  ["For the team","",true],
+  ["1. Add a work order","Go to 'Work Orders'. Type the WO number in column A and pick the assy code in column B. Description, sequence and quantity fill in by themselves.",false],
+  ["2. Quantity","WO Qty = the listed qty from the kitting plan (e.g. 24 for 92RRA00548AAA, 2 for 92YLS00548BBA). Pick the repeater (1–13) the WO belongs to, or leave it blank for the repeater being released. Type in 'Qty Override' only if the WO is for a different quantity.",false],
+  ["3. Update status","Change 'Status' as the WO moves: Planned → Released → Kitted → Closed. Blank counts as Planned.",false],
+  ["Example entry","WO No. = WO-4012871 · Assy Code = 92YLS00548BAA · Repeater = 5 · Qty Override = (blank) · Status = Released",false],
+  ["Flags","Column L on 'Work Orders' warns about duplicate WO numbers, missing codes or codes not in the plan.",false],
+  ["For management","",true],
+  ["Dashboard","Shows the whole plan on one screen: totals at the top, coverage by sequence, the WO pipeline, and every assembly with its WOs.",false],
+  ["Read the Status column","NO WO = nothing raised yet · SHORT n = WOs cover less than required (n units missing) · COVERED = WO qty matches · OVER = more WO qty than required.",false],
+  ["Trace a WO","The 'Work Order Nos.' column lists every WO on each assy code. To go the other way, filter column A on 'Work Orders'.",false],
+  ["Switch repeater view","Pick All or a repeater number 1–13 in the pink cell at the top right of the Dashboard. 'All' checks every WO against the release qty; a number shows only that repeater's WOs (plus WOs left blank/All).",false],
+  ["Projecting on a screen","Open the Dashboard tab and press Ctrl+F1 to hide the ribbon. The dashboard fits one landscape screen; adjust zoom to your projector if needed. Excel recalculates as soon as anyone adds a WO.",false],
+  ["Live sharing","Save the file on SharePoint / OneDrive / Teams so several people can edit while the dashboard is on screen.",false],
+  ["Changing the plan","Edit the blue cells on 'Kitting Plan' (codes, release qty, default qty). The Dashboard and WO lookups follow automatically.",false]
+ ],
+ "sample": [
+  ["WO-2001","92YLS00548BAA","5","","Closed"],
+  ["WO-2002","92YLS00548BBA","5","","Kitted"],
+  ["WO-2003","92RRA00548AAA","","12","Released"],
+  ["WO-2004","92YRA01548AAA","All","","Planned"],
+  ["WO-2004","91YAF03404AAA","7","4",""]
+ ]
+}
