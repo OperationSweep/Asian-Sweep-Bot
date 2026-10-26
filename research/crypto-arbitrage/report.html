@@ -61,7 +61,7 @@ ol.steps>li{margin:10px 0}
 <header class="prose">
   <div class="eyebrow">Research &amp; design brief · crypto arbitrage</div>
   <h1>Arbitrage Edge Audit</h1>
-  <p class="meta">Prepared for Nuru · research date 26 October 2026 · live data sampled 11:29–12:10 UTC · no trades placed, no funds moved</p>
+  <p class="meta">Prepared for Nuru · research date 26 October 2026 · live data sampled 11:29–12:44 UTC · no trades placed, no funds moved</p>
   <p>Labels used throughout: <span class="tag v">VERIFIED</span> means checked against a live order book, source code or a primary document today. <span class="tag i">INFERENCE</span> means my reasoning from that evidence. <span class="tag x">ILLUSTRATION</span> means made-up but plausible numbers that show a mechanism, never a forecast.</p>
 </header>
 
@@ -71,7 +71,7 @@ ol.steps>li{margin:10px 0}
 <div class="verdict">
   <strong class="big">No viable riskless edge for a small operator at retail fees. Do not commit capital yet.</strong>
   <p>Pure taker-on-both-legs arbitrage between major exchanges, triangular arbitrage inside one exchange, and atomic DEX arbitrage are all either too thin to beat retail fees or are dominated by a few very fast, vertically integrated firms. Today's live books show this directly. The best BTC/USDT cross between Kraken, Crypto.com and Gate was 4.7 basis points, but only about $103 of size sat at that price, worth $0.013 before fees and −$0.87 after them on a $100 trade. Triangular cycles on Crypto.com ran between −2.8 and +0.2 bps before fees, against 22.5 bps of fees.</p>
-  <p id="verdict-measured">A 30-minute WebSocket measurement across 7 venues and 9 pairs agreed. 21.8% of venue-pair-seconds showed a headline cross, but <strong>zero</strong> survived retail taker fees or even a flat 0.10% per leg. Zero of 34 triangular cycles was ever net-positive. Profit only appears near 0.02% per leg, and is small even then (section 4.3).</p>
+  <p id="verdict-measured">Three 30-minute WebSocket measurements across up to 10 exchanges and 9 pairs agreed. About 21% of venue-pair-seconds showed a headline cross, but <strong>none</strong> was still profitable at $100 or more after retail taker fees, or even at a flat 0.10% per leg. No triangular cycle was ever net-positive. A small edge only appears near 0.02% per leg, and even that was worth at most about $100 per 30 minutes across ten venues, with perfect execution (section 4.3).</p>
   <p><strong>What would have to change:</strong> fees near 0–2 bps per leg (market-maker or high-VIP tiers, or a maker rebate on one leg), less efficient markets (long-tail tokens, new listings, regional fiat premia), or a speed and order-flow advantage a small operator cannot buy. The one design worth testing further is <strong>hedged cross-venue market making</strong>: rest a limit order on the less liquid venue and hedge on the liquid one. That earns a spread but carries inventory and adverse-selection risk, so it is not riskless arbitrage, and it has to prove itself in paper trading first.</p>
 </div>
 </section>
@@ -171,26 +171,29 @@ ol.steps>li{margin:10px 0}
 <div class="prose">
 <h3 id="measured">4.3 Measured across venues (30-minute WebSocket sample)</h3>
 <div id="measured-body">
-<p><span class="tag v">VERIFIED</span> Two collectors ran in parallel on separate GitHub runners, 11:39–12:10 UTC, sampling every cached WebSocket book once a second (about 1,780 samples each). Seven venues delivered data: Gate, Coinbase, OKX, KuCoin, HTX, Bitget and Bitstamp, across nine USDT pairs plus BTC-quoted triangle legs. Binance, Bybit and Crypto.com failed to connect from the US-based runner, most likely geo-blocking (I have not confirmed the reason). Kraken and Bitfinex rejected the subscription depth, and MEXC needed an extra decoder library. Both issues are now patched for the next run.</p>
+<p><span class="tag v">VERIFIED</span> Three 30-minute WebSocket collections ran on GitHub's US-based cloud runners. Each sampled every cached order book once a second, about 1,750 samples per run. Runs A and B ran in parallel from 11:39 to 12:10 UTC on 7 venues. Run C ran from 12:13 to 12:44 UTC on <strong>10 venues</strong> (Gate, Coinbase, OKX, KuCoin, HTX, Bitget, Bitstamp, Kraken, MEXC, Bitfinex), with the feed-quality checks switched on. It covered nine USDT pairs plus BTC-quoted triangle legs. Binance, Bybit and Crypto.com failed to connect from the runner, most likely geo-blocking (I have not confirmed the reason). The table shows run C after it automatically dropped MEXC, whose own book was crossed 3.2% of the time.</p>
 </div>
 </div>
 <div class="scroll"><table>
-<thead><tr><th>Filter (clean run, all venue pairs × symbols × seconds)</th><th class="num">Observations</th><th class="num">Share</th></tr></thead>
+<thead><tr><th>Filter (all venue pairs × symbols × seconds)</th><th class="num">Run C, clean</th><th class="num">Share</th><th class="num">Run A</th></tr></thead>
 <tbody>
-<tr><td>Venue-pair observations</td><td class="num">402,106</td><td class="num">100%</td></tr>
-<tr><td>Headline: best bid on B above best ask on A</td><td class="num">87,661</td><td class="num">21.8%</td></tr>
-<tr><td>Still profitable after <strong>retail taker fees</strong>, any size</td><td class="num neg">0</td><td class="num neg">0%</td></tr>
-<tr><td>Still profitable with a flat 0.10% fee per leg</td><td class="num neg">0</td><td class="num neg">0%</td></tr>
-<tr><td>Profitable with a flat 0.02% fee per leg (VIP / market-maker level), $100</td><td class="num">12,425</td><td class="num">3.1%</td></tr>
-<tr><td>… same, fillable at $5,000</td><td class="num">6,952</td><td class="num">1.7%</td></tr>
-<tr><td>… distinct episodes at 0.02% · still there 1 s later · 3 s later</td><td class="num">1,116 · 906 · 614</td><td class="num">—</td></tr>
-<tr><td>… perfect-capture ceiling at 0.02% fees, 30 minutes, all routes combined</td><td class="num">$978</td><td class="num">—</td></tr>
+<tr><td>Venue-pair observations</td><td class="num">524,142</td><td class="num">100%</td><td class="num">402,106</td></tr>
+<tr><td>Headline: best bid on B above best ask on A</td><td class="num">108,608</td><td class="num">20.7%</td><td class="num">87,661</td></tr>
+<tr><td>Profitable after <strong>retail taker fees</strong> at any size</td><td class="num amb">64</td><td class="num">0.01%</td><td class="num neg">0</td></tr>
+<tr><td>… and fillable at $100 or more</td><td class="num neg">0</td><td class="num neg">0%</td><td class="num neg">0</td></tr>
+<tr><td>Flat 0.10% fee per leg: any size · at $100 or more</td><td class="num neg">323 · 0</td><td class="num neg">0%</td><td class="num neg">0 · 0</td></tr>
+<tr><td>Flat 0.02% per leg (VIP / market-maker level), $100</td><td class="num">8,197</td><td class="num">1.6%</td><td class="num">12,425</td></tr>
+<tr><td>… same, fillable at $5,000</td><td class="num">4,305</td><td class="num">0.8%</td><td class="num">6,952</td></tr>
+<tr><td>… distinct episodes · still there 1 s later · 3 s later</td><td class="num">866 · 596 · 389</td><td class="num">—</td><td class="num">1,116 · 906 · 614</td></tr>
+<tr><td>… perfect-capture ceiling at 0.02%, 30 min, all routes</td><td class="num">$102</td><td class="num">—</td><td class="num">$978</td></tr>
+<tr><td>Triangular cycles net-positive after fees ($1,000)</td><td class="num neg">0 of 52</td><td class="num">—</td><td class="num neg">0 of 34</td></tr>
 </tbody></table></div>
 <div class="prose">
-<p><strong>What this says.</strong> One in five seconds shows a "headline" arbitrage somewhere. None of it survives the fees a retail account pays, or even a flat 0.10%. An edge only appears near 0.02% per leg. Even then, the $978 ceiling assumes perfect, instant, failure-free capture with inventory everywhere. It is concentrated in routes through Bitstamp and HTX, whose feeds were the slowest and least consistent in the sample (Bitstamp's median feed lag was 570 ms, against 20–90 ms elsewhere), so part of it is probably feed artefact too. At zero fees the ceiling jumps to $48.6k. Over half of that is a USDC/USDT gap of 1–2 bp between KuCoin and OKX on very deep books, which disappears with any fee at all.</p>
-<p><strong>Typical headline gaps (best venue pair, before fees):</strong> BTC median 5.1 bp (p99 15.5), ETH 1.5 (4.2), SOL 6.0 (10.5), XRP 1.5 (9.6), DOGE 3.9 (6.5), LINK 1.8 (5.5). The cheapest round trip available here costs 15–20 bp.</p>
-<p><strong>Triangles:</strong> 34 cycles on 7 venues, about 1,500 samples each, produced <strong>zero</strong> net-positive moments. The best gross was KuCoin USDT→ETH→BTC at a median +0.6 bp (p99 +4.0), against 30 bp of fees.</p>
-<div class="callout"><strong>A broken feed looked like profit.</strong> On the second runner, the same code over the same 30 minutes reported 156 "profitable" episodes at retail fees and positive Bitget triangles up to +22 bp. Every one of them used Bitget as the sell side. On the clean runner, Bitget's triangles were all negative. That runner's local Bitget book had desynced. This is exactly how bot screenshots show profits that do not exist. The analyzer now flags feeds whose mid drifts from the other venues, or whose own book is crossed, and re-runs without them.</div>
+<p><strong>What this says.</strong> About one second in five shows a "headline" arbitrage somewhere. At retail fees, the few moments that clear costs at all involve only the first few dollars of depth: none was fillable at $100. A flat 0.10% fee does no better. Something only starts to appear near 0.02% per leg, and even then the ceiling is <strong>$102 in 30 minutes</strong> across ten exchanges. That figure assumes perfect, instant, failure-free capture with inventory already everywhere. Most of it is SOL routes buying on HTX, which had the noisiest feed of the clean venues (median 2.3 bp from the others). In run A the ceiling was larger ($978), but it came mostly through Bitstamp, whose feed lagged by about 0.6 s. Both are more likely stale prices than money anyone could take.</p>
+<p>At zero fees the ceiling jumps to about $140k. Over half of that is a steady 1.6 bp USDC/USDT gap between KuCoin and the other venues on very deep books, which no fee level a small account can reach would leave standing.</p>
+<p><strong>Typical headline gaps</strong> (best venue pair, run C, before fees): BTC median 2.0 bp (p99 5.9), ETH 2.3 (5.6), SOL 5.8 (10.9), XRP 2.1 (9.6), DOGE 3.9 (6.6), LINK 1.7 (31, briefly). The cheapest retail round trip available is 10–20 bp.</p>
+<p><strong>Triangles:</strong> across three runs and up to 52 cycles per run, there was never a net-positive moment. The most consistent positive gross was KuCoin USDT→ETH→BTC at a median +1.2 bp (p99 +4.7), against 30 bp of fees. Kraken's cycles stayed within ±1.5 bp gross, against Kraken's 240 bp of retail fees for three legs.</p>
+<div class="callout"><strong>A broken feed looked like profit.</strong> In run B, the same code over the same 30 minutes as run A reported 156 "profitable" episodes at retail fees, plus Bitget triangles up to +22 bp. Every one used Bitget as the sell side. In run A, on another runner, Bitget's triangles were all negative. Run B's local Bitget book had desynced. In run C the new checks caught a similar problem automatically: MEXC's book was crossed against itself 3.2% of the time. This is how bot screenshots show profits that do not exist.</div>
 </div>
 <div class="prose">
 
@@ -302,7 +305,7 @@ flowchart LR
 <ul>
 <li><strong>Your jurisdiction.</strong> This decides which venues you can legally use, and the shortlist depends on it. The cloud collector runs from the US, where Binance and Bybit are geo-blocked.</li>
 <li><strong>Your real fee tier.</strong> Several fee figures above come from secondary sources, and they disagree.</li>
-<li><strong>Sample size.</strong> A 30-minute sample on one day is a smoke test, not a distribution. Edges cluster in volatile minutes, so two-plus weeks are needed.</li>
+<li><strong>Sample size.</strong> Three 30-minute samples on one morning are a smoke test, not a distribution. Edges cluster in volatile minutes, so two-plus weeks are needed.</li>
 <li><strong>Quote age semantics.</strong> "Time since last book update" overstates staleness for quiet books and understates it when a venue batches updates. Exchange timestamps and local clocks also need NTP discipline.</li>
 <li><strong>Maker fill realism.</strong> Hedged market making can look great in simulation and lose live to adverse selection. Only a carefully modelled paper stage, then a capped pilot, can settle this.</li>
 <li><strong>Not measured here:</strong> DEX pools, long-tail tokens below the top 10 mid-caps, funding-rate history, and withdrawal-time distributions.</li>
