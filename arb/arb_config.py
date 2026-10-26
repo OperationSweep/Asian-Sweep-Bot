@@ -48,3 +48,27 @@ NOTIONALS = [100, 500, 1000, 5000]   # USDT trade sizes evaluated
 
 # Analyzer quality gates
 MAX_QUOTE_AGE_MS = 1500          # drop a book whose last update is older than this
+
+# ---------------------------------------------------------------------------
+# Cross-exchange market making (XEMM) paper simulation
+# ---------------------------------------------------------------------------
+
+# venue id -> maker fee fraction at the lowest retail tier, source. Same caveat
+# as TAKER_FEES: check your own account.
+MAKER_FEES = {
+    "kraken":   (0.0040, "kraken.com/features/fee-schedule, tier 1 ($0+), fetched 2026-10-26"),
+    "coinbase": (0.0060, "Coinbase Advanced $0-1K tier; secondary source, verify"),
+    "okx":      (0.0008, "OKX regular Lv1 spot; secondary source, verify"),
+    "bitstamp": (0.0030, "assumed $0-10K tier; verify"),
+    "gemini":   (0.0020, "assumed ActiveTrader tier 1; verify"),
+    "kucoin":   (0.0010, "mexc.com fee comparison, May 2026; secondary source"),
+    "bitfinex": (0.0010, "assumed standard 0.10 % maker; verify"),
+    "bybit":    (0.0010, "assumed standard 0.10 % maker; verify"),
+}
+TAKER_FEES.setdefault("gemini", (0.0040, "assumed ActiveTrader tier 1; verify"))
+
+# Venues for the market-making runs: the UK-relevant ones that answered from a
+# US GitHub runner, plus KuCoin as a liquid non-UK reference (not a venue to use).
+XEMM_VENUES = ["kraken", "coinbase", "okx", "bitstamp", "gemini", "kucoin"]
+XEMM_HEDGE_VENUES = ["okx", "kraken", "coinbase"]
+XEMM_SYMBOLS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT"]

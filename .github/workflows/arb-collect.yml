@@ -2,9 +2,6 @@ name: arb-collect
 
 # Public market data only. No secrets are used or exposed to this job.
 on:
-  push:
-    branches: [claude/project-thread-wn12i9]
-    paths: ["arb/**", ".github/workflows/arb-collect.yml"]
   workflow_dispatch:
     inputs:
       minutes:
