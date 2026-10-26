@@ -536,6 +536,7 @@ if __name__ == "__main__":
     grid = build_grid(a.venues.split(","), a.hedges.split(","), a.symbols.split(","),
                       [float(x) for x in a.edges.split(",")], a.scenarios.split(","),
                       [int(x) for x in a.latencies.split(",")])
+    a_lat0 = a.latencies.split(",")[0]
     sims = replay(a.books, a.trades, grid)
     rows = []
     for s in sims:
@@ -553,6 +554,32 @@ if __name__ == "__main__":
         print(f"{r['label']:52} {r['scenario']:6} {r['hedge_latency_ms']:>5} {r['quotes']:>6} {r['fills']:>5} "
               f"{r['cycles']:>4} {str(r['hedge_completion_pct']):>6} {r['failed_hedges']:>4} {r['net_pnl_usd']:>9.3f} "
               f"{str(r['net_pnl_bps_of_filled']):>7} {str(r['markout_5s_bps']):>6} {str(r['p95_s_unhedged']):>5}")
+    print("totals by fee scenario / fill model / hedge latency:")
+    agg = defaultdict(lambda: [0, 0, 0, 0, 0.0, 0, 0.0])
+    for r in rows:
+        a = agg[(r["scenario"], r["fill_model"], r["hedge_latency_ms"])]
+        a[0] += 1
+        a[1] += 1 if r["fills"] else 0
+        a[2] += r["fills"]
+        a[3] += r["cycles"]
+        a[4] += r["net_pnl_usd"]
+        a[5] += 1 if r["net_pnl_usd"] > 0 else 0
+        a[6] += r["filled_usd"]
+    print(f"  {'scenario':8} {'model':13} {'lat':>5} {'configs':>7} {'w/fills':>7} {'fills':>6} {'cycles':>6} {'net$':>9} {'net>0':>5} {'filled$':>9}")
+    for k in sorted(agg):
+        a = agg[k]
+        print(f"  {k[0]:8} {k[1]:13} {k[2]:>5} {a[0]:>7} {a[1]:>7} {a[2]:>6} {a[3]:>6} {a[4]:>9.3f} {a[5]:>5} {a[6]:>9.0f}")
+    print("every retail-fee configuration with a fill:")
+    for r in sorted((r for r in rows if r["scenario"] == "retail" and r["fills"]), key=lambda r: -r["net_pnl_usd"]):
+        print(f"  {r['label']:52} lat{r['hedge_latency_ms']:<5} fills {r['fills']:>3} cycles {r['cycles']:>3} "
+              f"net {r['net_pnl_usd']:>8.3f} bps {r['net_pnl_bps_of_filled']} mk5s {r['markout_5s_bps']} fail {r['failed_hedges']}")
+    print("quote activity by pair (realistic, low fees, edge 0, base latency):")
+    for r in rows:
+        if r["scenario"] == "low" and r["fill_model"] == "realistic" and r["edge_bps"] == 0 \
+                and r["hedge_latency_ms"] == int(a_lat0):
+            print(f"  {r['maker']:>8}>{r['hedge']:<8} {r['symbol']:9} quotes {r['quotes']:>5} cancels {r['cancels']:>5} "
+                  f"fills {r['fills']:>3} after-cancel {r['fills_after_cancel_sent']} paused(bad data) {r['paused_bad_data']} "
+                  f"paused(gap) {r['paused_mid_gap']} drift ${r['max_inventory_drift_usd']}")
     print("feed quality:")
     for k, v in sorted(out["feed_quality"].items()):
         print(f"  {k:22} {v}")

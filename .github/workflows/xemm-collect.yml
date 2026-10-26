@@ -4,7 +4,7 @@ name: xemm-collect
 # A push that touches this file starts a run (workflow_dispatch only works from the
 # default branch). RUN_LABEL below names the run.
 env:
-  RUN_LABEL: observation
+  RUN_LABEL: validation
 
 on:
   push:
