@@ -30,15 +30,23 @@ BOOKS: Dict[str, Dict[str, dict]] = {}
 STATS: Dict[str, Dict[str, int]] = {}
 
 
+# Some venues only accept fixed subscription depths; the book is truncated after.
+WS_DEPTH = {"kraken": 25, "bitfinex": 25}
+
+
 async def watch(ex, symbol: str, stop_at: float) -> None:
     venue = ex.id
     backoff = 1.0
+    warned = 0
     while time.time() < stop_at:
         try:
-            ob = await ex.watch_order_book(symbol, cfg.BOOK_DEPTH)
+            ob = await ex.watch_order_book(symbol, WS_DEPTH.get(venue, cfg.BOOK_DEPTH))
+            # Sort defensively: a mis-ordered side would fake a cross-venue gap.
+            bids = sorted(([float(p), float(q)] for p, q, *_ in ob["bids"]), key=lambda l: -l[0])
+            asks = sorted(([float(p), float(q)] for p, q, *_ in ob["asks"]), key=lambda l: l[0])
             BOOKS.setdefault(venue, {})[symbol] = {
-                "bids": [[float(p), float(q)] for p, q, *_ in ob["bids"][: cfg.BOOK_DEPTH]],
-                "asks": [[float(p), float(q)] for p, q, *_ in ob["asks"][: cfg.BOOK_DEPTH]],
+                "bids": bids[: cfg.BOOK_DEPTH],
+                "asks": asks[: cfg.BOOK_DEPTH],
                 "recv_ms": int(time.time() * 1000),
                 "exch_ms": ob.get("timestamp"),
             }
@@ -46,7 +54,9 @@ async def watch(ex, symbol: str, stop_at: float) -> None:
             backoff = 1.0
         except Exception as e:  # network drops, geo-blocks, unsupported symbols
             STATS.setdefault(venue, {"updates": 0, "errors": 0})["errors"] += 1
-            log.warning("%s %s: %s", venue, symbol, str(e)[:200])
+            # First failure per feed at ERROR so it survives log filtering; repeats as WARNING.
+            (log.error if warned == 0 else log.warning)("%s %s: %s", venue, symbol, str(e)[:200])
+            warned += 1
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 30.0)
 

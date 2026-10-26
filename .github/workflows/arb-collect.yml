@@ -28,7 +28,9 @@ jobs:
       - name: Collect order books
         run: |
           mkdir -p data
-          python -m arb.collector --minutes "${{ github.event.inputs.minutes || '30' }}" --out data/books.jsonl.gz 2>&1 | tee data/collector.log | grep -v WARNING | tail -60
+          python -m arb.collector --minutes "${{ github.event.inputs.minutes || '30' }}" --out data/books.jsonl.gz > data/collector.log 2>&1 || true
+          grep -E " (INFO|ERROR) " data/collector.log | grep -v "Exception in callback" | cut -c1-260 | head -80
+          tail -1 data/collector.log
           echo "warnings by venue:"; grep WARNING data/collector.log | awk '{print $4}' | sort | uniq -c || true
       - name: Analyze
         run: python -m arb.analyze data/books.jsonl.gz --out data/summary.json

@@ -18,7 +18,7 @@ import json
 import statistics
 from collections import defaultdict
 from itertools import permutations
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 from arb import arb_config as cfg
 from arb.book_math import cross_venue, cycle_return, max_profitable_cross
@@ -75,10 +75,18 @@ class Episodes:
         return self.closed
 
 
-def analyze(path: str) -> dict:
+# A venue whose mid sits this far from the other venues' median most of the time, or
+# whose own book is crossed, is more likely a broken feed than a real opportunity.
+SUSPECT_MEDIAN_DEV_BPS = 5.0
+SUSPECT_CROSSED_SHARE = 0.005
+
+
+def analyze(path: str, exclude: Sequence[str] = ()) -> dict:
     samples = 0
     venue_seen: Dict[str, int] = defaultdict(int)
     venue_lag: Dict[str, List[float]] = defaultdict(list)
+    venue_crossed: Dict[str, int] = defaultdict(int)
+    venue_dev: Dict[str, List[float]] = defaultdict(list)
     stale_dropped = 0
 
     funnel = {s: defaultdict(int) for s in FEE_SCENARIOS}
@@ -96,16 +104,31 @@ def analyze(path: str) -> dict:
             samples += 1
             fresh: Dict[str, Dict[str, dict]] = defaultdict(dict)
             for venue, books in rec["books"].items():
+                if venue in exclude:
+                    continue
                 for sym, b in books.items():
                     if t - b["recv_ms"] > cfg.MAX_QUOTE_AGE_MS:
                         stale_dropped += 1
                         continue
                     if not b["bids"] or not b["asks"]:
                         continue
+                    if b["bids"][0][0] >= b["asks"][0][0]:
+                        venue_crossed[venue] += 1   # a venue's own book can't be crossed
+                        continue
                     fresh[venue][sym] = b
                     venue_seen[venue] += 1
                     if b.get("exch_ms"):
                         venue_lag[venue].append(b["recv_ms"] - b["exch_ms"])
+
+            # ---- feed sanity: each venue's mid vs the median of the others ----
+            for sym in cfg.CROSS_SYMBOLS + cfg.TRIANGLE_LEGS:
+                mids = {v: (fresh[v][sym]["bids"][0][0] + fresh[v][sym]["asks"][0][0]) / 2
+                        for v in fresh if sym in fresh[v]}
+                if len(mids) < 3:
+                    continue
+                for v, m in mids.items():
+                    others = statistics.median([x for k, x in mids.items() if k != v])
+                    venue_dev[v].append(abs(m / others - 1) * 1e4)
 
             # ---- cross-venue ----
             positives = {s: {} for s in FEE_SCENARIOS}
@@ -165,7 +188,18 @@ def analyze(path: str) -> dict:
             tri_eps.update(t, tri_pos)
 
     # ---- summarise ----
-    out = {"samples": samples, "stale_books_dropped": stale_dropped,
+    quality = {}
+    for v in set(venue_seen) | set(venue_crossed):
+        devs = venue_dev.get(v, [])
+        total = venue_seen.get(v, 0) + venue_crossed.get(v, 0)
+        crossed_share = venue_crossed.get(v, 0) / total if total else 0.0
+        med = pct(devs, 0.5)
+        quality[v] = {"crossed_book_share": round(crossed_share, 4),
+                      "mid_dev_bps_median": med, "mid_dev_bps_p90": pct(devs, 0.9),
+                      "suspect": bool((med is not None and med > SUSPECT_MEDIAN_DEV_BPS)
+                                      or crossed_share > SUSPECT_CROSSED_SHARE)}
+    out = {"excluded_venues": list(exclude), "venue_quality": quality,
+           "samples": samples, "stale_books_dropped": stale_dropped,
            "venue_book_samples": dict(venue_seen),
            "venue_lag_ms_median": {v: statistics.median(l) for v, l in venue_lag.items() if l},
            "cross_venue": {}, "gross_best_bps_by_symbol": {}, "triangular": {}}
@@ -210,7 +244,15 @@ def analyze(path: str) -> dict:
 
 
 def print_report(s: dict) -> None:
+    print(f"excluded venues: {s['excluded_venues'] or 'none'}")
     print(f"samples={s['samples']} stale_books_dropped={s['stale_books_dropped']}")
+    print("venue feed quality (own-book crossed share, |mid - median of other venues| bps):")
+    for v, q in sorted(s["venue_quality"].items()):
+        med = q["mid_dev_bps_median"]
+        p90 = q["mid_dev_bps_p90"]
+        print(f"  {v:10s} crossed={q['crossed_book_share']*100:.2f}% "
+              f"dev_med={med if med is None else round(med, 2)} dev_p90={p90 if p90 is None else round(p90, 2)}"
+              f"{'  SUSPECT' if q['suspect'] else ''}")
     print("venue book-samples:", s["venue_book_samples"])
     print("venue recv-minus-exchange-timestamp median ms:", s["venue_lag_ms_median"])
     print("\nBest top-of-book gross cross per symbol (bps, before fees):")
@@ -238,9 +280,18 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("path")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--exclude", default="", help="comma-separated venues to ignore")
     a = ap.parse_args()
-    summary = analyze(a.path)
+    exclude = [v for v in a.exclude.split(",") if v]
+    summary = analyze(a.path, exclude)
     print_report(summary)
+    result = {"all": summary}
+    suspects = [v for v, q in summary["venue_quality"].items() if q["suspect"]]
+    if suspects:
+        print(f"\n==== re-run excluding suspect feeds: {suspects} ====")
+        clean = analyze(a.path, exclude + suspects)
+        print_report(clean)
+        result["clean"] = clean
     if a.out:
         with open(a.out, "w") as fh:
-            json.dump(summary, fh, indent=2, default=str)
+            json.dump(result, fh, indent=2, default=str)
