@@ -1,0 +1,39 @@
+name: arb-collect
+
+# Public market data only. No secrets are used or exposed to this job.
+on:
+  push:
+    branches: [claude/project-thread-wn12i9]
+    paths: ["arb/**", ".github/workflows/arb-collect.yml"]
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Collection length in minutes"
+        default: "30"
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r arb/requirements.txt
+      - run: python -m pytest -q arb/tests
+      - name: Collect order books
+        run: |
+          mkdir -p data
+          python -m arb.collector --minutes "${{ github.event.inputs.minutes || '30' }}" --out data/books.jsonl.gz 2>&1 | tee data/collector.log | grep -v WARNING | tail -60
+          echo "warnings by venue:"; grep WARNING data/collector.log | awk '{print $4}' | sort | uniq -c || true
+      - name: Analyze
+        run: python -m arb.analyze data/books.jsonl.gz --out data/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arb-data-${{ github.run_id }}
+          path: data/
+          retention-days: 14
