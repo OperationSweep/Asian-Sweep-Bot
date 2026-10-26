@@ -1,0 +1,18 @@
+{
+  "_note": "Pass/fail thresholds fixed on 2026-10-26 BEFORE the first XEMM data run. Do not edit after seeing results; add a new file instead.",
+  "observation_run": "first 60-minute collection; used only to pick quote edge per pair",
+  "validation_run": "a later, separate 60-minute collection; parameters frozen from the observation run",
+  "pass_if_all": {
+    "fill_model": "realistic",
+    "fees": "retail",
+    "min_completed_cycles": 30,
+    "net_pnl_usd_gt": 0,
+    "net_pnl_usd_conservative_ge": 0,
+    "hedge_completion_pct_ge": 99.0,
+    "p95_seconds_unhedged_le": 2.0,
+    "max_drawdown_pct_of_capital_le": 2.0,
+    "net_pnl_with_hedge_latency_2s_gt": 0
+  },
+  "redesign_if": "passes only with 'low' fees or only in the optimistic fill model",
+  "stop_if": "fails in the realistic model at both retail and low fees for every pair"
+}

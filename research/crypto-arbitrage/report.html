@@ -1,0 +1,329 @@
+<title>Arbitrage Edge Audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: single reading column (~72ch) with wide tables allowed to break out and scroll; order-book bid/ask colours carry meaning */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#15202b; --muted:#566373; --rule:#d9dee5;
+  --accent:#1f5fbf; --bid:#13795b; --ask:#b23a3a; --warn:#9a6400; --chip:#e8eef8;
+  --display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d26; --ink:#e4e9ef; --muted:#97a3b2; --rule:#2a3542;
+  --accent:#7aa7ef; --bid:#4cc39a; --ask:#ef7b7b; --warn:#e0b04a; --chip:#1d2a3b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#161d26; --ink:#e4e9ef; --muted:#97a3b2; --rule:#2a3542;
+  --accent:#7aa7ef; --bid:#4cc39a; --ask:#ef7b7b; --warn:#e0b04a; --chip:#1d2a3b; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--body)}
+.wrap{max-width:980px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.prose{max-width:72ch}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2.3rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.55rem;font-weight:600;margin-top:56px;padding-top:20px;border-top:1px solid var(--rule)}
+h3{font-size:1.15rem;font-weight:600;margin-top:28px}
+p,ul,ol{margin:12px 0}
+li{margin:4px 0}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.86em}
+.eyebrow{font:600 .78rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.meta{color:var(--muted);font-size:.95rem;margin-top:10px}
+.verdict{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--ask);border-radius:6px;padding:20px 22px;margin-top:28px}
+.verdict p:first-child{margin-top:0}
+.verdict strong.big{font-family:var(--display);font-size:1.25rem;display:block;margin-bottom:6px}
+.tag{display:inline-block;font:600 .72rem/1.6 var(--mono);letter-spacing:.04em;padding:0 7px;border-radius:4px;background:var(--chip);color:var(--ink);white-space:nowrap}
+.tag.v{color:var(--bid)} .tag.i{color:var(--warn)} .tag.x{color:var(--ask)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px solid var(--rule)}
+th{font:600 .74rem/1.3 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;white-space:nowrap}
+.pos{color:var(--bid);font-weight:600} .neg{color:var(--ask);font-weight:600} .amb{color:var(--warn);font-weight:600}
+.wide{min-width:880px}
+.note{color:var(--muted);font-size:.9rem}
+.callout{background:var(--chip);border-radius:6px;padding:14px 16px;margin:16px 0}
+.formula{font-family:var(--mono);font-size:.9rem;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:16px 0}
+.grid2>div{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;min-width:0}
+.grid2 h3{margin-top:0}
+.rank{font:700 1rem/1 var(--mono);color:var(--muted)}
+pre.mermaid{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px;overflow-x:auto}
+ol.steps>li{margin:10px 0}
+.src{font-size:.9rem}
+.src li{margin:6px 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<header class="prose">
+  <div class="eyebrow">Research &amp; design brief · crypto arbitrage</div>
+  <h1>Arbitrage Edge Audit</h1>
+  <p class="meta">Prepared for Nuru · research date 26 October 2026 · live data sampled 11:29–12:44 UTC · no trades placed, no funds moved</p>
+  <p>Labels used throughout: <span class="tag v">VERIFIED</span> means checked against a live order book, source code or a primary document today. <span class="tag i">INFERENCE</span> means my reasoning from that evidence. <span class="tag x">ILLUSTRATION</span> means made-up but plausible numbers that show a mechanism, never a forecast.</p>
+</header>
+
+<!-- ============================================================ 1 -->
+<section class="prose">
+<h2>1. Feasibility verdict</h2>
+<div class="verdict">
+  <strong class="big">No viable riskless edge for a small operator at retail fees. Do not commit capital yet.</strong>
+  <p>Pure taker-on-both-legs arbitrage between major exchanges, triangular arbitrage inside one exchange, and atomic DEX arbitrage are all either too thin to beat retail fees or are dominated by a few very fast, vertically integrated firms. Today's live books show this directly. The best BTC/USDT cross between Kraken, Crypto.com and Gate was 4.7 basis points, but only about $103 of size sat at that price, worth $0.013 before fees and −$0.87 after them on a $100 trade. Triangular cycles on Crypto.com ran between −2.8 and +0.2 bps before fees, against 22.5 bps of fees.</p>
+  <p id="verdict-measured">Three 30-minute WebSocket measurements across up to 10 exchanges and 9 pairs agreed. About 21% of venue-pair-seconds showed a headline cross, but <strong>none</strong> was still profitable at $100 or more after retail taker fees, or even at a flat 0.10% per leg. No triangular cycle was ever net-positive. A small edge only appears near 0.02% per leg, and even that was worth at most about $100 per 30 minutes across ten venues, with perfect execution (section 4.3).</p>
+  <p><strong>What would have to change:</strong> fees near 0–2 bps per leg (market-maker or high-VIP tiers, or a maker rebate on one leg), less efficient markets (long-tail tokens, new listings, regional fiat premia), or a speed and order-flow advantage a small operator cannot buy. The one design worth testing further is <strong>hedged cross-venue market making</strong>: rest a limit order on the less liquid venue and hedge on the liquid one. That earns a spread but carries inventory and adverse-selection risk, so it is not riskless arbitrage, and it has to prove itself in paper trading first.</p>
+</div>
+</section>
+
+<!-- ============================================================ 2 -->
+<section>
+<h2 class="prose">2. Strategy comparison</h2>
+<p class="prose"><strong>Executable</strong> means both legs can be priced and hit now at known quotes. <strong>Convergence</strong> means profit depends on prices or rates moving later. <strong>Atomic</strong> means all legs succeed or the whole trade reverts, which only happens inside one blockchain transaction.</p>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Strategy</th><th>Type</th><th>Atomic?</th><th>If one leg fails</th><th>Capital</th><th>Speed</th><th>Competition</th><th>Complexity</th><th>Small-operator fit</th></tr></thead>
+<tbody>
+<tr><td><strong>Cross-CEX, inventory on both venues</strong> (buy A, sell B at once)</td><td>Executable</td><td>No</td><td>Naked long or short until hedged</td><td>4 buckets (quote and base on each venue)</td><td>Sub-second for majors</td><td>Very high on majors, lower on long tail</td><td>Medium</td><td class="neg">Poor on majors; possible on long tail</td></tr>
+<tr><td>Cross-CEX with transfer after detection</td><td>Convergence in practice</td><td>No</td><td>Price moves during the 10–60 min deposit</td><td>Low</td><td>Too slow</td><td>n/a</td><td>Low</td><td class="neg">Reject: spread is gone before coins arrive</td></tr>
+<tr><td><strong>Triangular, one exchange</strong></td><td>Executable</td><td>No (3 separate orders)</td><td>Holding an intermediate coin</td><td>Single venue, no transfers</td><td>Milliseconds</td><td>Very high (bots are about 2.7% of Binance trades, per Grimberg et al.)</td><td>Low to medium</td><td class="neg">Poor: 3 fees vs about 1 bp gross</td></tr>
+<tr><td><strong>DEX-DEX atomic</strong> (one transaction, optional flash loan)</td><td>Executable</td><td><strong>Yes</strong></td><td>Transaction reverts; you still pay gas, or nothing via private bundles</td><td>Very low with flash loans</td><td>Same block</td><td>Extreme: MEV searchers, builder bribes</td><td>High (contracts, simulation, bundles)</td><td class="neg">Poor: revenue mostly paid to builders</td></tr>
+<tr><td>CEX-DEX</td><td>Executable</td><td>No (chain leg vs CEX hedge)</td><td>Unhedged on-chain or CEX position</td><td>Medium, on both</td><td>Block-time race</td><td>3 firms took about 90% of value by Q1 2025</td><td>High</td><td class="neg">Reject</td></tr>
+<tr><td>Cross-chain DEX (via bridge)</td><td>Convergence</td><td>No</td><td>Bridge delay or failure</td><td>Medium</td><td>Minutes</td><td>Medium</td><td>High; bridge risk</td><td class="neg">Reject</td></tr>
+<tr><td><strong>Hedged cross-venue market making</strong> (maker on thin venue, taker hedge on deep venue)</td><td>Executable on fill, but you are picked off when price moves</td><td>No</td><td>Hedge slippage; adverse selection</td><td>4 buckets</td><td>Fast cancels matter more than fast takes</td><td>Medium on mid-caps</td><td>Medium (Hummingbot XEMM exists)</td><td class="amb">Best candidate to test</td></tr>
+<tr><td>Funding-rate basis (long spot, short perp)</td><td>Convergence (rate carry)</td><td>No</td><td>Liquidation of short; funding turns negative</td><td>Medium; margin buffer</td><td>Slow</td><td>High, rates compress</td><td>Low to medium</td><td class="amb">Viable as a low-risk yield, not arbitrage</td></tr>
+<tr><td>Dated-futures cash-and-carry</td><td>Convergence at expiry (contractual)</td><td>No</td><td>Margin calls before expiry</td><td>Capital locked to expiry</td><td>Slow</td><td>High</td><td>Low</td><td class="amb">Viable yield where dated futures are accessible</td></tr>
+<tr><td>Regional/fiat premium (e.g. Korea)</td><td>Convergence</td><td>No</td><td>Capital controls block the round trip</td><td>High, plus local banking</td><td>Slow</td><td>Low, but legally gated</td><td>High (legal)</td><td class="neg">Reject unless locally licensed</td></tr>
+<tr><td>Stablecoin depeg buys</td><td>Convergence (redemption)</td><td>No</td><td>Peg does not return</td><td>Medium</td><td>Event-driven</td><td>Medium</td><td>Low</td><td class="amb">Opportunistic only</td></tr>
+<tr><td>Statistical arbitrage / pairs</td><td>Convergence</td><td>No</td><td>Correlation breaks</td><td>Medium</td><td>Varies</td><td>High</td><td>High</td><td class="neg">Not arbitrage; out of scope</td></tr>
+</tbody></table></div>
+<div class="prose">
+<p class="note"><span class="tag v">VERIFIED</span> Competition figures: CEX-DEX concentration from <a href="https://arxiv.org/pdf/2507.13023">Measuring CEX-DEX Extracted Value (AFT 2025)</a>; triangular bot share from <a href="https://arxiv.org/abs/2002.12274v1">Grimberg, Lauinger &amp; McCoy (2020)</a>. <span class="tag i">INFERENCE</span> Small-operator fit ratings are mine.</p>
+</div>
+</section>
+
+<!-- ============================================================ 3 -->
+<section>
+<h2 class="prose">3. Inspected repositories, ranked</h2>
+<p class="prose">Each verdict is reuse, adapt or reject. Dates are the latest PyPI release or visible push I could confirm on 26 Oct 2026. Where I read source code, I say so. Nothing was run with credentials.</p>
+<div class="scroll"><table class="wide">
+<thead><tr><th>#</th><th>Repository</th><th>Licence · last activity</th><th>What the code actually does</th><th>Execution status</th><th>Problems found</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td class="rank">1</td><td><a href="https://github.com/ccxt/ccxt">ccxt/ccxt</a></td><td>MIT · v4.5.90, 23 Oct 2026</td><td>Unified REST and WebSocket API for 100+ venues. Used by the collector in this repo.</td><td>Functional (library)</td><td><span class="tag v">VERIFIED</span> Hard-coded fee tables are stale: Kraken ships as 0.26% taker, while Kraken's own page says 0.80% at tier 1. Always override fees.</td><td class="pos">Reuse</td></tr>
+<tr><td class="rank">2</td><td><a href="https://github.com/hummingbot/hummingbot">hummingbot/hummingbot</a></td><td>Apache-2.0 · release 20260922, published 7 Oct 2026 · 19.5k stars</td><td>Full bot framework. 30+ CEX connectors and DEX via Gateway. Arbitrage executor, XEMM executor, <code>amm_arb</code>, spot-perp arb, and a paper-trade connector.</td><td>Functional, with gaps in risk handling</td><td><span class="tag v">VERIFIED</span> (read <code>arbitrage_executor.py</code> and <code>amm_arb.py</code> source):<br>• Both legs are sent as MARKET orders, so there is no price protection.<br>• Quotes come from a depth-walked VWAP, but quote age is never checked.<br>• A failed leg is blindly re-placed up to 3 times, then marked FAILED. The filled leg is never unwound.<br>• Completion requires both legs <code>is_filled</code>, so a partial fill hangs in SHUTTING_DOWN.<br>• <code>get_net_pnl_pct</code> divides quote PnL by base quantity, which is a unit bug.<br>• In <code>amm_arb</code> sequential mode, a failed second leg drops the proposal and leaves the first leg open.</td><td class="amb">Adapt (XEMM and paper trading); rewrite the risk layer</td></tr>
+<tr><td class="rank">3</td><td><a href="https://github.com/nautechsystems/nautilus_trader">nautechsystems/nautilus_trader</a></td><td>LGPL-3.0 · v1.231.0, 2 Aug 2026 (v2 in RC) · 30.7k stars</td><td>Rust-core event-driven engine with Python strategies. Same code runs in backtest and live. Adapters for Binance, Bybit, Coinbase, Kraken, OKX, Hyperliquid and Tardis data.</td><td>Functional engine; no arbitrage strategy included</td><td>Breaking API changes between releases. Steeper learning curve. LGPL obligations if you redistribute.</td><td class="amb">Adapt if the edge is proven and you need production grade</td></tr>
+<tr><td class="rank">4</td><td><a href="https://github.com/bmoscon/cryptofeed">bmoscon/cryptofeed</a></td><td>AGPL (badge) · v3.0.1, 27 Sep 2026</td><td>Normalised WebSocket feeds (L1/L2/L3, trades, funding) for about 29 venues, with storage backends.</td><td>Functional (data only)</td><td>AGPL is copyleft if you offer it as a service. Overlaps ccxt.pro.</td><td class="amb">Adapt as the data layer if ccxt.pro proves flaky</td></tr>
+<tr><td class="rank">5</td><td><a href="https://docsearch.algolia.com/mcp/docs/repo/bowtieddevil/degenbot">BowTiedDevil/degenbot</a></td><td>MIT · v0.5.0, 20 Nov 2025; docs active Aug 2026</td><td>Rust and Python pool-state and swap maths for Uniswap V2/V3/V4, Curve, Balancer and Solidly, plus a Vyper executor contract.</td><td>Building blocks; you write the strategy</td><td>Only matters if you pursue DEX arbitrage, which I do not recommend.</td><td class="amb">Adapt (DEX research only)</td></tr>
+<tr><td class="rank">6</td><td><a href="https://github.com/paradigmxyz/artemis">paradigmxyz/artemis</a></td><td>Apache-2.0 / MIT · 29 commits · 3.0k stars</td><td>Collector → strategy → executor framework in Rust. One example strategy (NFT arbitrage).</td><td>Framework skeleton</td><td>Low activity. Useful as an architecture pattern only.</td><td class="neg">Reject (reference)</td></tr>
+<tr><td class="rank">7</td><td><a href="https://github.com/bmino/binance-triangle-arbitrage">bmino/binance-triangle-arbitrage</a></td><td>MIT · 1.2k stars · pins Node 14.15.4 (end of life)</td><td>Binance-only triangle detection and execution, with linear or parallel legs.</td><td>Functional for Binance; unverified profit</td><td><span class="tag v">VERIFIED</span> (read <code>CalculationNode.js</code>): walks depth correctly, but no quote-age check. Fees are subtracted as 3 × a flat config value. An exact 0% result is coerced to −100. Depends on an outdated <code>node-binance-api 0.11</code>.</td><td class="neg">Reject (study the depth walk)</td></tr>
+<tr><td class="rank">8</td><td><a href="https://github.com/nelso0/barbotine-arbitrage-bot">nelso0/barbotine-arbitrage-bot</a></td><td>Licence file not identified · 647 stars · pushed 4 Feb 2026</td><td>ccxt cross-exchange bot.</td><td class="neg">Simulated only</td><td><span class="tag v">VERIFIED</span> (read <code>bot-fake-money.py</code>): places no real orders. Uses top of book only and ignores quantities. Reads the BTC/USDT fee for every pair. Records profit computed <em>before</em> its own simulated delay. The README says to contact the author for the "full version" with real balances.</td><td class="neg">Reject; advertised results are not evidence</td></tr>
+<tr><td class="rank">9</td><td><a href="https://github.com/flashbots/simple-arbitrage">flashbots/simple-arbitrage</a></td><td>2.1k stars · educational</td><td>Uniswap-style arbitrage via Flashbots bundles and a BundleExecutor contract.</td><td>Functional example</td><td>Its own README says it is "very unlikely to be profitable." Needs a hot private key.</td><td class="neg">Reject (education)</td></tr>
+<tr><td class="rank">10</td><td><a href="https://github.com/ehgp/realtime_crypto_arbitrage_bot">ehgp/realtime_crypto_arbitrage_bot</a></td><td>Apache-2.0 · 1 star · Python 3.7</td><td>KuCoin triangle and Bellman-Ford detection with SQLite storage.</td><td class="neg">Incomplete (TODO: trading module)</td><td>Outdated Python, single venue.</td><td class="neg">Reject</td></tr>
+<tr><td class="rank">–</td><td><a href="https://github.com/OperationSweep/Asian-Sweep-Bot">OperationSweep/Asian-Sweep-Bot</a> (this project)</td><td>—</td><td>An MT5 EURUSD session-sweep directional bot, plus unrelated research.</td><td>n/a</td><td>No crypto, no order-book code. The new <code>arb/</code> package (draft PR #15) lives beside it.</td><td>Keep separate</td></tr>
+</tbody></table></div>
+<div class="prose callout"><strong>Security warning.</strong> Fake "arbitrage bots" are a known malware channel. <a href="https://safedep.io/defi-infostealer-fake-arbitrage-bot-npm/">SafeDep (2026)</a> documents a fake arbitrage bot spread across ten npm accounts to deliver an infostealer. Never run any bot on a machine that holds wallet keys, and only ever give it exchange keys with withdrawals disabled and an IP whitelist.</div>
+</section>
+
+<!-- ============================================================ 4 -->
+<section>
+<h2 class="prose">4. Worked net-profit examples and break-even thresholds</h2>
+<div class="prose">
+<div class="formula">net = sell_proceeds × (1 − fee_sell) − buy_cost × (1 + fee_buy)
+      − gas − borrow − rebalance_cost_per_trade − failed_leg_reserve
+# buy_cost and sell_proceeds come from walking real depth,
+# so slippage is already inside them and is not added again.</div>
+
+<h3>4.1 Fee inputs (lowest retail tier, taker)</h3>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>Venue</th><th class="num">Taker</th><th class="num">Maker</th><th>Source (checked 26 Oct 2026)</th></tr></thead>
+<tbody>
+<tr><td>Kraken Pro</td><td class="num">0.80%</td><td class="num">0.40%</td><td><a href="https://www.kraken.com/features/fee-schedule">Kraken fee schedule</a> <span class="tag v">primary</span> · stablecoin pairs 0.20%</td></tr>
+<tr><td>Coinbase Advanced</td><td class="num">1.20%</td><td class="num">0.60%</td><td><a href="https://bitbo.io/buy/kraken-coinbase-fees/">bitbo</a> (secondary). <a href="https://www.mexc.com/crypto-pulse/article/crypto-exchange-fees-in-2026-110091">MEXC's May 2026 table</a> says 0.60/0.40, so check your own account.</td></tr>
+<tr><td>Crypto.com Exchange</td><td class="num">0.075%</td><td class="num">0.075%</td><td><a href="https://www.coinmarketcap.com/exchanges/crypto-com-exchange">CoinMarketCap listing</a> (secondary), under $250K 30-day volume</td></tr>
+<tr><td>OKX</td><td class="num">0.10%</td><td class="num">0.08%</td><td><a href="https://www.bitdegree.org/crypto/tutorials/okx-fees">BitDegree, updated 7 Aug 2026</a></td></tr>
+<tr><td>Binance</td><td class="num">0.10%</td><td class="num">0.10%</td><td><a href="https://cryptopotato.com/binance-fees/">CryptoPotato, Oct 2025</a>; 25% off when paying fees in BNB</td></tr>
+<tr><td>MEXC</td><td class="num">0.05%</td><td class="num">0%</td><td><a href="https://www.mexc.com/crypto-pulse/article/crypto-exchange-fees-in-2026-110091">MEXC (self-reported), May 2026</a></td></tr>
+</tbody></table></div>
+<p class="prose note">Fee sources disagree. MEXC's comparison lists Kraken at 0.25/0.40%, but Kraken's own page says 0.40/0.80%. Treat any fee you have not read in your own account as unverified.</p>
+
+<div class="prose">
+<h3>4.2 Live snapshots, 26 Oct 2026 11:29 UTC <span class="tag v">VERIFIED</span></h3>
+<p><strong>Example A: the headline BTC cross.</strong> Kraken best ask was 80,343.30 (0.012 BTC). Crypto.com best bid was 80,347.09, but for only 0.00128 BTC (about $103). Gate sat between them at 80,345.2 / 80,345.3. A screener would show "+4.7 bps". Walking both books gives this:</p>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>Trade size</th><th class="num">Zero fees</th><th class="num">Retail (0.80% + 0.075%)</th><th class="num">Best case (0.10% + 0.075%)</th></tr></thead>
+<tbody>
+<tr><td>$100</td><td class="num pos">+$0.005 (+0.47 bp)</td><td class="num neg">−$0.87 (−86 bp)</td><td class="num neg">−$0.17 (−17 bp)</td></tr>
+<tr><td>$1,000</td><td class="num pos">+$0.013 (+0.13 bp)</td><td class="num neg">−$8.74</td><td class="num neg">−$1.74</td></tr>
+<tr><td>$5,000</td><td class="num neg">−$0.05</td><td class="num neg">−$43.80</td><td class="num neg">−$8.80</td></tr>
+</tbody></table></div>
+<p class="prose">The most that could have been captured at zero fees was 0.012 BTC for <strong>$0.013</strong>. The snapshots were also 10–20 seconds apart, not simultaneous, which is the quote-age problem in action.</p>
+
+<div class="prose"><p><strong>Example B: triangular arbitrage on Crypto.com</strong> (same second, one venue: BTC_USDT, ETH_USDT, ETH_BTC; 3 × 0.075% taker).</p></div>
+<div class="scroll"><table>
+<thead><tr><th>Cycle</th><th class="num">$100 gross</th><th class="num">$1,000 gross</th><th class="num">$5,000 gross</th><th class="num">$1,000 net of fees</th></tr></thead>
+<tbody>
+<tr><td>USDT → BTC → ETH → USDT</td><td class="num neg">−1.08 bp</td><td class="num neg">−1.11 bp</td><td class="num neg">−1.78 bp</td><td class="num neg">−$2.36 (−23.6 bp)</td></tr>
+<tr><td>USDT → ETH → BTC → USDT</td><td class="num pos">+0.16 bp</td><td class="num neg">−0.47 bp</td><td class="num neg">−2.78 bp</td><td class="num neg">−$2.30 (−23.0 bp)</td></tr>
+</tbody></table></div>
+<p class="prose">The cross rate is priced to within about one basis point. Fees of 22.5 bps would need a mispricing about 20 times larger than this.</p>
+
+<div class="prose">
+<h3 id="measured">4.3 Measured across venues (30-minute WebSocket sample)</h3>
+<div id="measured-body">
+<p><span class="tag v">VERIFIED</span> Three 30-minute WebSocket collections ran on GitHub's US-based cloud runners. Each sampled every cached order book once a second, about 1,750 samples per run. Runs A and B ran in parallel from 11:39 to 12:10 UTC on 7 venues. Run C ran from 12:13 to 12:44 UTC on <strong>10 venues</strong> (Gate, Coinbase, OKX, KuCoin, HTX, Bitget, Bitstamp, Kraken, MEXC, Bitfinex), with the feed-quality checks switched on. It covered nine USDT pairs plus BTC-quoted triangle legs. Binance, Bybit and Crypto.com failed to connect from the runner, most likely geo-blocking (I have not confirmed the reason). The table shows run C after it automatically dropped MEXC, whose own book was crossed 3.2% of the time.</p>
+</div>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>Filter (all venue pairs × symbols × seconds)</th><th class="num">Run C, clean</th><th class="num">Share</th><th class="num">Run A</th></tr></thead>
+<tbody>
+<tr><td>Venue-pair observations</td><td class="num">524,142</td><td class="num">100%</td><td class="num">402,106</td></tr>
+<tr><td>Headline: best bid on B above best ask on A</td><td class="num">108,608</td><td class="num">20.7%</td><td class="num">87,661</td></tr>
+<tr><td>Profitable after <strong>retail taker fees</strong> at any size</td><td class="num amb">64</td><td class="num">0.01%</td><td class="num neg">0</td></tr>
+<tr><td>… and fillable at $100 or more</td><td class="num neg">0</td><td class="num neg">0%</td><td class="num neg">0</td></tr>
+<tr><td>Flat 0.10% fee per leg: any size · at $100 or more</td><td class="num neg">323 · 0</td><td class="num neg">0%</td><td class="num neg">0 · 0</td></tr>
+<tr><td>Flat 0.02% per leg (VIP / market-maker level), $100</td><td class="num">8,197</td><td class="num">1.6%</td><td class="num">12,425</td></tr>
+<tr><td>… same, fillable at $5,000</td><td class="num">4,305</td><td class="num">0.8%</td><td class="num">6,952</td></tr>
+<tr><td>… distinct episodes · still there 1 s later · 3 s later</td><td class="num">866 · 596 · 389</td><td class="num">—</td><td class="num">1,116 · 906 · 614</td></tr>
+<tr><td>… perfect-capture ceiling at 0.02%, 30 min, all routes</td><td class="num">$102</td><td class="num">—</td><td class="num">$978</td></tr>
+<tr><td>Triangular cycles net-positive after fees ($1,000)</td><td class="num neg">0 of 52</td><td class="num">—</td><td class="num neg">0 of 34</td></tr>
+</tbody></table></div>
+<div class="prose">
+<p><strong>What this says.</strong> About one second in five shows a "headline" arbitrage somewhere. At retail fees, the few moments that clear costs at all involve only the first few dollars of depth: none was fillable at $100. A flat 0.10% fee does no better. Something only starts to appear near 0.02% per leg, and even then the ceiling is <strong>$102 in 30 minutes</strong> across ten exchanges. That figure assumes perfect, instant, failure-free capture with inventory already everywhere. Most of it is SOL routes buying on HTX, which had the noisiest feed of the clean venues (median 2.3 bp from the others). In run A the ceiling was larger ($978), but it came mostly through Bitstamp, whose feed lagged by about 0.6 s. Both are more likely stale prices than money anyone could take.</p>
+<p>At zero fees the ceiling jumps to about $140k. Over half of that is a steady 1.6 bp USDC/USDT gap between KuCoin and the other venues on very deep books, which no fee level a small account can reach would leave standing.</p>
+<p><strong>Typical headline gaps</strong> (best venue pair, run C, before fees): BTC median 2.0 bp (p99 5.9), ETH 2.3 (5.6), SOL 5.8 (10.9), XRP 2.1 (9.6), DOGE 3.9 (6.6), LINK 1.7 (31, briefly). The cheapest retail round trip available is 10–20 bp.</p>
+<p><strong>Triangles:</strong> across three runs and up to 52 cycles per run, there was never a net-positive moment. The most consistent positive gross was KuCoin USDT→ETH→BTC at a median +1.2 bp (p99 +4.7), against 30 bp of fees. Kraken's cycles stayed within ±1.5 bp gross, against Kraken's 240 bp of retail fees for three legs.</p>
+<div class="callout"><strong>A broken feed looked like profit.</strong> In run B, the same code over the same 30 minutes as run A reported 156 "profitable" episodes at retail fees, plus Bitget triangles up to +22 bp. Every one used Bitget as the sell side. In run A, on another runner, Bitget's triangles were all negative. Run B's local Bitget book had desynced. In run C the new checks caught a similar problem automatically: MEXC's book was crossed against itself 3.2% of the time. This is how bot screenshots show profits that do not exist.</div>
+</div>
+<div class="prose">
+
+<h3>4.4 Break-even spreads</h3>
+<p>Required gross spread = fee_buy + fee_sell + rebalancing cost per trade + a buffer for adverse moves and failed legs. The table below uses a 2 bp buffer and assumes one rebalance (two withdrawals of about $1 each) per 10 trades <span class="tag x">ILLUSTRATION</span>.</p>
+</div>
+<div class="scroll"><table>
+<thead><tr><th>Fee profile (taker + taker)</th><th class="num">Fees</th><th class="num">Rebalance @ $250/trade</th><th class="num">Rebalance @ $1,250/trade</th><th class="num">Break-even @ $250</th><th class="num">Break-even @ $1,250</th></tr></thead>
+<tbody>
+<tr><td>Kraken retail + Crypto.com</td><td class="num">87.5 bp</td><td class="num">8 bp</td><td class="num">1.6 bp</td><td class="num neg">97.5 bp</td><td class="num neg">91.1 bp</td></tr>
+<tr><td>OKX + Binance retail</td><td class="num">20 bp</td><td class="num">8 bp</td><td class="num">1.6 bp</td><td class="num neg">30 bp</td><td class="num amb">23.6 bp</td></tr>
+<tr><td>Crypto.com + Binance (BNB)</td><td class="num">15 bp</td><td class="num">8 bp</td><td class="num">1.6 bp</td><td class="num amb">25 bp</td><td class="num amb">18.6 bp</td></tr>
+<tr><td>MEXC + MEXC-like (0.05%)</td><td class="num">10 bp</td><td class="num">8 bp</td><td class="num">1.6 bp</td><td class="num amb">20 bp</td><td class="num amb">13.6 bp</td></tr>
+<tr><td>Maker on one leg (0%) + 0.05% taker</td><td class="num">5 bp</td><td class="num">8 bp</td><td class="num">1.6 bp</td><td class="num amb">15 bp</td><td class="num pos">8.6 bp</td></tr>
+<tr><td>VIP / market-maker (0.02% each)</td><td class="num">4 bp</td><td class="num">8 bp</td><td class="num">1.6 bp</td><td class="num amb">14 bp</td><td class="num pos">7.6 bp</td></tr>
+</tbody></table></div>
+<p class="prose">Triangular break-even is 3 × taker fee: 22.5 bp on Crypto.com or Binance with BNB, 15 bp on MEXC, 30 bp at 0.10%.</p>
+
+<div class="prose">
+<h3>4.5 DEX and CEX-DEX</h3>
+<p><strong>Example C: a two-hop atomic DEX arbitrage on Ethereum</strong> <span class="tag x">ILLUSTRATION</span> using sourced inputs. Gas is about 300k units × 0.5 gwei ≈ 0.00015 ETH ≈ $0.35 at the ETH_USDT price of $2,330. That gas assumption comes from the typical 0.1–0.5 gwei base fee reported for early 2026 by <a href="https://skills.sh/austintgriffith/ethskills/gas">ethskills</a>, not a live reading. Pool fees are 5 bp + 30 bp. Gas is not the problem. Winning the block is: top CEX-DEX searchers keep median margins of only <strong>18–28%</strong> of revenue after paying builders. Wintermute, SCP and Kayle took about 90% of extracted value by Q1 2025 (<a href="https://arxiv.org/pdf/2507.13023">AFT 2025</a>).</p>
+<p><strong>On cheap L2s it is a spam war.</strong> On Base, cyclic-arbitrage contracts used about 51% of gas in Q1 2025, yet only 6.3% of their DEX-touching transactions actually traded (<a href="https://arxiv.org/html/2506.14768">Solmaz et al., AFT 2025</a>). A June 2026 Flashbots study of Base counts 21.4M successful arbitrages against 985.6M failed attempts (<a href="https://collective.flashbots.net/t/to-wait-or-to-probe-arbitrage-competition-on-high-throughput-blockchains/5759">Wu &amp; Öz</a>).</p>
+
+<h3>4.6 Why "move the coins after you see the spread" fails</h3>
+<p>A spread that lasts seconds cannot survive a 10–60 minute deposit (blockchain confirmations plus exchange crediting) or a withdrawal review. Every executable cross-venue design therefore needs <strong>inventory already sitting on both venues</strong>: quote currency where you buy and the coin where you sell. That splits capital four ways, and transfers are only used to rebalance later, at a known cost. The large historic spreads in <a href="https://quantpedia.com/arbitrage-opportunities-in-cryptocurrency-markets/">Makarov &amp; Schoar</a> (Korea premium averaging over 15%) persisted because capital controls stopped this rebalancing, not because nobody noticed.</p>
+</div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section>
+<h2 class="prose">5. Recommended strategy and architecture</h2>
+<div class="prose">
+<p><strong>Recommendation.</strong> Keep measuring. If the data supports it, test <strong>hedged cross-venue market making on 3–5 mid-cap USDT pairs</strong> between one deep venue (hedge, taker) and one or two thinner venues (quote, maker). Run it in paper mode first, with inventory pre-positioned. A pure taker-taker detector stays in place as an opportunistic sub-strategy that only fires when net edge clears the threshold. Funding-rate carry is a separate, slower yield option, to be evaluated on its own terms.</p>
+</div>
+<pre class="mermaid">
+flowchart LR
+  subgraph Ingest
+    WS1[Venue A WebSocket books]:::n --> NB[Normaliser + sequence/gap check]
+    WS2[Venue B WebSocket books]:::n --> NB
+    BAL[Private WS: fills and balances] --> INV
+  end
+  NB --> BOOK[(In-memory books with recv timestamps)]
+  BOOK --> DET[Opportunity detector: depth walk, fees, quote age]
+  INV[Inventory and exposure ledger] --> SIZE
+  DET --> SIZE[Sizer: min of depth, inventory, risk caps]
+  SIZE --> RISK{Pre-trade risk gate}
+  RISK -->|pass| EXE[Executor: IOC limit legs in parallel]
+  RISK -->|block| LOG
+  EXE --> HEDGE[Failed-leg handler: re-hedge or flatten]
+  EXE --> LOG[(Event log: quotes, decisions, fills)]
+  HEDGE --> LOG
+  LOG --> MON[Monitoring and kill switch]
+  INV --> REB[Rebalancer: scheduled transfers]
+  classDef n fill:none
+</pre>
+<div class="grid2">
+<div><h3>Language and concurrency</h3>
+<p>Start in <strong>Python asyncio</strong>: one event loop, one task per venue feed, <code>orjson</code>, and <code>uvloop</code> where available. The bottleneck is network round-trip to the venue (typically tens to hundreds of ms from a home connection). Python spends microseconds per depth walk. More threads do not help: the GIL serialises CPU work, and the work is I/O-bound anyway. Move hot paths to Rust (or adopt NautilusTrader) only if logs show internal decision time above about 5% of total latency.</p></div>
+<div><h3>Placement</h3>
+<p>Measure round-trip from candidate cloud regions to each venue's API and pick the one that minimises the slower leg. Colocation matters more than code speed for taker-taker strategies. <span class="tag i">INFERENCE</span> Several large venues are hosted in AWS Tokyo; confirm by measurement, not folklore.</p></div>
+<div><h3>Order handling</h3>
+<p>Use IOC limit orders priced at the depth-walk worst price plus a small tolerance, never plain market orders. Send both legs in parallel. Reconcile from the private fills stream, not from REST polling.</p></div>
+<div><h3>Keys and custody</h3>
+<p>Trade-only keys, withdrawals disabled, IP whitelist, one sub-account per strategy. Transfers for rebalancing are a separate, manually approved process.</p></div>
+</div>
+
+<div class="prose"><h3>Risk parameters (starting values)</h3></div>
+<div class="scroll"><table>
+<thead><tr><th>Control</th><th>Starting value</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Max quote age (taker leg)</td><td>500 ms since last book update; reject on a sequence gap</td><td>Older books are mostly stale versions of opportunities that have already been taken</td></tr>
+<tr><td>Min net edge</td><td>≥ 5 bp after fees and reserved rebalancing cost, and ≥ $0.25 absolute</td><td>Covers the adverse move between decision and fill</td></tr>
+<tr><td>Per-trade size</td><td>≤ 10% of the smaller inventory bucket, ≤ 50% of the depth inside the edge</td><td>Avoids walking your own edge away</td></tr>
+<tr><td>Open unhedged exposure</td><td>≤ $100, or 2% of capital, whichever is lower</td><td>Bounds the cost of a failed leg</td></tr>
+<tr><td>Failed leg</td><td>Retry the hedge once as an IOC within 30 bp; if still unfilled after 2 s, flatten at market and pause the route for 15 min</td><td>Turns an unknown loss into a capped one</td></tr>
+<tr><td>Daily loss limit</td><td>1% of capital, then stop until a manual restart</td><td>Capital preservation</td></tr>
+<tr><td>Pause conditions</td><td>2 failed legs per hour; venue p99 latency over 1 s; clock drift over 100 ms; inventory skew past 70/30; stablecoin off peg by more than 30 bp; any venue withdrawal or maintenance notice</td><td>Conditions where the model is wrong</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ============================================================ 6 -->
+<section class="prose">
+<h2>6. Implementation and validation plan</h2>
+<h3>Budget feasibility</h3>
+</section>
+<div class="scroll"><table>
+<thead><tr><th>Capital</th><th>Per bucket (4-way split)</th><th>Practical?</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>$100</td><td>$25</td><td class="neg">No</td><td>Near venue minimums ($5–10 notional). One rebalance withdrawal of $0.20–$2.20 is 1–9% of a bucket. Only useful as a software smoke test.</td></tr>
+<tr><td>$500</td><td>$125</td><td class="neg">Not for cross-venue</td><td>Rebalancing still costs 0.2–1.8% per move. Acceptable for a single-venue live plumbing test, but triangular has no edge.</td></tr>
+<tr><td>$1,000</td><td>$250</td><td class="amb">Pilot only</td><td>The smallest size for a capped pilot of one route. <span class="tag x">ILLUSTRATION</span> Even a real 5 bp net edge, 20 times a day on $250, is $2.50 a day before any failed leg.</td></tr>
+<tr><td>$5,000</td><td>$1,250</td><td class="amb">Enough to measure honestly</td><td>Rebalancing falls to about 1–2 bp per trade. Turnover (for example $25k a day) can lift you into better volume fee tiers within a month, and that is the real lever.</td></tr>
+</tbody></table></div>
+<section class="prose">
+<h3>Staged plan with pass/fail gates</h3>
+<ol class="steps">
+<li><strong>Collect</strong> (2+ weeks, from your own region and the venues you can legally use). Run <code>arb.collector</code> continuously on a small VPS. <em>Pass:</em> at least 99% of samples per venue with fresh books, clock synced via NTP, and both volatile and quiet days covered.</li>
+<li><strong>Record opportunities</strong> with <code>arb.analyze</code>, using your actual fee tier. <em>Pass:</em> net-positive episodes that survive at least 1 s must add up, as an upper bound, to at least 3× the expected daily rebalancing cost, with at least 5 distinct episodes a day on the chosen routes. <em>Fail:</em> stop here. That would be the evidence that the edge is not there.</li>
+<li><strong>Paper-trade</strong> (Hummingbot paper connector or a custom simulator). Inject 250–500 ms latency. A taker fill happens only against the book as it exists at decision time plus latency. Assume a 2–5% leg-reject rate, and model maker fills from trade prints, not quote touches. <em>Pass:</em> net PnL after all costs positive on at least 70% of days, max drawdown under 2%, both-leg fill rate at least 80%, one-sided episodes under 2% of trades, and realised edge at least 50% of the detected edge.</li>
+<li><strong>Out-of-sample test.</strong> Freeze every parameter, then run on 2+ weeks of new data never used in tuning. <em>Pass:</em> same sign, and at least 50% of in-sample net return per unit of capital.</li>
+<li><strong>Live pilot, only after your explicit approval.</strong> Cap $500–1,000, trade-only keys, one route, 2 weeks, kill switch tested on day 1. <em>Pass:</em> live slippage within 2 bp of paper, no unhandled one-sided exposure, and drawdown under 2%.</li>
+</ol>
+<p>Report at every stage: the share of apparent opportunities that disappear at each filter (headline → net of fees → fillable at size → still there 1 s later → actually filled in paper).</p>
+</section>
+
+<!-- ============================================================ 7 -->
+<section class="prose">
+<h2>7. Main uncertainties and evidence still needed</h2>
+<ul>
+<li><strong>Your jurisdiction.</strong> This decides which venues you can legally use, and the shortlist depends on it. The cloud collector runs from the US, where Binance and Bybit are geo-blocked.</li>
+<li><strong>Your real fee tier.</strong> Several fee figures above come from secondary sources, and they disagree.</li>
+<li><strong>Sample size.</strong> Three 30-minute samples on one morning are a smoke test, not a distribution. Edges cluster in volatile minutes, so two-plus weeks are needed.</li>
+<li><strong>Quote age semantics.</strong> "Time since last book update" overstates staleness for quiet books and understates it when a venue batches updates. Exchange timestamps and local clocks also need NTP discipline.</li>
+<li><strong>Maker fill realism.</strong> Hedged market making can look great in simulation and lose live to adverse selection. Only a carefully modelled paper stage, then a capped pilot, can settle this.</li>
+<li><strong>Not measured here:</strong> DEX pools, long-tail tokens below the top 10 mid-caps, funding-rate history, and withdrawal-time distributions.</li>
+<li><strong>Venue risk</strong> (insolvency, frozen withdrawals) is not in any PnL figure above, and it is the largest tail risk of holding inventory on several exchanges.</li>
+</ul>
+
+<h2>Sources</h2>
+<ul class="src">
+<li>Live order books: Crypto.com Exchange public API (via connector), Kraken and Gate public REST, 26 Oct 2026 11:29 UTC. OKX, KuCoin, MEXC and Coinbase responses were stale cached copies (exchange timestamps 2–16 days old) and were excluded.</li>
+<li><a href="https://www.kraken.com/features/fee-schedule">Kraken fee schedule</a> · <a href="https://www.coinmarketcap.com/exchanges/crypto-com-exchange">Crypto.com Exchange on CoinMarketCap</a> · <a href="https://www.bitdegree.org/crypto/tutorials/okx-fees">OKX fees (BitDegree)</a> · <a href="https://cryptopotato.com/binance-fees/">Binance fees (CryptoPotato)</a> · <a href="https://bitbo.io/buy/kraken-coinbase-fees/">Coinbase vs Kraken (bitbo)</a> · <a href="https://www.mexc.com/crypto-pulse/article/crypto-exchange-fees-in-2026-110091">Exchange fee comparison (MEXC, May 2026)</a> — all read 26 Oct 2026</li>
+<li><a href="https://quantpedia.com/arbitrage-opportunities-in-cryptocurrency-markets/">Makarov &amp; Schoar, Trading and Arbitrage in Cryptocurrency Markets (summary)</a></li>
+<li><a href="https://arxiv.org/abs/2002.12274v1">Grimberg, Lauinger, McCoy (2020), Indirect Internal Conversions in Cryptocurrency Exchanges</a></li>
+<li><a href="https://arxiv.org/pdf/2507.13023">Measuring CEX-DEX Extracted Value and Searcher Profitability (AFT 2025)</a> · <a href="https://arxiv.org/html/2401.01622v3">Heimbach et al., Non-Atomic Arbitrage in DeFi</a></li>
+<li><a href="https://arxiv.org/html/2506.14768">Solmaz, Heimbach, Vonlanthen, Wattenhofer, Optimistic MEV in Ethereum L2s (AFT 2025)</a> · <a href="https://collective.flashbots.net/t/to-wait-or-to-probe-arbitrage-competition-on-high-throughput-blockchains/5759">Wu &amp; Öz, To Wait or To Probe (Flashbots, Jun 2026)</a></li>
+<li><a href="https://athenum.mataroa.blog/blog/funding-rate-arbitrage-how-the-perp-spot-basis-pays-and-when-it-does-not/">Funding rate arbitrage: when the basis pays (Jun 2026)</a> · <a href="https://skills.sh/austintgriffith/ethskills/gas">Ethereum gas notes (early 2026)</a></li>
+<li><a href="https://safedep.io/defi-infostealer-fake-arbitrage-bot-npm/">SafeDep, fake arbitrage bot infostealer</a></li>
+<li>Source code read: Hummingbot 20260922 sdist from PyPI (<code>strategy_v2/executors/arbitrage_executor</code>, <code>strategy/amm_arb</code>, <code>connector/exchange_base.pyx</code>); bmino <code>CalculationNode.js</code>, <code>package.json</code>; barbotine <code>bot-fake-money.py</code>. Release dates from PyPI JSON on 26 Oct 2026.</li>
+<li>Measurement code: <a href="https://github.com/OperationSweep/Asian-Sweep-Bot/pull/15">draft PR #15</a>, <code>arb/</code> package.</li>
+</ul>
+</section>
+</div>
