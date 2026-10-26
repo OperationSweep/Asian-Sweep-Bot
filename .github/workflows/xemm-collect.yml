@@ -1,7 +1,15 @@
 name: xemm-collect
 
 # Public market data only: order books and trade prints. No secrets, no orders.
+# A push that touches this file starts a run (workflow_dispatch only works from the
+# default branch). RUN_LABEL below names the run.
+env:
+  RUN_LABEL: observation
+
 on:
+  push:
+    branches: [claude/project-thread-wn12i9]
+    paths: [".github/workflows/xemm-collect.yml"]
   workflow_dispatch:
     inputs:
       minutes:
@@ -39,7 +47,7 @@ jobs:
         run: python -m arb.xemm_sim data/books.jsonl.gz data/trades.jsonl.gz --out data/xemm.json
       - uses: actions/upload-artifact@v4
         with:
-          name: xemm-${{ github.event.inputs.label || 'run' }}-${{ github.run_id }}
+          name: xemm-${{ github.event.inputs.label || env.RUN_LABEL }}-${{ github.run_id }}
           path: |
             data/xemm.json
             data/collector.log
