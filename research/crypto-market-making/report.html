@@ -1,0 +1,290 @@
+<title>Hedged Market-Making Audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Same system as the Arbitrage Edge Audit: one reading column, wide tables scroll; bid/ask colours carry meaning */
+:root{
+  --bg:#f6f7f9; --surface:#ffffff; --ink:#15202b; --muted:#566373; --rule:#d9dee5;
+  --accent:#1f5fbf; --bid:#13795b; --ask:#b23a3a; --warn:#9a6400; --chip:#e8eef8;
+  --display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141a; --surface:#161d26; --ink:#e4e9ef; --muted:#97a3b2; --rule:#2a3542;
+  --accent:#7aa7ef; --bid:#4cc39a; --ask:#ef7b7b; --warn:#e0b04a; --chip:#1d2a3b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141a; --surface:#161d26; --ink:#e4e9ef; --muted:#97a3b2; --rule:#2a3542;
+  --accent:#7aa7ef; --bid:#4cc39a; --ask:#ef7b7b; --warn:#e0b04a; --chip:#1d2a3b; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--body)}
+.wrap{max-width:980px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.prose{max-width:72ch}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:2.3rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.55rem;font-weight:600;margin-top:56px;padding-top:20px;border-top:1px solid var(--rule)}
+h3{font-size:1.15rem;font-weight:600;margin-top:28px}
+p,ul,ol{margin:12px 0}
+li{margin:4px 0}
+a{color:var(--accent)}
+code,.mono{font-family:var(--mono);font-size:.86em}
+.eyebrow{font:600 .78rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.meta{color:var(--muted);font-size:.95rem;margin-top:10px}
+.verdict{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--ask);border-radius:6px;padding:20px 22px;margin-top:28px}
+.verdict p:first-child{margin-top:0}
+.verdict strong.big{font-family:var(--display);font-size:1.25rem;display:block;margin-bottom:6px}
+.tag{display:inline-block;font:600 .72rem/1.6 var(--mono);letter-spacing:.04em;padding:0 7px;border-radius:4px;background:var(--chip);color:var(--ink);white-space:nowrap}
+.tag.v{color:var(--bid)} .tag.i{color:var(--warn)} .tag.x{color:var(--ask)}
+.scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--rule);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;vertical-align:top;padding:9px 11px;border-bottom:1px solid var(--rule)}
+th{font:600 .74rem/1.3 var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;white-space:nowrap}
+.pos{color:var(--bid);font-weight:600} .neg{color:var(--ask);font-weight:600} .amb{color:var(--warn);font-weight:600}
+.wide{min-width:860px}
+.note{color:var(--muted);font-size:.9rem}
+.callout{background:var(--chip);border-radius:6px;padding:14px 16px;margin:16px 0}
+.formula{font-family:var(--mono);font-size:.9rem;background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:12px 14px;overflow-x:auto;white-space:pre}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:16px 0}
+.grid2>div{background:var(--surface);border:1px solid var(--rule);border-radius:6px;padding:14px 16px;min-width:0}
+.grid2 h3{margin-top:0}
+ol.steps>li{margin:10px 0}
+.q{background:var(--surface);border:1px solid var(--rule);border-left:4px solid var(--accent);border-radius:6px;padding:14px 18px;margin:16px 0}
+.q ol{margin:6px 0 0}
+.src{font-size:.9rem}
+.src li{margin:6px 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<div class="wrap">
+<header class="prose">
+  <div class="eyebrow">Research brief · hedged market making · follow-up to the Arbitrage Edge Audit</div>
+  <h1>Hedged Market-Making Audit</h1>
+  <p class="meta">Prepared for Nuru · research date 26 October 2026 · live data 14:39–15:40 UTC (observation) and 15:47–16:48 UTC (validation) · paper simulation only, no orders, no funds moved</p>
+  <p><strong>The idea in one line:</strong> leave a patient buy or sell order on one exchange, and the moment someone fills it, do the opposite trade on a second, busier exchange. If the gap between the two prices is bigger than both fees, you keep the difference.</p>
+  <p>Labels: <span class="tag v">VERIFIED</span> checked today against a primary source, live data or source code. <span class="tag i">INFERENCE</span> my reasoning from that evidence. <span class="tag x">ILLUSTRATION</span> made-up but realistic numbers that show how something works, never a forecast.</p>
+</header>
+
+<!-- ============================================================ 1 -->
+<section class="prose">
+<h2>1. Verdict</h2>
+<div class="verdict">
+  <strong class="big">Not profitable for a small UK or Nigerian account at the fees you can get today. Keep paper-testing only if you can reach much lower fees.</strong>
+  <p><strong>Why, in plain terms.</strong> On the exchanges a UK resident can clearly use, the two fees together cost 0.5% to 1.8% of every round trip. The price gaps between big exchanges are usually 0.02% to 0.06%. To make money, your patient order has to sit so far from the market that it only gets filled when the price is crashing through it, and that is exactly when the hedge price has already moved against you.</p>
+  <p id="v-measured"><strong>What two hours of live data showed.</strong> Two separate one-hour runs replayed 2,880 setups (six exchanges, four coins, three fill models). <strong>At retail fees, not a single order was filled</strong>: a quote far enough from the market to cover the fees was never reached. At a hypothetical well-tiered fee level, the realistic model made <strong>$0.05 in total on $2,315 of fills</strong> in the untouched validation hour, about 0.2 basis points, which is zero for practical purposes. No setup came close to the 30 completed cycles required in advance, so by the rules fixed before testing, this design fails.</p>
+  <p><strong>Is any setup worth more work?</strong> Only one: a well-tiered account with zero or negative maker fees on the quoting exchange and about 0.05% taker on the hedge exchange. Even then, the best pair in the observation hour made about <strong>10 cents on two fills</strong>, and the best in the validation hour about 17 cents on two fills. That is noise, not an edge. Spot only, with coins and cash already sitting on both exchanges, is the only setup that is clearly legitimate for you. It needs no leverage and no borrowing.</p>
+</div>
+
+<div class="q">
+<strong>Three questions only you can answer</strong> (they decide which exchanges are in play; I kept researching without them):
+<ol>
+<li>Which country are you <em>legally resident</em> in now, and where will you physically be when the bot runs?</li>
+<li>Which exchange accounts do you already have fully verified, and under which country was each one opened?</li>
+<li>What maker and taker fees do those accounts actually show you (Settings → Fees)?</li>
+</ol>
+</div>
+</section>
+
+<!-- ============================================================ 2 -->
+<section>
+<h2 class="prose">2. Which exchanges you can legitimately use</h2>
+<p class="prose">Checked 26 Oct 2026 against regulator and exchange pages where I could reach them. A website loading, or public data streaming, says nothing about whether you may open an account, so I never used that as evidence. Anything I could not confirm is marked <span class="tag x">UNVERIFIED</span>.</p>
+
+<h3 class="prose">UK residents</h3>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Exchange</th><th>Spot</th><th>Margin / borrowing</th><th>Derivatives (perps, futures)</th><th>API and bots</th><th>Funding</th><th>Status and source</th></tr></thead>
+<tbody>
+<tr><td><strong>Kraken</strong> (Payward Ltd, FCA-registered cryptoasset firm)</td><td class="pos">Yes</td><td class="amb">Crypto-vs-crypto margin yes. Fiat and stablecoin margin only if you declare high net worth (£150k income or £500k assets, accountant-confirmed) or business use. Shorting crypto vs fiat is not restricted.</td><td class="neg">No for retail</td><td>Public API exists; UK-specific API terms <span class="tag x">UNVERIFIED</span></td><td>GBP via Payward Services Ltd (FCA e-money firm). New UK retail accounts wait 24 h before first trade.</td><td><span class="tag v">VERIFIED</span> <a href="https://support.kraken.com/hc/es-es/articles/360001368823-Where-can-I-use-Kraken-">Kraken licensing page</a>, <a href="https://support.kraken.com/gb/articles/margin-trading-for-clients-in-the-united-kingdom">UK margin page</a></td></tr>
+<tr><td><strong>Coinbase</strong></td><td class="pos">Yes</td><td><span class="tag x">UNVERIFIED</span></td><td class="neg">Professional clients only (perps up to 50×, futures, options), launched 11 Aug 2026</td><td>Advanced Trade API; UK terms <span class="tag x">UNVERIFIED</span></td><td>GBP <span class="tag x">UNVERIFIED</span></td><td><span class="tag v">VERIFIED</span> derivatives scope: <a href="https://theblock.co/news/business/2026-08-11-coinbase-expands-uk-derivatives-411380">The Block, 11 Aug 2026</a></td></tr>
+<tr><td><strong>Bybit</strong></td><td class="pos">Yes, 100 pairs, plus P2P</td><td>Not offered at launch</td><td class="neg">Not offered to UK</td><td><span class="tag x">UNVERIFIED</span></td><td><span class="tag x">UNVERIFIED</span></td><td><span class="tag v">VERIFIED</span> relaunched 19 Dec 2025 under financial-promotion approval by Archax; Bybit itself is <em>not</em> FCA-registered (<a href="https://www.theblock.co/post/383291/bybit-relaunches-crypto-exchange-in-uk">The Block</a>)</td></tr>
+<tr><td>Bitstamp, Gemini</td><td>Reported FCA-registered (2021–2023 news)</td><td colspan="3"><span class="tag x">UNVERIFIED</span> today. Check the <a href="https://register.fca.org.uk/">FCA register</a> before relying on either.</td><td>—</td><td><a href="https://cointelegraph.com/news/bitstamp-fca-list-of-registered-crypto-firms">Cointelegraph (Bitstamp)</a>, <a href="https://www.theblock.co/post/75312/gemini-registered-uk-fca">The Block (Gemini)</a></td></tr>
+<tr><td>OKX, Crypto.com</td><td colspan="5"><span class="tag x">UNVERIFIED</span>: I did not find a primary page confirming current UK retail eligibility. OKX is used below only as a hedge venue in the paper simulation, because its books are deep.</td><td>—</td></tr>
+<tr><td>Binance</td><td colspan="5" class="amb">Stopped accepting new UK users after an FCA restriction; current position <span class="tag x">UNVERIFIED</span></td><td>The Block (search result, not re-read today)</td></tr>
+<tr><td>KuCoin, HTX</td><td colspan="5" class="neg">On the FCA's list of unauthorised firms (Oct 2023). Do not use from the UK.</td><td><a href="https://cryptoslate.com/htx-kucoin-among-exchanges-on-uks-fca-unauthorized-operators-list/">CryptoSlate</a></td></tr>
+</tbody></table></div>
+<p class="prose"><span class="tag v">VERIFIED</span> <strong>The rule that matters most:</strong> since 6 January 2021 the FCA bans selling crypto derivatives (CFDs, futures, options) and crypto ETNs to <em>all retail consumers</em> by firms acting in or from the UK (<a href="https://fca.org.uk/news/press-releases/fca-bans-sale-crypto-derivatives-retail-consumers">FCA press release</a>). So for a UK retail client, the perp-hedge version of this strategy is off the table.</p>
+
+<h3 class="prose">Nigerian residents</h3>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Platform</th><th>SEC Nigeria status</th><th>What that allows</th><th>Source</th></tr></thead>
+<tbody>
+<tr><td><strong>Busha, Quidax</strong></td><td class="pos">Approval-in-principle under ARIP (Aug 2024), listed as "Digital Assets Exchange" participants</td><td>Operate inside the programme's scope. Spot NGN and USDT markets. API, market-making permission and depth <span class="tag x">UNVERIFIED</span></td><td><span class="tag v">VERIFIED</span> <a href="https://sec.gov.ng/fintech-and-innovation-hub-finport/registered-fintech-operators/">SEC registered fintech operators</a></td></tr>
+<tr><td>Yellow Card, BC Access, Pisi</td><td class="pos">Approval-in-principle, 12 Aug 2026 ("not a final licence")</td><td>Within ARIP scope only</td><td><span class="tag v">VERIFIED</span> <a href="https://www.sec.gov.ng/for-investors/sec-nigeria-clears-additional-vasps-for-accelerated-regulatory-incubation-programme">SEC statement</a></td></tr>
+<tr><td>KuCoin Nigeria Ltd</td><td class="amb">Conditional approval-in-principle, 13 Oct 2026</td><td>Explicitly <em>not</em> yet allowed to operate or onboard customers</td><td><a href="https://thenextweb.com/news/kucoin-nigeria-sec-conditional-approval-arip">The Next Web</a></td></tr>
+<tr><td>Binance, OKX</td><td class="neg">Exited Nigeria (2024)</td><td>—</td><td><a href="https://cryptoslate.com/nigeria-to-ramp-up-crackdown-on-unregistered-crypto-exchanges/">CryptoSlate, Sep 2024</a></td></tr>
+<tr><td>Kraken, Coinbase and other foreign exchanges</td><td class="amb">Nigeria is not on Kraken's prohibited list, but the SEC says only approved platforms are legally authorised</td><td>Whether a Nigerian resident may lawfully use them is <span class="tag x">UNVERIFIED</span>. Offshore derivatives for Nigerian residents: <span class="tag x">UNVERIFIED</span></td><td><a href="https://www.techeconomy.ng/sec-grants-approval-to-quidax-and-busha-as-official-crypto-exchanges-in-nigeria">TechEconomy (SEC statement, Aug 2024)</a></td></tr>
+</tbody></table></div>
+<p class="prose"><span class="tag i">INFERENCE</span> If you trade as a Nigerian resident, the clearly legitimate venues are local, spot-only and quoted in naira or USDT. A local quote venue would need a hedge venue you are also allowed to use, and I could not confirm one. If you trade as a UK resident, Kraken is the one venue I could verify end to end; the second leg needs a second eligible exchange, most plausibly Coinbase or Bybit's UK spot service.</p>
+</section>
+
+<!-- ============================================================ 3 -->
+<section>
+<h2 class="prose">3. Ways to hedge, compared</h2>
+<div class="prose">
+<p>Call the exchange where your patient order sits the <strong>quote venue</strong>, and the busy one where you hedge the <strong>hedge venue</strong>.</p>
+<p><strong>Selling coins you own is not the same as shorting.</strong> In the spot setup you only ever sell bitcoin that is already in your account. Nothing is borrowed, so nothing can be liquidated. A short means borrowing coins (margin) or opening a perp, which adds borrowing fees, funding payments and the risk of forced closure.</p>
+</div>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Structure</th><th>What you need beforehand</th><th>Your buy order fills on the quote venue</th><th>Your sell order fills</th><th>Extra risks</th><th>Available to you?</th></tr></thead>
+<tbody>
+<tr><td><strong>Spot to spot, pre-funded</strong></td><td>Cash and coins on <em>both</em> exchanges (four pots)</td><td>You get coins on the quote venue. You immediately <strong>sell coins you already hold</strong> on the hedge venue. Total coins unchanged; cash up by the gap minus fees.</td><td>Mirror image: you buy coins on the hedge venue with cash already there.</td><td>Coins drift to one venue and cash to the other, so you must rebalance (withdrawal fees, transfer time). Exchange failure risk on two venues.</td><td class="pos">Yes, UK (Kraken plus a second eligible venue). Nigeria: only if both venues are approved.</td></tr>
+<tr><td>Spot quote, perp hedge</td><td>Cash on the quote venue; margin on the perp venue</td><td>You buy spot and <strong>open a short perp</strong>. Later you sell the spot and close the short.</td><td>Needs coins to sell, or a long perp</td><td>Funding payments, basis moves, liquidation if the price spikes</td><td class="neg">UK retail: no (FCA ban). Nigeria: <span class="tag x">UNVERIFIED</span>, not recommended.</td></tr>
+<tr><td>Spot quote, margin-short hedge</td><td>Margin account on the hedge venue</td><td>You buy spot and <strong>borrow and sell</strong> coins on the hedge venue</td><td>Mirror image</td><td>Opening and rollover interest, margin calls, liquidation</td><td class="amb">UK: Kraken crypto margin is allowed, but it adds cost and risk you do not need</td></tr>
+<tr><td>Same exchange, two order books (e.g. BTC/USD vs BTC/USDT)</td><td>One account</td><td>Hedge in the other book on the same venue</td><td>Same</td><td>Exposure to the USD/USDT rate; usually tighter competition</td><td class="amb">Possible; not tested here</td></tr>
+</tbody></table></div>
+<p class="prose"><span class="tag i">INFERENCE</span> <strong>No leverage is needed.</strong> Spot to spot with pre-funded pots is the simplest, cheapest and safest version, and the only one that is clearly allowed for you. The rest of this report assumes it.</p>
+</section>
+
+<!-- ============================================================ 4 -->
+<section>
+<h2 class="prose">4. Worked examples, including a failed hedge</h2>
+<div class="prose">
+<div class="formula">profit per completed cycle (your buy fills, you sell on the hedge venue)
+  = hedge_price × qty × (1 − hedge_fee) − quote_price × qty × (1 + maker_fee)
+
+break-even: quote_price ≤ hedge_price × (1 − hedge_fee) / (1 + maker_fee)
+minimum gap you must leave ≈ maker_fee + hedge_fee + hedge slippage + adverse move</div>
+<p><span class="tag x">ILLUSTRATION</span> BTC at $80,000. Order size $100 (0.00125 BTC). Quote on Kraken (maker 0.40%), hedge on a deep venue at 0.10% taker. You must bid at least 0.50% below the hedge price, so the bid sits around $79,600.</p>
+</div>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Case</th><th>What happens</th><th class="num">Buy cost incl. fee</th><th class="num">Hedge proceeds after fee</th><th class="num">Result</th></tr></thead>
+<tbody>
+<tr><td><strong>A. Textbook fill</strong></td><td>A seller hits your $79,560 bid on Kraken while the hedge venue still bids $80,000. You sell 0.00125 BTC there 300 ms later.</td><td class="num">$99.85</td><td class="num">$99.90</td><td class="num pos">+$0.05</td></tr>
+<tr><td><strong>B. The usual fill: adverse selection</strong></td><td>Your bid fills <em>because</em> the whole market is dropping. By the time your hedge lands, the hedge venue bids $79,520.</td><td class="num">$99.85</td><td class="num">$99.30</td><td class="num neg">−$0.55</td></tr>
+<tr><td><strong>C. Failed hedge</strong></td><td>The hedge order is a limit "fill now or cancel" capped 0.10% below the expected price. The hedge venue's feed freezes and the price falls 0.6% in 2 seconds, so the order misses. At the 2-second timeout the bot sells at whatever is there: $79,300.</td><td class="num">$99.85</td><td class="num">$99.03</td><td class="num neg">−$0.82</td></tr>
+<tr><td><strong>D. Fill during a cancel</strong></td><td>The bot sends "cancel" at 12:00:00.000. The exchange fills the order at 12:00:00.090, before the cancel arrives. If the bot assumes the cancel worked, it now holds 0.00125 BTC it never hedges.</td><td class="num">$99.85</td><td class="num">unhedged</td><td class="num neg">open risk</td></tr>
+<tr><td>E. Same as A with a well-tiered account (0% maker, 0.05% taker)</td><td>Bid only 0.05–0.10% below the hedge price, so it fills far more often, and the gap is small.</td><td class="num">$99.92</td><td class="num">$99.95</td><td class="num pos">+$0.03</td></tr>
+</tbody></table></div>
+<div class="prose">
+<p><strong>How D is caught.</strong> A cancel is never treated as done until the exchange confirms it <em>and</em> the bot has re-read the order's filled quantity from the exchange (private fills stream plus a REST order check). If the exchange's filled quantity is larger than the bot's ledger, the difference is hedged immediately. In the simulator, a quote stays fillable for 150 ms after the cancel is sent, and those fills are counted and hedged; in the validation hour, 20 of the 45 fills at zero margin landed while a cancel was already on its way. This is the normal case, not an edge case.</p>
+<p><span class="tag v">VERIFIED</span> <strong>Measured adverse selection</strong> (mid-price move on the hedge venue 5 s after a simulated fill, in your favour if positive): from −5.7 bp to +11 bp across pairs with fills in the observation hour, and from +0.4 bp to +23 bp in the validation hour. With one to fourteen fills per pair, these averages are not reliable yet.</p>
+</div>
+</section>
+
+<!-- ============================================================ 5 -->
+<section>
+<h2 class="prose">5. Capital and break-even</h2>
+<h3 class="prose">5.1 The minimum gap you must leave, by pair of exchanges (lowest retail tier)</h3>
+<div class="scroll"><table>
+<thead><tr><th>Quote venue (maker)</th><th>Hedge venue (taker)</th><th class="num">Fees only</th><th>Compared with typical cross-exchange gaps (2–6 bp)</th></tr></thead>
+<tbody>
+<tr><td>Kraken 0.40%</td><td>Bybit UK or OKX 0.10% <span class="tag x">fees unverified</span></td><td class="num neg">50 bp</td><td>About 10× too wide</td></tr>
+<tr><td>Bybit UK 0.10% <span class="tag x">unverified</span></td><td>Kraken 0.80%</td><td class="num neg">90 bp</td><td>About 20× too wide</td></tr>
+<tr><td>Coinbase 0.60%</td><td>Kraken 0.80%</td><td class="num neg">140 bp</td><td>Hopeless</td></tr>
+<tr><td>Kraken 0.40%</td><td>Coinbase 1.20%</td><td class="num neg">160 bp</td><td>Hopeless</td></tr>
+<tr><td>Any, well-tiered</td><td>Any, well-tiered (0% / 0.05%)</td><td class="num amb">5 bp</td><td>Same size as the gaps: borderline</td></tr>
+</tbody></table></div>
+<div class="prose">
+<p><span class="tag i">INFERENCE</span> <strong>Largest hedge size.</strong> On BTC and ETH the deep venues hold far more than $5,000 within 1 bp of the best price, so hedge depth is not the limit at your sizes; the limit is how rarely the quote venue fills. The simulator prices every quote from the depth-walked hedge price for the full order size.</p>
+<p><span class="tag i">INFERENCE</span> <strong>Longest tolerable hedge delay.</strong> At about 2.5% daily volatility, BTC drifts about 0.85 bp per √second; SOL about 1.4 bp. To keep a 2-standard-deviation move inside a 5 bp margin, the hedge must land within about 8 s on BTC and about 3 s on SOL. Adverse selection makes the real limit shorter, so the design caps it at 2 s.</p>
+</div>
+
+<h3 class="prose">5.2 What each budget can support (spot to spot, four pots)</h3>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Budget</th><th>Per pot</th><th>Order size (room for ~3 same-side fills before rebalancing)</th><th class="num">Profit per cycle at 5 bp net</th><th>Cycles a month to cover a $10 server</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>$100</td><td>$25</td><td>$8, near exchange minimum order sizes</td><td class="num">$0.004</td><td>≈ 2,500, plus every rebalance fee</td><td class="neg">Cannot support two venues with buffers. One withdrawal fee wipes out weeks.</td></tr>
+<tr><td>$500</td><td>$125</td><td>$40</td><td class="num">$0.02</td><td>≈ 500</td><td class="neg">Too small</td></tr>
+<tr><td>$1,000</td><td>$250</td><td>$80</td><td class="num">$0.04</td><td>≈ 250</td><td class="amb">Only for paper-to-pilot testing</td></tr>
+<tr><td>$5,000</td><td>$1,250</td><td>$400</td><td class="num">$0.20</td><td>≈ 50</td><td class="amb">Smallest size where it could pay for itself, <em>if</em> a real net edge existed</td></tr>
+</tbody></table></div>
+<p class="prose note"><span class="tag i">INFERENCE</span> Break-even volume per month = (server + monitoring + rebalancing fees) ÷ net margin per dollar filled. At 5 bp net and $10 of fixed cost that is $20,000 filled a month. The observation hour's busiest realistic configuration filled 23 orders of $100, and its net was negative.</p>
+</section>
+
+<!-- ============================================================ 6 -->
+<section>
+<h2 class="prose">6. Hummingbot check, and the design I would build</h2>
+<p class="prose"><span class="tag v">VERIFIED</span> Source read: <a href="https://github.com/hummingbot/hummingbot">Hummingbot</a> release 20260922 from PyPI, Apache-2.0 licence. Connectors exist for Kraken, Coinbase Advanced Trade, Bybit, OKX, Bitstamp, Gemini and KuCoin; Kraken supports post-only (LIMIT_MAKER) orders. Nothing was run with keys.</p>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Check</th><th>V2 <code>XEMMExecutor</code></th><th>V1 <code>cross_exchange_market_making</code></th></tr></thead>
+<tbody>
+<tr><td>Hedge partial fills</td><td class="neg">No. Hedges only when the maker order is <em>completely</em> filled.</td><td class="pos">Yes, per fill, de-duplicated by exchange trade id</td></tr>
+<tr><td>Fill that lands while a cancel is in flight</td><td class="neg">Lost. The order reference is cleared when the cancel is <em>sent</em>, so a late fill is never hedged.</td><td class="pos">Hedged; the maker id stays tracked</td></tr>
+<tr><td>Partial fill, then quote cancelled</td><td class="neg">The filled part is never hedged</td><td class="pos">Hedged</td></tr>
+<tr><td>Hedge order type</td><td class="neg">MARKET, for the configured amount rather than the filled amount</td><td class="amb">LIMIT with a slippage buffer, but no fill-or-cancel flag, so a miss can rest on the book</td></tr>
+<tr><td>Hedge size</td><td>Configured amount</td><td class="amb">Silently capped by hedge-venue balance, which can leave part unhedged</td></tr>
+<tr><td>Timeout and max unhedged exposure</td><td class="neg">None. Failed hedges retried.</td><td class="neg">None</td></tr>
+<tr><td>Restart recovery</td><td class="neg">State in memory</td><td class="neg">Unhedged fills kept in memory only; the connector restores open orders, but fills during downtime are ignored by the strategy</td></tr>
+<tr><td>Quote age, precision</td><td>No quote-age check. Prices and sizes quantised by the connector.</td><td>Same</td></tr>
+<tr><td>PnL report</td><td class="neg">Percentage divides dollars by coin amount (unit bug, as in the arbitrage executor)</td><td>—</td></tr>
+<tr><td>Paper-trade connector</td><td colspan="2" class="neg">Fills the <em>whole</em> order on any trade through the price and on any touching quote, ignoring queue and trade size: far too optimistic for this strategy.</td></tr>
+</tbody></table></div>
+<div class="prose">
+<p><strong>Do the earlier arbitrage concerns apply?</strong> Partly. MARKET hedges and missing timeouts apply to V2. The "failed leg never unwound" problem becomes "unhedged fill never hedged", which V2 has in three ways and V1 has after a restart.</p>
+<p><strong>Verdict: adapt, do not reuse as is.</strong> For paper trading, use this repo's own simulator (below), not Hummingbot's paper connector. For any future live pilot, start from V1's per-fill logic and add a persistent fill ledger, restart reconciliation, an exposure cap, a hedge timeout and fill-or-cancel hedges. A small custom engine on ccxt is a reasonable alternative.</p>
+<h3>Design (control loop, in order of priority)</h3>
+<ol class="steps">
+<li><strong>Ledger first.</strong> Every order, fill and hedge goes into SQLite before and after each action. On start-up, read open orders and fills since the last recorded trade id from every venue, hedge any difference, and only then start quoting.</li>
+<li><strong>Price from hedge depth.</strong> Bid = depth-walked hedge price for the full size × (1 − hedge fee) ÷ (1 + maker fee) × (1 − margin). Post-only, rounded to the venue's tick and lot size.</li>
+<li><strong>Refresh rules.</strong> Replace the quote when the target moves more than 1 bp. Pull all quotes if either book is older than 1.5 s, crossed, or more than 0.5% from the other venue.</li>
+<li><strong>Hedge rules.</strong> Fill-or-cancel limit order capped 10 bp beyond the expected price, sent on every fill, sized to the <em>filled</em> amount. Retry until 2 s; then flatten at market and pause.</li>
+<li><strong>Limits.</strong> Unhedged exposure never above one order size; inventory per venue within ±50% of start; daily loss limit of 1% of capital, then auto-pause; manual stop that cancels everything and flattens.</li>
+<li><strong>Alerts and logs.</strong> Alert on every failed hedge, pause, reconnect and ledger mismatch.</li>
+</ol>
+</div>
+</section>
+
+<!-- ============================================================ 7 -->
+<section>
+<h2 class="prose">7. Paper trading: plan and first results</h2>
+<div class="prose">
+<p><strong>The simulator</strong> (<code>arb/xemm_sim.py</code>, 15 unit tests) replays every public order book four times a second plus every public trade print, with exchange and local timestamps. A price merely touching your order is <em>not</em> a fill, except in the optimistic model:</p>
+<ul>
+<li><strong>Optimistic:</strong> any trade at or through your price, or a touching quote, fills the whole order.</li>
+<li><strong>Realistic:</strong> trades through your price fill up to the trade's size. Trades <em>at</em> your price first use up the queue that was ahead of you when you joined.</li>
+<li><strong>Conservative:</strong> only trades strictly through your price count, and hedges take twice as long.</li>
+</ul>
+<p>Quotes take 150 ms to go live and 150 ms to cancel, and stay fillable while the cancel travels. Hedges take 300 ms (2 s in the stress test). Only completed buy-and-hedge cycles count as profit. Books that are stale, crossed or far from the other venue pause quoting, without assuming every difference is an error.</p>
+<p><span class="tag v">VERIFIED</span> <strong>Thresholds were fixed before any data was seen</strong> (<code>arb/xemm_prereg.json</code>). To pass, the realistic model at retail fees needs at least 30 completed cycles, positive net profit (and at least break-even in the conservative model), at least 99% of fills hedged, 95% of hedges within 2 s, drawdown under 2% of capital, and positive profit with 2 s hedge delay.</p>
+</div>
+
+<h3 class="prose">7.1 Two separate one-hour runs, six exchanges, four pairs</h3>
+<p class="prose">Kraken, Coinbase, OKX, Bitstamp, Gemini (UK-relevant) plus KuCoin (liquid reference, not usable from the UK) on BTC, ETH, SOL and XRP against USDT. 1,440 configurations per run: every quote/hedge pair, three margins (0, 5, 15 bp), three fill models, two fee levels, two hedge delays. $100 orders, $1,000 per pot.</p>
+<div class="scroll"><table class="wide">
+<thead><tr><th>Result</th><th>Observation, 14:39–15:40 UTC</th><th>Validation (untouched), 15:47–16:48 UTC</th></tr></thead>
+<tbody>
+<tr><td>Public trade prints recorded</td><td class="num">98,807</td><td class="num">80,492</td></tr>
+<tr><td><strong>Retail fees</strong> (720 setups)</td><td>No retail setup among the 60 best results (full breakdown added for the second run)</td><td class="neg">0 fills in all 720 setups</td></tr>
+<tr><td>Low fees, realistic model: setups with a fill · fills · net</td><td>116 setups filled at least once (both fee levels)</td><td>18 of 180 · 52 fills · <span class="amb">+$0.05</span> on $2,315 (≈ 0.2 bp)</td></tr>
+<tr><td>Low fees, conservative · optimistic · realistic with 2 s hedge</td><td>—</td><td><span class="amb">+$0.07</span> · <span class="neg">−$0.42</span> · <span class="amb">+$0.01</span></td></tr>
+<tr><td>Best single setup</td><td>Bitstamp → OKX, XRP: 2 fills, +$0.10</td><td>Kraken → Coinbase, SOL, 15 bp margin: 2 fills, +$0.17</td></tr>
+<tr><td>Busiest single setup</td><td>KuCoin → OKX, ETH: 23 fills, −$0.08</td><td>OKX → Kraken, ETH: 14 fills, net below −$0.06</td></tr>
+<tr><td>Quotes sent per setup per hour · fill rate</td><td>≈ 1,500–4,700 · under 1%</td><td>≈ 1,000–5,300 · under 0.5%</td></tr>
+<tr><td>Hedges completed · failed (past 2 s)</td><td>100% · only in the 2 s stress test</td><td>100% · only in the 2 s stress test</td></tr>
+<tr><td><strong>Pre-registered test</strong></td><td class="neg">Fail (no setup reached 30 cycles)</td><td class="neg">Fail (no retail fills; at most 14 fills)</td></tr>
+</tbody></table></div>
+<div class="prose">
+<p><strong>Data quality problems found and handled:</strong> Bitstamp's BTC/USDT book was crossed 95% of the time in the first hour and never in the second (so quoting paused only when it was broken), Coinbase XRP/USDT was stale 48–58% of the time and Gemini ETH/USDT 21–32%; Gemini printed only 3 trades in the second hour. Bitstamp's feed lagged the exchange clock by about 0.55 s. Exchange timestamps never ran backwards on any venue except one Bitstamp update.</p>
+</div>
+
+<h3 class="prose">7.2 Staged plan from here</h3>
+<ol class="steps prose">
+<li><strong>Done:</strong> simulator, pre-registered thresholds, one observation hour and one untouched validation hour.</li>
+<li><strong>Only if your real fee tier changes the picture:</strong> re-run with your actual fees on your eligible exchanges, from a machine in your own region, for 14 days across quiet and volatile sessions. Freeze parameters after day 7 and judge days 8–14 only.</li>
+<li><strong>Report every time:</strong> net profit, drawdown, fill rate, hedge completion, time unhedged, inventory drift, and the same numbers at +50% fees and +1 s latency. Keep optimistic, realistic and conservative side by side; only realistic and conservative count.</li>
+<li><strong>Live pilot</strong> requires your separate written approval, trade-only keys with withdrawals disabled, and a $1,000 cap.</li>
+</ol>
+</section>
+
+<!-- ============================================================ 8 -->
+<section class="prose">
+<h2>8. Proceed, redesign or stop</h2>
+<div class="grid2">
+<div><h3 class="pos">Proceed to a longer paper test</h3><p>Only if the realistic and conservative models both pass every pre-registered threshold at <em>your actual fees</em>, on exchanges you are verified for, on two separate periods.</p></div>
+<div><h3 class="amb">Redesign</h3><p>If it only works at "low" fees or only in the optimistic model. Options: reach a better fee tier, test same-exchange BTC/USD vs BTC/USDT, or a less-watched pair on an approved local venue.</p></div>
+<div><h3 class="neg">Stop</h3><p>If the realistic model fails at both fee levels on every pair. That is what happened in both runs: no fills at all at retail fees, and no pair reached 30 cycles at low fees. By the pre-registered rules, stop this design on these exchanges unless your real fee tier is close to the "low" scenario.</p></div>
+</div>
+<p><strong>Main uncertainties:</strong> your residence and verified accounts; your real fees; two hours is a smoke test, not a distribution; simulated fills can never fully match a real queue; venue failure risk is not in any number above.</p>
+
+<h2>Sources</h2>
+<ul class="src">
+<li>Regulators: <a href="https://fca.org.uk/news/press-releases/fca-bans-sale-crypto-derivatives-retail-consumers">FCA crypto-derivatives ban</a> · <a href="https://sec.gov.ng/fintech-and-innovation-hub-finport/registered-fintech-operators/">SEC Nigeria registered fintech operators</a> · <a href="https://www.sec.gov.ng/for-investors/sec-nigeria-clears-additional-vasps-for-accelerated-regulatory-incubation-programme">SEC Nigeria ARIP statement, 12 Aug 2026</a> — read 26 Oct 2026</li>
+<li>Exchanges: <a href="https://support.kraken.com/hc/es-es/articles/360001368823-Where-can-I-use-Kraken-">Kraken: where Kraken is licensed</a> · <a href="https://support.kraken.com/gb/articles/margin-trading-for-clients-in-the-united-kingdom">Kraken: UK margin</a> · <a href="https://www.kraken.com/features/fee-schedule">Kraken fee schedule</a></li>
+<li>News: <a href="https://theblock.co/news/business/2026-08-11-coinbase-expands-uk-derivatives-411380">Coinbase UK derivatives (The Block)</a> · <a href="https://www.theblock.co/post/383291/bybit-relaunches-crypto-exchange-in-uk">Bybit UK relaunch (The Block)</a> · <a href="https://thenextweb.com/news/kucoin-nigeria-sec-conditional-approval-arip">KuCoin Nigeria AIP (The Next Web)</a> · <a href="https://www.techeconomy.ng/sec-grants-approval-to-quidax-and-busha-as-official-crypto-exchanges-in-nigeria">Quidax and Busha AIP (TechEconomy)</a> · <a href="https://cryptoslate.com/nigeria-to-ramp-up-crackdown-on-unregistered-crypto-exchanges/">Nigeria crackdown (CryptoSlate)</a> · <a href="https://cryptoslate.com/htx-kucoin-among-exchanges-on-uks-fca-unauthorized-operators-list/">FCA unauthorised list (CryptoSlate)</a></li>
+<li>Code read: Hummingbot 20260922 sdist (<code>strategy_v2/executors/xemm_executor</code>, <code>strategy/cross_exchange_market_making</code>, <code>connector/exchange/paper_trade</code>, <code>connector/client_order_tracker.py</code>)</li>
+<li>Measurement code and runs: <a href="https://github.com/OperationSweep/Asian-Sweep-Bot/pull/15">draft PR #15</a> · observation run <a href="https://github.com/OperationSweep/Asian-Sweep-Bot/actions/runs/40341628810">40341628810</a> · validation run <a href="https://github.com/OperationSweep/Asian-Sweep-Bot/actions/runs/40352683249">40352683249</a></li>
+<li>Previous report: <a href="https://claude.ai/artifact/SRuav61sRTHCK9WW96FkUk">Arbitrage Edge Audit</a></li>
+</ul>
+</section>
+</div>

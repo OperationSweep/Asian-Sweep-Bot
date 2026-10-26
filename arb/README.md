@@ -37,3 +37,13 @@ collector from your own region to see the venues you can actually trade.
 - **upper_bound_profit**: perfect capture of the max profitable size once per episode,
   with inventory already in place. It is a ceiling, not an expected return: it excludes
   rebalancing, failed legs, competition and adverse selection.
+
+
+## Hedged market-making (XEMM) paper simulator
+
+`arb/xemm_sim.py` replays the collector's books and trade prints (`--trades`) and
+simulates quoting on one venue and hedging on another, spot only, with three fill
+models (optimistic, queue-aware realistic, conservative). Only completed
+maker-and-hedge cycles count. Pass/fail thresholds are pre-registered in
+`arb/xemm_prereg.json`. The `xemm-collect` workflow runs a 60-minute collection
+plus the simulation; a push touching the workflow file starts it.
