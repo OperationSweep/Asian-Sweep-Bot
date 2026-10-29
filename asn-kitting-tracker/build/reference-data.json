@@ -1,0 +1,480 @@
+{
+ "requirements": [
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "LASA",
+   "code": "92YLS00548BAA",
+   "desc": "R5B LASER ASSEMBLY 4P BOAT 1 - E2A",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "PSB",
+   "code": "91YAF03404AAA",
+   "desc": "R5B PSB SUB ASSEMBLY 4P-4FP",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "POB",
+   "code": "92YWS04548AAA",
+   "desc": "R5B 4FP POB LUMENTUM SUB ASSEMBLY - E2A",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "OPF",
+   "code": "92YFD04548BAA",
+   "desc": "R5B OPF ASSEMBLY (4P-4FP) BOAT 1 - E2A",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "Boat",
+   "code": "92UAP04548BAA",
+   "desc": "R5B BOAT 1 ASSY (4P-4FP)",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "Erbium",
+   "code": "92YRA01548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 1",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "Erbium",
+   "code": "92YRA02548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 2",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "Erbium",
+   "code": "92YRA03548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 3",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "Erbium",
+   "code": "92YRA04548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 4",
+   "qty": 1,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R4P-T1-C",
+   "top": "92ERP04548A++",
+   "fp": 4,
+   "stage": "Erbium",
+   "code": "92RRA00548AAA",
+   "desc": "R5B ERBIUM SPOOL ASSEMBLY - E2A",
+   "qty": 8,
+   "source": "Per-REP table supplied 29 Oct 2026 - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "LASA",
+   "code": "92YLS00548BAA",
+   "desc": "R5B LASER ASSEMBLY 4P BOAT 1 - E2A",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "LASA",
+   "code": "92YLS00548BBA",
+   "desc": "R5B LASER ASSEMBLY 4P BOAT 2/3 - E2A",
+   "qty": 2,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "PSB",
+   "code": "91YAF03404AAA",
+   "desc": "R5B PSB SUB ASSEMBLY 4P-4FP",
+   "qty": 3,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "POB",
+   "code": "92YWS04548AAA",
+   "desc": "R5B 4FP POB LUMENTUM SUB ASSEMBLY - E2A",
+   "qty": 3,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "OPF",
+   "code": "92YFD04548BAA",
+   "desc": "R5B OPF ASSEMBLY (4P-4FP) BOAT 1 - E2A",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "OPF",
+   "code": "92YFD04548BBA",
+   "desc": "R5B OPF ASSEMBLY (4P-4FP) BOAT 2/3 - E2A",
+   "qty": 2,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Boat",
+   "code": "92UAP04548BAA",
+   "desc": "R5B BOAT 1 ASSY (4P-4FP)",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Boat",
+   "code": "92UAP04548BBA",
+   "desc": "R5B BOAT 2 ASSY (4P-4FP)",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Boat",
+   "code": "92UAP04548BCA",
+   "desc": "R5B BOAT 3 ASSY (4P-4FP)",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Erbium",
+   "code": "92YRA01548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 1",
+   "qty": 3,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Erbium",
+   "code": "92YRA02548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 2",
+   "qty": 3,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Erbium",
+   "code": "92YRA03548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 3",
+   "qty": 3,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Erbium",
+   "code": "92YRA04548AAA",
+   "desc": "R5B ERBIUM ASSEMBLY POSITION 4",
+   "qty": 3,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "E2A",
+   "variant": "E2A-R12P-T5-C",
+   "top": "92ERP12548A++",
+   "fp": 12,
+   "stage": "Erbium",
+   "code": "92RRA00548AAA",
+   "desc": "R5B ERBIUM SPOOL ASSEMBLY - E2A",
+   "qty": 24,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "LASA",
+   "code": "92YLS00543AAA",
+   "desc": "R5B LASER ASSEMBLY 4P-4P BOAT 1 - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "LASA",
+   "code": "92YLS00543ABA",
+   "desc": "R5B LASER ASSEMBLY 4P-4P BOAT 2 - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "LASA",
+   "code": "92YLS00543ACA",
+   "desc": "R5B LASER ASSEMBLY 4P-4P BOAT 3 - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "PSB",
+   "code": "91YAF03404AAA",
+   "desc": "R5B PSB SUB ASSEMBLY 4P-4FP",
+   "qty": 6,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "POB",
+   "code": "92YWS04543AAA",
+   "desc": "R5B 4FP POB LUMENTUM SUB ASSEMBLY - WKE",
+   "qty": 6,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "OPF",
+   "code": "92YFD44543AAA",
+   "desc": "R5B OPF ASSEMBLY 2X(4P-4FP) BOAT 1 - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "OPF",
+   "code": "92YFD44543ABA",
+   "desc": "R5B OPF ASSEMBLY 2X(4P-4FP) BOAT 2 - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "OPF",
+   "code": "92YFD44543ACA",
+   "desc": "R5B OPF ASSEMBLY 2X(4P-4FP) BOAT 3 - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Boat",
+   "code": "92UAP44543AAA",
+   "desc": "R5B BOAT 1 ASSY 2X(4P-4FP) L - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Boat",
+   "code": "92UAP44543ABA",
+   "desc": "R5B BOAT 2 ASSY 2X(4P-4FP) L - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Boat",
+   "code": "92UAP44543ACA",
+   "desc": "R5B BOAT 3 ASSY 2X(4P-4FP) L - WKE",
+   "qty": 1,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Erbium",
+   "code": "92YRA01543AAA",
+   "desc": "R5B ERBIUM ASSEMBLY 1 - WKE",
+   "qty": 6,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Erbium",
+   "code": "92YRA02543AAA",
+   "desc": "R5B ERBIUM ASSEMBLY 2 - WKE",
+   "qty": 6,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Erbium",
+   "code": "92YRA03543AAA",
+   "desc": "R5B ERBIUM ASSEMBLY 3 - WKE",
+   "qty": 6,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Erbium",
+   "code": "92YRA04543AAA",
+   "desc": "R5B ERBIUM ASSEMBLY 4 - WKE",
+   "qty": 6,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  },
+  {
+   "project": "Wamkelekile",
+   "variant": "WKE-R24P-T1-C",
+   "top": "92ERP24543A++",
+   "fp": 24,
+   "stage": "Erbium",
+   "code": "92RRA00543AAA",
+   "desc": "R5B ERBIUM SPOOL ASSEMBLY - WKE",
+   "qty": 48,
+   "source": "Reconstructed from pasted kitting table - Verify against original kitting sheet"
+  }
+ ],
+ "stages": [
+  {
+   "stage": "LASA",
+   "order": 1,
+   "desc": "Laser assembly"
+  },
+  {
+   "stage": "PSB",
+   "order": 2,
+   "desc": "Pump sharing box"
+  },
+  {
+   "stage": "POB",
+   "order": 3,
+   "desc": "Passive optical box"
+  },
+  {
+   "stage": "OPF",
+   "order": 4,
+   "desc": "OPF assembly"
+  },
+  {
+   "stage": "Boat",
+   "order": 5,
+   "desc": "Boat assembly"
+  },
+  {
+   "stage": "Erbium",
+   "order": 6,
+   "desc": "Erbium assemblies and spools"
+  }
+ ],
+ "settings": {
+  "kitLead": 3,
+  "defaultProduct": "REPEATERS"
+ }
+}

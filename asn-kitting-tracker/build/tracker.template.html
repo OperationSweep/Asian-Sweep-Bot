@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASN Kitting Progress Tracker</title>
+<style>
+:root{--navy:#17324d;--ink:#1e2433;--teal:#0e7c7b;--grey:#5d6576;--line:#d5dae1;--panel:#f2f4f7;--bg:#ffffff;
+--ok:#1e7b4f;--ok-s:#d9f0e3;--ok-l:#eef8f2;--warn:#9a5b00;--warn-s:#fcefd6;--crit:#b42318;--crit-s:#fbe3e1;--info:#2f5aae;--info-s:#e2eafa;--input:#fff4bf;--calc:#e7e9ed}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 "Segoe UI",Arial,Helvetica,sans-serif;color:var(--ink);background:var(--bg)}
+header{background:var(--navy);color:#fff;padding:12px 20px 0}
+header h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.2px}
+header .sub{font-size:12px;opacity:.8;margin:2px 0 10px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.bar button,.bar label.btn{background:#ffffff1a;color:#fff;border:1px solid #ffffff40;border-radius:6px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.bar button:hover,.bar label.btn:hover{background:#ffffff33}
+.bar input[type=file]{display:none}
+.pill{font-size:12px;background:#ffffff14;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.pill.warn{background:#fcefd633;color:#ffe3a3}
+nav{display:flex;gap:2px;flex-wrap:wrap}
+nav button{background:transparent;color:#cfd8e3;border:0;border-bottom:3px solid transparent;padding:8px 14px;font:inherit;cursor:pointer}
+nav button.on{color:#fff;border-bottom-color:#5fd0c8;font-weight:600}
+main{padding:18px 20px 60px;max-width:1500px}
+section{display:none}section.on{display:block}
+h2{font-size:17px;color:var(--teal);margin:22px 0 8px}
+h2:first-child{margin-top:0}
+.muted{color:var(--grey);font-size:12px}
+.row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--grey)}
+.field input,.field select{font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--input);color:var(--ink);min-width:150px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.tile{background:var(--panel);border-radius:10px;padding:12px 14px}
+.tile .k{font-size:11px;font-weight:700;color:var(--grey);letter-spacing:.4px;text-transform:uppercase}
+.tile .v{font-size:30px;font-weight:700;color:var(--navy);line-height:1.15;margin:4px 0}
+.tile .d{font-size:11px;color:var(--grey)}
+.tile.crit .v{color:var(--crit)}.tile.warn .v{color:var(--warn)}
+.tbl{overflow:auto;border:1px solid var(--line);border-radius:8px;max-height:70vh}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:6px 8px;position:sticky;top:0;z-index:1;white-space:nowrap}
+td{padding:5px 8px;border-top:1px solid var(--line);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.void td{color:#9aa1ae;text-decoration:line-through}
+tr.sel td{background:var(--warn-s)}
+.st{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.s-ok{background:var(--ok-s);color:var(--ok)}.s-okl{background:var(--ok-l);color:var(--ok)}.s-warn{background:var(--warn-s);color:var(--warn)}
+.s-crit{background:var(--crit-s);color:var(--crit)}.s-info{background:var(--info-s);color:var(--info)}.s-grey{background:var(--calc);color:var(--grey)}
+.cell-K{background:var(--ok-s);color:var(--ok);font-weight:600;text-align:center}.cell-Ks{background:var(--ok-l);color:var(--ok);text-align:center}
+.cell-P{background:var(--warn-s);color:var(--warn);font-weight:600;text-align:center}.cell-B{background:var(--calc);color:var(--grey);text-align:center}
+.checks{list-style:none;padding:0;margin:0}.checks li{padding:3px 0}.checks .okc{color:var(--ok)}.checks .bad{color:var(--crit);font-weight:600}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:6px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{background:#9aa1ae;cursor:not-allowed}
+.btn.sec{background:#fff;color:var(--navy);border:1px solid var(--line);font-weight:500}
+.btn.small{padding:3px 8px;font-size:12px}
+.note{background:var(--panel);border-left:4px solid var(--teal);padding:10px 12px;border-radius:6px;font-size:13px;margin:10px 0}
+.note.crit{border-left-color:var(--crit)}
+.toast{position:fixed;right:20px;bottom:20px;background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;box-shadow:0 6px 24px #0003;display:none;max-width:480px}
+.strip td,.strip th{text-align:center}.strip td:first-child,.strip th:first-child{text-align:left}
+.strip .now{background:var(--warn-s);font-weight:700}
+td[contenteditable]{background:#fffbe6;outline:none}td[contenteditable]:focus{background:var(--input);box-shadow:inset 0 0 0 2px var(--teal)}
+.readme h3{color:var(--teal);margin:18px 0 4px;font-size:15px}.readme li{margin:3px 0}
+@media print{header .bar,nav,.noprint{display:none}section{display:block!important;page-break-after:always}.tbl{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+<header>
+  <h1>ASN Kitting Progress Tracker</h1>
+  <div class="sub" id="subline">Repeater assembly kitting · kit target = ASP week minus kit lead</div>
+  <div class="bar">
+    <label class="btn">Load ASP (.xlsx)<input type="file" id="fAsp" accept=".xlsx,.xls,.xlsm"></label>
+    <label class="btn">Load COOIS (.xlsx)<input type="file" id="fCoois" accept=".xlsx,.xls,.xlsm"></label>
+    <label class="btn">Import Excel tracker<input type="file" id="fXl" accept=".xlsx"></label>
+    <button id="bSave">Save backup</button>
+    <label class="btn">Restore backup<input type="file" id="fBak" accept=".json"></label>
+    <span class="pill" id="pAsp"></span><span class="pill" id="pCoois"></span><span class="pill" id="pSaved"></span>
+  </div>
+  <nav id="tabs"></nav>
+</header>
+<main>
+<section id="t-dash">
+  <div class="row noprint">
+    <div class="field">Product<select id="dProd"></select></div>
+    <div class="field">Project<select id="dProj"></select></div>
+    <div class="field">Variant<select id="dVar"></select></div>
+  </div>
+  <div class="tiles" id="kpis"></div>
+  <h2>Kits due by kit week <span class="muted">(selection above, set-up variants · this week highlighted)</span></h2>
+  <div class="tbl"><table class="strip" id="strip"></table></div>
+  <h2>Data checks</h2><ul class="checks" id="checks"></ul>
+  <h2>Contract overview</h2>
+  <div class="tbl"><table id="overview"></table></div>
+  <div class="note" id="defs"></div>
+</section>
+
+<section id="t-rep">
+  <div class="row noprint"><div class="field">Variant<select id="rVar"></select></div></div>
+  <div class="tiles" id="rFacts"></div>
+  <div class="note" id="rNote"></div>
+  <h2>Stage summary (contract level)</h2>
+  <div class="tbl" style="width:max-content;max-width:100%"><table id="rSum" style="width:auto"></table></div>
+  <h2>Repeater by repeater</h2>
+  <div class="tbl"><table id="rTab"></table></div>
+</section>
+
+<section id="t-rec">
+  <div class="note">Record what was <b>physically kitted</b>. Choose the variant you actually worked on, even if management changed the order. The tracker works out the quantities from Settings, proposes unallocated COOIS orders and records nothing until you press <b>Confirm and record</b>.</div>
+  <div class="row">
+    <div class="field">Entry date<input type="date" id="eDate"></div>
+    <div class="field">Variant ID<select id="eVar"></select></div>
+    <div class="field">Stage<select id="eStage"></select></div>
+    <div class="field">Assembly code (optional)<select id="eAsm"></select></div>
+    <div class="field">REPs kitted<input type="number" id="eReps" min="0" step="0.5" style="min-width:90px"></div>
+    <div class="field">REP from (optional)<input type="number" id="eFrom" min="1" style="min-width:90px"></div>
+    <div class="field">REP to (optional)<input type="number" id="eTo" min="1" style="min-width:90px"></div>
+    <div class="field" style="flex:1">Note<input type="text" id="eNote" placeholder="e.g. management instruction"></div>
+  </div>
+  <h2>Checks</h2><ul class="checks" id="eMsgs"></ul>
+  <h2>Quantities for this entry</h2>
+  <div class="tbl"><table id="eLines"></table></div>
+  <h2>Rows that will be recorded</h2>
+  <div class="tbl" style="max-height:40vh"><table id="eRows"></table></div>
+  <p class="row"><button class="btn" id="bConfirm">Confirm and record</button><span class="muted" id="eHint"></span></p>
+</section>
+
+<section id="t-log">
+  <div class="row noprint">
+    <button class="btn sec" id="bCopyNew">Copy new rows for Excel</button>
+    <button class="btn sec" id="bCopyAll">Copy all rows (tab separated)</button>
+    <label class="field" style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="lShowVoid" checked> show voided entries</label>
+    <span class="muted" id="lInfo"></span>
+  </div>
+  <div class="note">Never delete history. To correct an entry press <b>Void</b> on any of its rows and give a reason: the whole entry (progress and its orders) stops counting and stays visible. Then record the correct entry.</div>
+  <div class="tbl"><table id="logT"></table></div>
+</section>
+
+<section id="t-coois">
+  <div class="row noprint">
+    <div class="field">Show<select id="cFilt"><option value="all">All orders</option><option value="review">Needs review</option><option value="unalloc">Not allocated / shared</option><option value="alloc">Allocated</option></select></div>
+    <div class="field">Search<input type="text" id="cSearch" placeholder="order, code or status"></div>
+    <span class="muted" id="cInfo"></span>
+  </div>
+  <div class="note">CNF can be recorded before physical picking, so the tracker never reads CNF as kitted. PCNF, CNF, DLV, CLSD and TECO are matched as whole status words (PCNF is never read as CNF). CLSD is shown for review; its cause is not confirmed by the status alone.</div>
+  <div class="tbl"><table id="cTab"></table></div>
+</section>
+
+<section id="t-set">
+  <div class="row">
+    <div class="field">Report date (blank = today)<input type="date" id="sDate"></div>
+    <div class="field">Kit lead (weeks before ASP week)<input type="number" id="sLead" min="0" step="1" style="min-width:90px"></div>
+  </div>
+  <h2>Assembly requirements <span class="muted">(quantity per ONE repeater · click a cell to edit · Variant ID must equal the ASP Friendly_name)</span></h2>
+  <div class="tbl"><table id="reqT"></table></div>
+  <p><button class="btn sec" id="bAddReq">Add requirement row</button></p>
+  <h2>Kitting stages <span class="muted">(order = column order in the reports)</span></h2>
+  <div class="tbl" style="max-width:700px"><table id="stgT"></table></div>
+  <p><button class="btn sec" id="bAddStg">Add stage</button></p>
+  <h2>Stored data</h2>
+  <p class="muted" id="sInfo"></p>
+  <p><button class="btn sec" id="bReset">Clear all data in this browser…</button></p>
+</section>
+
+<section id="t-read" class="readme"></section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>/*__SHEETJS__*/</script>
+<script>/*__ENGINE__*/</script>
+<script>
+"use strict";
+const SEED = /*__SEED__*/null;
+const E = window.KitEngine, KEY = "asnKittingTracker.v1";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s === null || s === undefined ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const U = (x) => (x === null || x === undefined ? "" : String(x)).trim().toUpperCase();
+const n0 = (x) => (x === "" || x === null || x === undefined ? "" : x);
+let S = null, M = null;
+
+function blank() {
+  return { asp: { header: [], rows: [], file: "", loadedAt: null }, coois: { header: [], rows: [], file: "", loadedAt: null },
+    requirements: [], stages: [], settings: { kitLead: 3, reportDate: null }, log: [], excelSyncedThrough: 0, savedAt: null };
+}
+function load() {
+  try { const t = localStorage.getItem(KEY); if (t) return JSON.parse(t); } catch (e) { toast("Could not read saved data: " + e.message); }
+  const b = blank();
+  if (SEED) Object.assign(b, JSON.parse(JSON.stringify(SEED)));
+  return b;
+}
+function save() {
+  S.savedAt = new Date().toISOString();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); $("pSaved").textContent = "Saved in this browser " + new Date().toLocaleTimeString("en-GB"); $("pSaved").className = "pill"; }
+  catch (e) { $("pSaved").textContent = "NOT SAVED - browser storage full: use Save backup"; $("pSaved").className = "pill warn"; }
+}
+function data() { return { asp: S.asp, coois: S.coois, requirements: S.requirements, stages: S.stages, log: S.log, settings: S.settings }; }
+function recompute() { M = E.compute(data()); }
+const todaySerial = () => { const d = new Date(); return E.dateSerial(d.getFullYear(), d.getMonth() + 1, d.getDate()); };
+function serialToISO(s) { if (s === null || s === undefined || s === "") return ""; const d = new Date((Number(s) - 25569) * 86400000); return d.toISOString().slice(0, 10); }
+function isoToSerial(v) { if (!v) return null; const [y, m, d] = v.split("-").map(Number); return E.dateSerial(y, m, d); }
+function fmtDate(s) { if (s === null || s === undefined || s === "" || isNaN(Number(s))) return s || ""; const d = new Date((Number(s) - 25569) * 86400000);
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" }); }
+function toast(t) { const el = $("toast"); el.textContent = t; el.style.display = "block"; clearTimeout(toast.h); toast.h = setTimeout(() => (el.style.display = "none"), 4500); }
+function stCls(s) {
+  s = String(s || "");
+  if (/^(All kitted|OK|Allocated)$/.test(s)) return "s-ok";
+  if (/behind|review|fix|CLSD|Duplicate|invalid|missing|not in|not set up|Not in|differs|recognised/i.test(s)) return "s-crit";
+  if (/due this week|Shared|Not in weekly|setup|Part/i.test(s)) return "s-warn";
+  if (/On track/.test(s)) return "s-info";
+  return "s-grey";
+}
+const pill = (s) => s === "" || s === null || s === undefined ? "" : `<span class="st ${stCls(s)}">${esc(s)}</span>`;
+function opts(sel, values, keep) {
+  const cur = keep !== undefined ? keep : sel.value;
+  sel.innerHTML = values.map((v) => `<option${U(v) === U(cur) ? " selected" : ""}>${esc(v)}</option>`).join("");
+  if (!values.some((v) => U(v) === U(cur)) && values.length) sel.value = values[0];
+}
+function table(el, head, rows, opts2) {
+  opts2 = opts2 || {};
+  el.innerHTML = "<thead><tr>" + head.map((h) => `<th>${esc(h)}</th>`).join("") + "</tr></thead><tbody>" +
+    (rows.length ? rows.join("") : `<tr><td colspan="${head.length}" class="muted">${esc(opts2.empty || "Nothing to show")}</td></tr>`) + "</tbody>";
+}
+const td = (v, cls) => `<td${cls ? ` class="${cls}"` : ""}>${v}</td>`;
+const tn = (v) => td(esc(n0(v)), "num");
+
+// ------------------------------------------------------------------ file loading
+function readBook(file) {
+  return file.arrayBuffer().then((buf) => XLSX.read(new Uint8Array(buf), { type: "array", cellDates: false, cellFormula: false }));
+}
+function sheetRows(ws) {   // always anchored at A1 so fixed cells (e.g. Settings!C6) keep their position
+  if (!ws || !ws["!ref"]) return [];
+  const r = XLSX.utils.decode_range(ws["!ref"]); r.s.r = 0; r.s.c = 0;
+  return XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null, blankrows: true, range: r });
+}
+function trimRow(r) { let n = r.length; while (n > 0 && (r[n - 1] === null || r[n - 1] === "")) n--; return r.slice(0, n); }
+function loadAspRows(rows, file) {
+  const hdr = rows[0] || [];
+  const bad = E.ASP_HEADERS.filter((h, i) => U(hdr[i + 2]) !== U(h));
+  if (bad.length) { if (!confirm("The ASP headers are not where expected (row 1, columns C to P). Missing/moved: " + bad.join(", ") + ". Load anyway?")) return false; }
+  let body = rows.slice(1).map(trimRow);
+  while (body.length && !body[body.length - 1].length) body.pop();
+  S.asp = { header: hdr.map((h) => (h === null ? "" : h)), rows: body, file, loadedAt: todaySerial() };
+  return true;
+}
+function loadCooisRows(rows, file) {
+  const hdr = (rows[0] || []).slice(0, 15);
+  const bad = E.COOIS_HEADERS.filter((h, i) => U(hdr[i]) !== U(h));
+  if (bad.length) { if (!confirm("The COOIS columns are not in the expected order (Order .. System Status). Different: " + bad.join(", ") + ". Load anyway?")) return false; }
+  const body = rows.slice(1).map((r) => r.slice(0, 15)).filter((r) => r[0] !== null && String(r[0]).trim() !== "");
+  const before = new Set(S.coois.rows.map((r) => U(r[0])));
+  const now = new Set(body.map((r) => U(r[0])));
+  const allocated = S.log.filter((r) => U(r["Record type"]) === "COOIS ORDER").map((r) => U(r.Order));
+  const missing = allocated.filter((k) => k && !now.has(k)).length;
+  S.coois = { header: hdr, rows: body, file, loadedAt: todaySerial() };
+  toast(`COOIS loaded: ${body.length} orders (${body.filter((r) => !before.has(U(r[0]))).length} new). Allocations kept.` + (missing ? ` ${missing} allocated orders are not in this export - flagged for review.` : ""));
+  return true;
+}
+$("fAsp").onchange = (e) => { const f = e.target.files[0]; if (!f) return; readBook(f).then((wb) => {
+  if (loadAspRows(sheetRows(wb.Sheets[wb.SheetNames[0]]), f.name)) { save(); render(); toast(`ASP loaded: ${S.asp.rows.length} lines. Recorded progress is kept by Variant ID.`); } e.target.value = ""; }).catch((x) => toast("Could not read ASP: " + x.message)); };
+$("fCoois").onchange = (e) => { const f = e.target.files[0]; if (!f) return; readBook(f).then((wb) => {
+  if (loadCooisRows(sheetRows(wb.Sheets[wb.SheetNames[0]]), f.name)) { save(); render(); } e.target.value = ""; }).catch((x) => toast("Could not read COOIS: " + x.message)); };
+$("fXl").onchange = (e) => { const f = e.target.files[0]; if (!f) return; readBook(f).then((wb) => { importTracker(wb, f.name); e.target.value = ""; }).catch((x) => toast("Could not read workbook: " + x.message)); };
+
+function findHeader(rows, need) {
+  for (let i = 0; i < rows.length; i++) { const r = rows[i] || []; const idx = need.map((h) => r.findIndex((v) => U(v) === U(h)));
+    if (idx.every((x) => x >= 0)) return { row: i, idx }; }
+  return null;
+}
+function readTable(rows, cols) {
+  const h = findHeader(rows, cols); if (!h) return null;
+  const out = [];
+  for (let i = h.row + 1; i < rows.length; i++) { const r = rows[i] || []; const vals = h.idx.map((j) => (r[j] === undefined ? null : r[j]));
+    if (vals.every((v) => v === null || v === "")) break; out.push(Object.fromEntries(cols.map((c, k) => [c, vals[k]]))); }
+  return out;
+}
+function importTracker(wb, name) {
+  const need = ["Settings", "Kitting Log"]; if (!need.every((n) => wb.SheetNames.includes(n))) { toast("This is not an ASN Kitting Tracker workbook (Settings / Kitting Log sheets not found)."); return; }
+  if (S.log.length && !confirm("Replace the requirements, stages, settings and Kitting Log held in this browser with the ones in " + name + "? (Save a backup first if unsure.)")) return;
+  const st = sheetRows(wb.Sheets["Settings"]);
+  const req = readTable(st, ["Project", "Variant ID", "Top code", "Fibre pairs", "Stage", "Assembly code", "Assembly description", "Qty per REP", "Source", "Verified by / date"]);
+  const stg = readTable(st, ["Stage", "Order", "Description"]);
+  const lg = readTable(sheetRows(wb.Sheets["Kitting Log"]), E.LOG_COLUMNS) || [];
+  if (req) S.requirements = req.map((r) => ({ project: r.Project, variant: r["Variant ID"], top: r["Top code"], fp: r["Fibre pairs"], stage: r.Stage, code: r["Assembly code"],
+    desc: r["Assembly description"], qty: r["Qty per REP"], source: r.Source, verified: r["Verified by / date"] }));
+  if (stg) S.stages = stg.map((r) => ({ stage: r.Stage, order: r.Order, desc: r.Description }));
+  S.log = lg.map((r) => Object.fromEntries(E.LOG_COLUMNS.map((c) => [c, r[c] === null ? "" : r[c]])));
+  const lead = st[6] && st[6][2]; if (lead !== null && lead !== undefined && lead !== "") S.settings.kitLead = Number(lead);
+  const rd = st[5] && st[5][2]; S.settings.reportDate = rd === null || rd === undefined || rd === "" ? null : Number(rd);
+  if (wb.Sheets["ASP"]) loadAspRows(sheetRows(wb.Sheets["ASP"]), name + " (ASP sheet)");
+  if (wb.Sheets["COOIS"]) { const c = sheetRows(wb.Sheets["COOIS"]); S.coois = { header: (c[0] || []).slice(0, 15), rows: c.slice(1).map((r) => r.slice(0, 15)).filter((r) => r[0] !== null && String(r[0]).trim() !== ""), file: name + " (COOIS sheet)", loadedAt: todaySerial() }; }
+  S.excelSyncedThrough = maxEntryNo();
+  save(); render(); toast(`Imported ${name}: ${S.requirements.length} requirement rows, ${S.log.length} log rows.`);
+}
+function maxEntryNo() { let m = 0; S.log.forEach((r) => { const x = /^K(\d+)$/i.exec(String(r["Entry ID"] || "").trim()); if (x) m = Math.max(m, Number(x[1])); }); return m; }
+
+$("bSave").onclick = () => {
+  const blob = new Blob([JSON.stringify(S)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = `ASN-Kitting-Tracker-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(a.href);
+  toast("Backup downloaded. Keep it on the shared drive - it is the record of all Kitting Progress entries.");
+};
+$("fBak").onchange = (e) => { const f = e.target.files[0]; if (!f) return; f.text().then((t) => { const b = JSON.parse(t);
+  if (!b || !Array.isArray(b.log) || !b.asp) throw new Error("not a tracker backup");
+  if (!confirm(`Replace the data in this browser with the backup ${f.name} (${b.log.length} log rows, saved ${b.savedAt || "?"})?`)) return;
+  S = Object.assign(blank(), b); save(); render(); toast("Backup restored."); }).catch((x) => toast("Could not restore: " + x.message)); e.target.value = ""; };
+
+// ------------------------------------------------------------------ tabs
+const TABS = [["t-dash", "Dashboard"], ["t-rep", "Repeater View"], ["t-rec", "Record Kitting"], ["t-log", "Kitting Log"], ["t-coois", "COOIS Review"], ["t-set", "Settings"], ["t-read", "Read Me"]];
+$("tabs").innerHTML = TABS.map(([id, t]) => `<button data-t="${id}">${t}</button>`).join("");
+function showTab(id) { document.querySelectorAll("section").forEach((s) => s.classList.toggle("on", s.id === id));
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("on", b.dataset.t === id)); try { localStorage.setItem(KEY + ".tab", id); } catch (e) {} }
+$("tabs").onclick = (e) => { if (e.target.dataset.t) showTab(e.target.dataset.t); };
+
+// ------------------------------------------------------------------ render
+function render() {
+  recompute();
+  const v = S.asp.rows.length ? (S.asp.rows[0][1] || "") : "";
+  const exp = S.asp.rows.length ? S.asp.rows[0][0] : "";
+  $("subline").textContent = `Week ${M.thisWeekLabel} · report date ${fmtDate(M.rptDate)} · kit target = ASP week − ${M.kitLead} weeks`;
+  $("pAsp").textContent = S.asp.rows.length ? `ASP: ${S.asp.file || "?"}${v ? " · " + v : ""}${exp ? " (export " + fmtDate(exp) + ")" : ""} · loaded ${fmtDate(S.asp.loadedAt)}` : "ASP: not loaded";
+  $("pAsp").className = "pill" + (S.asp.rows.length ? "" : " warn");
+  $("pCoois").textContent = S.coois.rows.length ? `COOIS: ${S.coois.file || "?"} · ${S.coois.rows.length} orders · loaded ${fmtDate(S.coois.loadedAt)}` : "COOIS: not loaded";
+  $("pCoois").className = "pill" + (S.coois.rows.length ? "" : " warn");
+  if (S.savedAt && !$("pSaved").textContent) $("pSaved").textContent = "Saved in this browser " + new Date(S.savedAt).toLocaleString("en-GB");
+  renderDash(); renderRep(); renderRec(); renderLog(); renderCoois(); renderSettings();
+}
+
+function renderDash() {
+  const prods = [...new Set(M.plan.map((p) => p.product).filter(Boolean))].sort();
+  opts($("dProd"), prods, $("dProd").value || "REPEATERS");
+  const prod = $("dProd").value;
+  opts($("dProj"), ["All"].concat([...new Set(M.plan.filter((p) => U(p.product) === U(prod)).map((p) => p.projectName).filter(Boolean))].sort()));
+  const proj = $("dProj").value;
+  opts($("dVar"), ["All"].concat([...new Set(M.plan.filter((p) => U(p.product) === U(prod) && p.valid && (proj === "All" || p.projectName === proj)).map((p) => p.variant))].sort()));
+  const vr = $("dVar").value;
+  const k = E.scope(M, prod, proj, vr);
+  const cfgCount = k.rows.filter((p) => p.reqLines > 0).length;
+  const tiles = [
+    ["Planned", cfgCount ? k.plannedCfg : k.plannedAll, cfgCount ? "ASP planned qty, set-up variants" + (k.plannedAll > k.plannedCfg ? ` (${k.plannedAll} incl. not set up)` : "") : "ASP planned qty in scope (no variant set up)"],
+    ["Complete assembly kits", k.complete, "REPs with every set-up line covered"],
+    ["Partly kitted", k.partial, "REPs started, not complete"],
+    ["Remaining to kit", cfgCount ? k.remaining : "n/a", "planned minus complete kits"],
+    ["Kitting progress", k.pct === "not available" ? "not available" : Math.round(k.pct * 100) + "%", "complete kits / planned (set-up variants)"],
+    ["Kits due this week", k.dueThis, "kit target this week, not yet complete", "warn"],
+    ["Kits behind", k.behind, "kit target before this week, not complete", "crit"],
+    ["COOIS unallocated / review", `${M.coois.filter((o) => o.review === "Not allocated" || o.review.startsWith("Shared")).length} / ${M.log.filter((r) => r._check && !["OK", "Void", ""].includes(r._check)).length + M.coois.filter((o) => o.review === "CLSD - review" || o.review === "Material changed - review").length}`, "orders, all contracts - see COOIS Review"]];
+  $("kpis").innerHTML = tiles.map(([a, b, c, cls]) => `<div class="tile ${cls || ""}"><div class="k">${esc(a)}</div><div class="v">${esc(b)}</div><div class="d">${esc(c)}</div></div>`).join("");
+  const sw = E.weekStrip(M, data(), prod, proj, vr);
+  const rowsS = [["Kit week", (w) => w.label], ["REPs due to kit that week", (w) => w.due], ["Cumulative due", (w) => w.cum], ["Complete kits to date", (w) => w.complete], ["Short of cumulative due", (w) => w.gap]];
+  $("strip").innerHTML = rowsS.map(([lab, f], i) => `<tr>${i ? `<td><b>${lab}</b></td>` : `<th>${lab}</th>`}${sw.map((w) => i ? `<td class="${w.thisWeek ? "now" : ""}">${esc(f(w))}</td>` : `<th class="${w.thisWeek ? "now" : ""}" style="${w.thisWeek ? "color:#7a4a00" : ""}">${esc(f(w))}</th>`).join("")}</tr>`).join("");
+  $("checks").innerHTML = E.dataChecks(M, data(), k).map((c) => `<li class="${c.ok ? "okc" : "bad"}">${c.ok ? "✓" : "⚠"} ${esc(c.text)}</li>`).join("");
+  const head = ["Project", "Variant ID", "Top code", "FP", "Body", "Temp", "System qty", "Built before plan", "Planned", "Kits due by this week", "Complete kits", "Partly kitted", "Remaining", "Progress", "Due this week", "Behind", "Units without COOIS order", "Status"];
+  table($("overview"), head, k.rows.map((p) => `<tr>${td(esc(p.projectName))}${td(esc(p.variant))}${td(esc(p.prodId))}${tn(p.fp)}${td(esc(p.body))}${td(esc(p.temp))}${tn(p.system)}${tn(p.built)}${tn(p.planned)}${tn(p.dEnd)}${tn(p.complete)}${tn(p.partial)}${tn(p.remaining)}${td(p.pct === "not available" ? '<span class="muted">not available</span>' : Math.round(p.pct * 100) + "%", "num")}${tn(p.dueThis)}${tn(p.behind)}${tn(p.shortage)}${td(pill(p.status))}</tr>`), { empty: "No ASP lines for this selection" });
+  $("defs").innerHTML = "<b>Definitions.</b> <b>Planned</b>: ASP Planned Qty for the selected product (repeaters and amplifiers are separate ASP products and are never added together). <b>Complete assembly kits</b>: repeaters' worth for which every set-up assembly line is recorded as kitted <i>and</i> covered by allocated COOIS orders (the lowest line decides). It is not a finished repeater. <b>Partly kitted</b>: started, not complete. <b>Kit target week</b> = ASP planned week minus the kit lead. <b>Due this week / behind</b> compare complete kits with the cumulative plan, contract by contract. COOIS CNF is never treated as kitted; contract allocation is the controller's entry, not a link proven by SAP.";
+}
+["dProd", "dProj", "dVar"].forEach((id) => ($(id).onchange = () => renderDash()));
+
+function renderRep() {
+  const vars = [...new Set(S.requirements.map((r) => String(r.variant || "").trim()).filter(Boolean))].sort();
+  opts($("rVar"), vars, $("rVar").value || (vars.includes("E2A-R12P-T5-C") ? "E2A-R12P-T5-C" : undefined));
+  const v = $("rVar").value; if (!v) { $("rTab").innerHTML = ""; return; }
+  const rv = E.repeaterView(M, data(), v);
+  const p = M.plan.find((x) => x.valid && U(x.variant) === U(v));
+  const comp = rv.stageInfo.length ? Math.min(...rv.stageInfo.map((s) => s.complete)) : "Assembly setup required";
+  const facts = [["Project", p ? p.projectName : "not in ASP"], ["Top code (ASP)", p ? p.prodId : ""], ["System qty", rv.system], ["Built before plan", rv.built], ["Planned", rv.planned], ["Weekly plan total", rv.wsum], ["Complete kits", comp], ["This week", M.thisWeekLabel]];
+  $("rFacts").innerHTML = facts.map(([a, b]) => `<div class="tile"><div class="k">${esc(a)}</div><div class="v" style="font-size:22px">${esc(b)}</div></div>`).join("");
+  $("rNote").innerHTML = "<b>Kitted</b> = recorded against that REP number. <b>Kitted*</b> = covered by a contract-level quantity and shown against the earliest open REP positions; it is <b>not</b> a physical traceability link. <b>Part</b> = some lines of the stage started." + (rv.wsum !== rv.planned && rv.stages.length ? " <br><b>Note:</b> the weekly plan total differs from Planned Qty in the ASP; REPs beyond the weekly plan show 'Not in weekly plan'." : "");
+  if (!rv.stages.length) { table($("rSum"), ["Stage"], []); table($("rTab"), ["REP"], [], { empty: "Assembly setup required for this variant (Settings)" }); return; }
+  const labs = [["Complete kits (covered)", "complete"], ["Recorded against REP numbers", "assigned"], ["Contract level, not assigned to a REP", "pool"], ["Partly kitted REPs", (s) => s.started - s.complete], ["Units without COOIS order", "shortage"]];
+  table($("rSum"), ["Stage"].concat(rv.stages), labs.map(([l, f]) => `<tr>${td("<b>" + esc(l) + "</b>")}${rv.stageInfo.map((s) => tn(typeof f === "function" ? f(s) : s[f])).join("")}</tr>`));
+  const cell = (c) => c === "Kitted" ? td("Kitted", "cell-K") : c === "Kitted*" ? td("Kitted*", "cell-Ks") : c === "Part" ? td("Part", "cell-P") : c === "Built" ? td("Built", "cell-B") : td("");
+  table($("rTab"), ["REP", "ASP week"].concat(rv.stages, ["Next kit to issue", "Kit due week", "Weeks left", "Status"]),
+    rv.reps.map((r) => `<tr>${tn(r.rep)}${td(esc(r.aspWeek))}${r.cells.map(cell).join("")}${td(esc(r.next))}${td(esc(r.kitWeek))}${tn(r.weeksLeft)}${td(pill(r.status))}</tr>`),
+    { empty: "No repeaters for this variant in the current ASP" });
+}
+$("rVar").onchange = () => renderRep();
+
+// ------------------------------------------------------------------ record kitting
+function entryInput() {
+  return { date: isoToSerial($("eDate").value), variant: $("eVar").value, stage: $("eStage").value, assembly: $("eAsm").value,
+    reps: $("eReps").value === "" ? 0 : Number($("eReps").value), from: $("eFrom").value === "" ? "" : Number($("eFrom").value),
+    to: $("eTo").value === "" ? "" : Number($("eTo").value), note: $("eNote").value };
+}
+function renderRec() {
+  const vars = [...new Set(S.requirements.map((r) => String(r.variant || "").trim()).filter(Boolean))].sort();
+  opts($("eVar"), vars);
+  const v = $("eVar").value;
+  const stg = M.stages.map((s) => s.stage).filter((s) => S.requirements.some((r) => U(r.variant) === U(v) && U(r.stage) === U(s)));
+  opts($("eStage"), stg);
+  const codes = S.requirements.filter((r) => U(r.variant) === U(v) && U(r.stage) === U($("eStage").value)).map((r) => r.code);
+  const cur = $("eAsm").value;
+  $("eAsm").innerHTML = `<option value="">(whole stage)</option>` + codes.map((c) => `<option${c === cur ? " selected" : ""}>${esc(c)}</option>`).join("");
+  const inp = entryInput(); const pr = E.propose(M, inp);
+  const msgs = pr.messages.slice();
+  if (v && !M.plan.some((p) => p.valid && U(p.variant) === U(v))) msgs.push("Warning: variant not in the current ASP - entry allowed, flagged for review.");
+  if (pr.lines.length && !(inp.reps > 0)) msgs.push("No REPs kitted entered - only orders for earlier shortages will be proposed.");
+  if (pr.lines.some((l) => l.shortageAfter > 0)) msgs.push("Warning: not enough unallocated COOIS orders - see Shortage after. The shortfall stays open.");
+  $("eMsgs").innerHTML = (msgs.length ? msgs : ["No problems found"]).map((m) => `<li class="${m === "No problems found" ? "okc" : "bad"}">${m === "No problems found" ? "✓" : "⚠"} ${esc(m)}</li>`).join("");
+  table($("eLines"), ["Assembly code", "Description", "Qty per REP", "Units this entry", "Already recorded", "Already allocated", "Needs COOIS orders", "Orders available", "Orders proposed", "Shortage after", "Settings rows using code"],
+    pr.lines.map((l) => `<tr>${td(esc(l.code))}${td(esc(l.desc))}${tn(l.qty)}${tn(l.units)}${tn(l.recorded)}${tn(l.allocated)}${tn(l.need)}${tn(l.available)}${tn(l.proposed)}${td(l.shortageAfter ? `<span class="st s-crit">${l.shortageAfter}</span>` : "0", "num")}${tn(l.sharedBy)}</tr>`));
+  table($("eRows"), E.LOG_COLUMNS, pr.rows.map((r) => "<tr>" + E.LOG_COLUMNS.map((c) => td(esc(c === "Entry date" ? fmtDate(r[c]) : r[c]))).join("") + "</tr>"),
+    { empty: pr.blocking ? "Nothing to record - see Checks" : "Nothing to record - no REPs kitted and no orders needed" });
+  $("bConfirm").disabled = pr.blocking || !pr.rows.length;
+  $("eHint").textContent = pr.rows.length ? ` Will record entry ${pr.entryId}: ${pr.rows.length} row(s).` : "";
+  renderRec.last = pr;
+}
+["eDate", "eVar", "eStage", "eAsm", "eReps", "eFrom", "eTo", "eNote"].forEach((id) => { $(id).oninput = () => { recompute(); renderRec(); }; $(id).onchange = $(id).oninput; });
+$("bConfirm").onclick = () => {
+  recompute(); renderRec(); const pr = renderRec.last;
+  if (pr.blocking || !pr.rows.length) return;
+  pr.rows.forEach((r) => S.log.push(Object.assign({}, r)));
+  save(); ["eReps", "eFrom", "eTo", "eNote"].forEach((id) => ($(id).value = ""));
+  render(); toast(`Entry ${pr.entryId} recorded: ${pr.rows.length} row(s). Dashboard updated.`);
+};
+
+// ------------------------------------------------------------------ kitting log
+function renderLog() {
+  const show = $("lShowVoid").checked;
+  const head = E.LOG_COLUMNS.concat(["Active", "Check", ""]);
+  const firstOf = {};
+  M.log.forEach((r, i) => { const id = String(r["Entry ID"] || ""); if (!(id in firstOf)) firstOf[id] = i; });
+  const rows = M.log.filter((r) => show || r._active).map((r) => {
+    const id = String(r["Entry ID"] || ""); const first = firstOf[id] === r._i;
+    return `<tr class="${r._active ? "" : "void"}">` + E.LOG_COLUMNS.map((c) => td(esc(c === "Entry date" ? fmtDate(r[c]) : r[c]), ["REPs kitted", "REP from", "REP to", "Order qty"].includes(c) ? "num" : "")).join("") +
+      tn(r._active) + td(pill(r._check)) + td(first && r._active && id ? `<button class="btn small sec" data-void="${esc(id)}">Void…</button>` : "") + "</tr>";
+  });
+  table($("logT"), head, rows.reverse(), { empty: "No Kitting Progress recorded yet" });
+  const nNew = S.log.filter((r) => { const x = /^K(\d+)$/i.exec(String(r["Entry ID"] || "")); return x && Number(x[1]) > (S.excelSyncedThrough || 0); }).length;
+  $("lInfo").textContent = `${S.log.length} rows · newest first · ${nNew} row(s) not yet copied to Excel`;
+}
+$("lShowVoid").onchange = renderLog;
+$("logT").onclick = (e) => {
+  const id = e.target.dataset && e.target.dataset.void; if (!id) return;
+  const why = prompt(`Void entry ${id}? It stays in the log (struck through) and stops counting. Reason:`);
+  if (why === null) return; if (!why.trim()) { toast("A reason is required to void an entry."); return; }
+  const r = S.log.find((x) => String(x["Entry ID"]) === id); r.Void = "Y"; r["Void reason"] = why.trim() + " (" + new Date().toISOString().slice(0, 10) + ")";
+  save(); render(); toast(`Entry ${id} voided. Record the correct entry on Record Kitting.`);
+};
+function tsv(rows) {
+  return rows.map((r) => E.LOG_COLUMNS.map((c) => { let v = r[c]; if (c === "Entry date" && v !== "" && v !== null && v !== undefined) v = serialToISO(v);
+    return String(v === null || v === undefined ? "" : v).replace(/[\t\n]/g, " "); }).join("\t")).join("\n");
+}
+function copyText(t, msg) {
+  (navigator.clipboard && window.isSecureContext ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast(msg)).catch(() => {
+    const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast(msg); });
+}
+$("bCopyAll").onclick = () => copyText(tsv(S.log), `${S.log.length} rows copied. In Excel paste into an EMPTY Kitting Log only (Paste Special > Values at A6) to avoid duplicates.`);
+$("bCopyNew").onclick = () => {
+  const rows = S.log.filter((r) => { const x = /^K(\d+)$/i.exec(String(r["Entry ID"] || "")); return x && Number(x[1]) > (S.excelSyncedThrough || 0); });
+  if (!rows.length) { toast("No new rows since the last copy / Excel import."); return; }
+  copyText(tsv(rows), `${rows.length} new row(s) copied. Paste Special > Values on the first empty row of the Excel Kitting Log.`);
+  S.excelSyncedThrough = maxEntryNo(); save(); renderLog();
+};
+
+// ------------------------------------------------------------------ COOIS review
+function renderCoois() {
+  const f = $("cFilt").value, q = U($("cSearch").value);
+  let rows = M.coois;
+  if (f === "review") rows = rows.filter((o) => /review/.test(o.review));
+  if (f === "unalloc") rows = rows.filter((o) => o.review === "Not allocated" || o.review.startsWith("Shared"));
+  if (f === "alloc") rows = rows.filter((o) => o.allocEntry);
+  if (q) rows = rows.filter((o) => U(o.order + " " + o.material + " " + o.status + " " + o.review).includes(q));
+  const missing = M.log.filter((r) => r._check === "Not in current COOIS - review").length;
+  $("cInfo").textContent = `${rows.length} of ${M.coois.length} orders` + (missing ? ` · ${missing} allocated orders are not in this export (see Kitting Log)` : "");
+  const yes = (b) => (b ? "Yes" : "");
+  table($("cTab"), ["Order", "Material Number", "Material description", "Order qty", "Release date (actual)", "Delivered qty", "System Status", "PCNF", "CNF", "DLV", "CLSD", "TECO", "Settings rows using code", "Allocated entry", "Allocated variant", "Review"],
+    rows.map((o) => `<tr>${td(esc(o.order))}${td(esc(o.material))}${td(esc(o.description))}${tn(o.qty)}${td(esc(fmtDate(o.releaseDate)))}${tn(o.delivered)}${td(esc(o.status))}${td(yes(o.PCNF))}${td(yes(o.CNF))}${td(yes(o.DLV))}${td(yes(o.CLSD))}${td(yes(o.TECO))}${tn(o.variantsUsing)}${td(esc(o.allocEntry))}${td(esc(o.allocVariant))}${td(pill(o.review))}</tr>`),
+    { empty: "No COOIS loaded" });
+}
+$("cFilt").onchange = renderCoois; $("cSearch").oninput = renderCoois;
+
+// ------------------------------------------------------------------ settings
+const REQF = [["project", "Project"], ["variant", "Variant ID"], ["top", "Top code"], ["fp", "Fibre pairs"], ["stage", "Stage"], ["code", "Assembly code"], ["desc", "Assembly description"], ["qty", "Qty per REP"], ["source", "Source"], ["verified", "Verified by / date"]];
+function renderSettings() {
+  $("sDate").value = S.settings.reportDate ? serialToISO(S.settings.reportDate) : "";
+  $("sLead").value = S.settings.kitLead;
+  table($("reqT"), REQF.map((f) => f[1]).concat([""]), S.requirements.map((r, i) => "<tr>" + REQF.map(([k]) => `<td contenteditable data-r="${i}" data-k="${k}">${esc(r[k])}</td>`).join("") +
+    `<td><button class="btn small sec" data-del="${i}">Remove</button></td></tr>`));
+  table($("stgT"), ["Stage", "Order", "Description", ""], S.stages.map((r, i) => `<tr><td contenteditable data-s="${i}" data-k="stage">${esc(r.stage)}</td><td contenteditable data-s="${i}" data-k="order">${esc(r.order)}</td><td contenteditable data-s="${i}" data-k="desc">${esc(r.desc)}</td><td><button class="btn small sec" data-sdel="${i}">Remove</button></td></tr>`));
+  let size = 0; try { size = (localStorage.getItem(KEY) || "").length; } catch (e) {}
+  $("sInfo").textContent = `Held in this browser: ${S.asp.rows.length} ASP lines, ${S.coois.rows.length} COOIS orders, ${S.requirements.length} requirement rows, ${S.log.length} Kitting Log rows (${Math.round(size / 1024)} KB). Last saved ${S.savedAt ? new Date(S.savedAt).toLocaleString("en-GB") : "never"}.`;
+}
+$("sDate").onchange = () => { S.settings.reportDate = isoToSerial($("sDate").value); save(); render(); };
+$("sLead").onchange = () => { const v = Number($("sLead").value); if (!(v >= 0)) return; S.settings.kitLead = v; save(); render(); };
+$("reqT").addEventListener("blur", (e) => { const t = e.target; if (t.dataset.r === undefined) return;
+  let v = t.textContent.trim(); if (t.dataset.k === "qty" || t.dataset.k === "fp") v = v === "" ? "" : (isNaN(Number(v)) ? v : Number(v));
+  if (S.requirements[t.dataset.r][t.dataset.k] !== v) { S.requirements[t.dataset.r][t.dataset.k] = v; save(); render(); } }, true);
+$("reqT").onclick = (e) => { const i = e.target.dataset && e.target.dataset.del; if (i === undefined) return;
+  const r = S.requirements[i]; if (!confirm(`Remove requirement ${r.variant} / ${r.stage} / ${r.code}? Recorded Kitting Log rows are not changed.`)) return;
+  S.requirements.splice(Number(i), 1); save(); render(); };
+$("bAddReq").onclick = () => { const last = S.requirements[S.requirements.length - 1] || {}; S.requirements.push({ project: last.project || "", variant: last.variant || "", top: last.top || "", fp: last.fp || "", stage: "", code: "", desc: "", qty: 1, source: "Added " + new Date().toISOString().slice(0, 10), verified: "" }); save(); render(); };
+$("stgT").addEventListener("blur", (e) => { const t = e.target; if (t.dataset.s === undefined) return; let v = t.textContent.trim(); if (t.dataset.k === "order") v = Number(v) || 0;
+  if (S.stages[t.dataset.s][t.dataset.k] !== v) { S.stages[t.dataset.s][t.dataset.k] = v; save(); render(); } }, true);
+$("stgT").onclick = (e) => { const i = e.target.dataset && e.target.dataset.sdel; if (i === undefined) return; if (!confirm("Remove this stage?")) return; S.stages.splice(Number(i), 1); save(); render(); };
+$("bAddStg").onclick = () => { S.stages.push({ stage: "New stage", order: S.stages.length + 1, desc: "" }); save(); render(); };
+$("bReset").onclick = () => { if (prompt("This deletes every Kitting Log entry held in this browser. Save a backup first. Type DELETE to continue:") !== "DELETE") return;
+  localStorage.removeItem(KEY); S = load(); save(); render(); toast("Browser data cleared."); };
+
+// ------------------------------------------------------------------ read me
+$("t-read").innerHTML = `
+<h2>Read Me</h2>
+<p class="muted">For Production Controllers. This page and the Excel workbook apply the same rules to the same inputs and give the same numbers. The page keeps its working copy in this browser; the backup file is the record to keep.</p>
+<h3>1. Load a new ASP</h3><ul><li>Press <b>Load ASP</b> and choose the ASP export (.xlsx) exactly as exported (headers on row 1).</li><li>New contracts and variants appear in the filters. Recorded progress is kept by Variant ID (ASP Friendly_name), so it is never erased by a new ASP.</li><li>A set-up or recorded variant that disappears from the ASP is listed under Data checks for review; its history stays in the Kitting Log.</li></ul>
+<h3>2. Load COOIS (column order unchanged)</h3><ul><li>Press <b>Load COOIS</b> and choose the COOIS export. Columns Order to System Status must be in SAP's order; extra columns are ignored.</li><li>Orders already allocated keep their allocation; nothing is counted twice. An allocated order missing from a new export is flagged for review - that does not prove it was cancelled (the selection may differ).</li></ul>
+<h3>3. Record what was kitted (daily routine)</h3><ul><li><b>Record Kitting</b>: choose the variant you actually worked on, the stage and the repeaters' worth kitted. Leave Assembly code as (whole stage), or choose one code for a partial line-only entry. REP from / to only when the repeater numbers are known.</li><li>Review the quantities and proposed orders, then press <b>Confirm and record</b>. The entry, with its order allocations, goes to the Kitting Log and the reports update.</li></ul>
+<h3>4. Shortages and shared assemblies</h3><ul><li>If fewer suitable COOIS orders exist than needed, the shortfall is shown and the stage does not count as complete. When a later COOIS has the orders, record the same variant and stage with REPs kitted = 0: only the outstanding orders are proposed.</li><li>Codes used by several variants (e.g. PSB 91YAF03404AAA) are never assigned to a contract automatically.</li></ul>
+<h3>5. Add or change assembly requirements</h3><ul><li><b>Settings</b>: one row per assembly line - Project, Variant ID (= ASP Friendly_name), Top code, Fibre pairs, Stage, Assembly code, description, Qty per REP (for ONE repeater). Click a cell to edit. The same code can be used by several variants with different quantities.</li><li>Fill <i>Verified by / date</i> once a line is checked against the official kitting sheet. A variant without rows shows <i>Assembly setup required</i>. New stages (e.g. Internal Unit, Housing) are added in Kitting stages with an order number.</li></ul>
+<h3>6. Correct an entry</h3><ul><li><b>Kitting Log</b> &gt; <b>Void…</b> on the wrong entry, give a reason. It stays visible, struck through, and its orders are released. Then record the correct entry.</li></ul>
+<h3>7. Save, back up, hand over and Excel</h3><ul><li>Everything is saved in this browser automatically, on this PC and browser only. Press <b>Save backup</b> at least weekly and keep the .json on the shared drive; <b>Restore backup</b> loads it on another PC or browser.</li><li>Clearing browser data deletes the working copy - restore from the latest backup.</li><li>To work from the Excel tracker: <b>Import Excel tracker</b> reads its Settings, Kitting Log, ASP and COOIS sheets. <b>Copy new rows for Excel</b> copies entries made here so they can be pasted (Paste Special &gt; Values) at the bottom of the Excel Kitting Log.</li></ul>
+<h3>8. Terms</h3><ul><li><b>Kitting Progress</b>: what the controller records as physically kitted. <b>Status</b>: the result in the report (All kitted, On track, Kit due this week, Kit behind, Assembly setup required, review flags).</li><li><b>Complete assembly kits</b>: repeaters' worth where every set-up line is recorded and covered by allocated COOIS orders. Not a finished repeater.</li><li><b>Kitted / Kitted* / Part</b> (Repeater View): recorded against that REP / contract-level quantity shown against the earliest open REP positions (not a traceability link) / some lines started.</li><li><b>Kit target week</b>: ASP week minus kit lead (3). Year ends, including 53-week years, use ISO weeks. <b>Kits behind</b>: kit target before this week, minus complete kits.</li><li><b>CNF</b> may be recorded before picking and never counts as kitted. <b>CLSD</b> is shown for review; the cause is not confirmed by the status. Contract allocation is the controller's entry, not a link proven by SAP.</li></ul>`;
+
+// ------------------------------------------------------------------ start
+S = load(); if (!S.stages.length && SEED) S.stages = SEED.stages;
+$("eDate").value = serialToISO(todaySerial());
+let startTab = "t-dash"; try { startTab = localStorage.getItem(KEY + ".tab") || startTab; } catch (e) {}
+showTab(startTab); render();
+</script>
+</body>
+</html>
